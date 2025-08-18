@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FootGG - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">FootGG</div>
+        
+        <ul class="nav-menu">
+            <li><a href="#" class="active">Inicio</a></li>
+            <li><a href="#">Social</a></li>
+            <li><a href="#">Mi Perfil</a></li>
+        </ul>
+
+        <div class="hamburger" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <ul>
+            <li><a href="#">Inicio</a></li>
+            <li><a href="#">Social</a></li>
+            <li><a href="#">Mi Perfil</a></li>
+        </ul>
+    </div>
+
+    <!-- Search Section -->
+    <section class="search-container">
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <!-- <i class="fas fa-futbol ballon-icon"></i> -->
+            <input type="text" class="search-input" placeholder="Buscar usuarios, equipos, jugadores...">
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Featured Posts Section -->
+        <section>
+            <h2 class="section-title">
+                <i class="fas fa-trophy trophy-icon"></i> Publicaciones Destacadas
+            </h2>
+            <div class="posts-grid" id="featuredPosts">
+                <!-- Featured posts will be populated here -->
+            </div>
+        </section>
+
+        <!-- Recent Posts Section -->
+        <section>
+            <h2 class="section-title">
+                 <i class="fas fa-futbol ballon-icon"></i> Publicaciones Recientes
+            </h2>
+            <div class="posts-grid" id="recentPosts">
+                <!-- Recent posts will be populated here -->
+            </div>
+        </section>
+    </main>
+
+    <script src="index.js"></script>
+</body>
+</html>
