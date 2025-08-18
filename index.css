@@ -11,7 +11,7 @@ body {
     color: #fff;
 }
 
-/* Navbar Desktop */
+/* Navbar */
 .navbar {
     position: sticky;
     top: 0;
@@ -49,6 +49,7 @@ body {
     background: #00ff88;
     color: #000;
 }
+
 /* Hamburger Menu */
 .hamburger {
     display: none;
@@ -71,6 +72,7 @@ body {
 .hamburger.active span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -6px);
 }
+
 /* Mobile Menu */
 .mobile-menu {
     display: none;
@@ -105,14 +107,15 @@ body {
     background: #00ff88;
     color: #000;
 }
-/* Search Section */
+
+/* Search Section & Filters */
 .search-container {
     padding: 2rem;
     background: rgba(0, 0, 0, 0.3);
 }
 .search-box {
     max-width: 600px;
-    margin: 0 auto;
+    margin: 0 auto 1rem;
     position: relative;
 }
 .search-input {
@@ -144,16 +147,46 @@ body {
     font-size: 1.2rem;
     z-index: 1;
 }
+.search-filters {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
 
+.search-filters select {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff; /* Asegura que el texto en el cuadro sea blanco */
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.search-filters select:hover {
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.search-filters select:focus {
+    outline: none;
+}
+
+/* --- Solución al problema de color --- */
+/* Estilos para el menú desplegable (las opciones) */
+.search-filters select option {
+    background-color: #0d2818; /* Fondo oscuro */
+    color: #fff; /* Letras blancas */
+}
+
+/* Icons and Main Content */
 .ballon-icon {
     color: #edf7f2;
 }
-
 .trophy-icon {
     color: #ffd000;
 }
-
-/* Main Content */
 .main-content {
     padding: 2rem;
     max-width: 1200px;
@@ -167,6 +200,7 @@ body {
     margin-bottom: 1.5rem;
     text-align: center;
 }
+
 /* Post Cards */
 .posts-grid {
     display: grid;
@@ -262,6 +296,140 @@ body {
     margin-bottom: 1rem;
     display: inline-block;
 }
+
+/* Form Styles (Registro & Login) */
+.form-container {
+    max-width: 500px;
+    margin: 5rem auto;
+    padding: 2rem;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+.form-container h2 {
+    font-family: 'Montserrat', sans-serif;
+    color: #00ff88;
+    margin-bottom: 2rem;
+}
+.input-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+.input-group label {
+    display: block;
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+.input-group input,
+.input-group select {
+    width: 100%;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 1rem;
+}
+.input-group input:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: #00ff88;
+}
+.submit-btn {
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 8px;
+    background: #00ff88;
+    color: #000;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.submit-btn:hover {
+    background: #00cc6a;
+}
+.form-footer {
+    margin-top: 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+.form-footer a {
+    color: #00ff88;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* Profile Styles */
+.profile-container {
+    max-width: 800px;
+    padding: 3rem;
+    text-align: left;
+}
+.profile-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+.user-avatar-lg {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #00ff88, #00cc6a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #000;
+    margin: 0 auto 1rem;
+}
+.profile-header h2 {
+    margin-bottom: 0.5rem;
+}
+.profile-header p {
+    color: rgba(255, 255, 255, 0.7);
+}
+.edit-btn {
+    background: none;
+    border: 1px solid #00ff88;
+    color: #00ff88;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background-color 0.3s ease;
+}
+.edit-btn:hover {
+    background: rgba(0, 255, 136, 0.2);
+}
+.profile-info,
+.profile-content,
+.profile-interactions {
+    margin-bottom: 2rem;
+}
+.profile-info h3,
+.profile-content h3,
+.profile-interactions h3 {
+    font-family: 'Montserrat', sans-serif;
+    color: #fff;
+    border-bottom: 2px solid #00ff88;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+.profile-info ul {
+    list-style: none;
+    padding: 0;
+}
+.profile-info li {
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .nav-menu {
