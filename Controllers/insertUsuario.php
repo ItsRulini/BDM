@@ -9,9 +9,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $usuario->setCorreo($_POST['correo']);
     $usuario->setContraseña($_POST['contraseña']);
-    $usuario->setNombre($_POST['nombre']);
-    $usuario->setApellidoPaterno($_POST['apellidoPaterno']);
-    $usuario->setApellidoMaterno($_POST['apellidoMaterno']);
+    $usuario->setNombre($_POST['nombres']);
+    $usuario->setApellidoPaterno($_POST['paterno']);
+    $usuario->setApellidoMaterno($_POST['materno']);
     $usuario->setGenero($_POST['genero']);
     $usuario->setGeneroEspecifico($_POST['generoEspecifico']);
     $usuario->setNacionalidad((int)$_POST['nacionalidad']);
@@ -27,8 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $usuario->setFotoPerfil(null); // o manejar error si la foto es obligatoria
     }
 
-    $usuario->setFechaNacimiento($_POST['fechaNacimiento']);
-    $usuario->setFechaRegistro(date('Y-m-d H:i:s'));
+    $usuario->setFechaNacimiento($_POST['nacimiento']);
+    //$usuario->setFechaRegistro(date('Y-m-d H:i:s'));
     $usuarioDAO = new UsuarioDAO($conn);
 
     $result = $usuarioDAO->createUsuario($usuario);
