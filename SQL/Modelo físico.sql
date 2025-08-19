@@ -4,8 +4,8 @@ USE BDM;
 
 CREATE TABLE Usuario (
   IdUsuario INT PRIMARY KEY AUTO_INCREMENT,
-  Correo VARCHAR(255) NOT NULL,
-  Contraseña VARCHAR(255) NOT NULL,
+  Correo VARCHAR(255) BINARY UNIQUE NOT NULL,
+  Contraseña VARCHAR(255) BINARY NOT NULL,
   Nombre VARCHAR(255),
   ApellidoPaterno VARCHAR(255),
   ApellidoMaterno VARCHAR(255),
@@ -20,6 +20,10 @@ CREATE TABLE Usuario (
   FOREIGN KEY (Nacionalidad) REFERENCES Pais(IdPais),
   FOREIGN KEY (PaisNacimiento) REFERENCES Pais(IdPais)
 );
+
+ALTER TABLE Usuario
+MODIFY Correo VARCHAR(255) BINARY UNIQUE NOT NULL,
+MODIFY Contraseña VARCHAR(255) BINARY NOT NULL;
 
 alter table usuario
 drop column FechaNacimiento;
