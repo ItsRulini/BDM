@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Datos del usuario para enviar:", { nombres, paterno, materno, nacimiento, correo, contrasena });
             alert("¡Formulario validado! Ahora se enviaría al servidor.");
             // En un proyecto real, aquí usarías `fetch()` o `XMLHttpRequest` para comunicarte con `procesar_registro.php`
-            fetch('procesar_registro.php', {
+            fetch('insertUsuario.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
