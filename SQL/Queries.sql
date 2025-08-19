@@ -1,0 +1,3 @@
+USE BDM;
+
+SELECT * FROM Usuario;

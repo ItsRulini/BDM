@@ -17,7 +17,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usuario->setNacionalidad((int)$_POST['nacionalidad']);
     $usuario->setPaisNacimiento((int)$_POST['paisNacimiento']);
     $usuario->setTipo($_POST['tipo']);
-    $usuario->setFotoPerfil($_FILES['fotoPerfil']['name']);
+    //$usuario->setFotoPerfil($_FILES['fotoPerfil']['name']);
+
+    // 🔹 Guardar el contenido binario de la foto
+    if (isset($_FILES['fotoPerfil']) && $_FILES['fotoPerfil']['error'] === UPLOAD_ERR_OK) {
+        $fotoBinaria = file_get_contents($_FILES['fotoPerfil']['tmp_name']);
+        $usuario->setFotoPerfil($fotoBinaria);
+    } else {
+        $usuario->setFotoPerfil(null); // o manejar error si la foto es obligatoria
+    }
+
     $usuario->setFechaNacimiento($_POST['fechaNacimiento']);
     $usuario->setFechaRegistro(date('Y-m-d H:i:s'));
     $usuarioDAO = new UsuarioDAO($conn);
