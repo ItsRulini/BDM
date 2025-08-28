@@ -81,7 +81,9 @@ CREATE TABLE Publicacion (
   FechaAprobacion TIMESTAMP,
   EstatusAprobacion ENUM('Aprobado', 'Rechazado', 'Pendiente') DEFAULT 'Pendiente',
   IdCreador INT,
-  FOREIGN KEY (IdCreador) REFERENCES Usuario(IdUsuario)
+  IdMundial INT,
+  FOREIGN KEY (IdCreador) REFERENCES Usuario(IdUsuario),
+  FOREIGN KEY (IdMundial) REFERENCES Mundial(IdMundial)
 );
 
 CREATE TABLE Interaccion (
