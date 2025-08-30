@@ -473,3 +473,57 @@ body {
         gap: 0.5rem;
     }
 }
+
+
+
+
+
+/* Estilos para la sección de Mundiales */
+.world-cups-section {
+    margin-bottom: 3rem;
+}
+
+.world-cups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.world-cup-card {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.world-cup-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+}
+
+.world-cup-card img {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    display: block;
+}
+
+.world-cup-info {
+    padding: 1.5rem;
+}
+
+.world-cup-info h3 {
+    color: #fff;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.world-cup-info p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    line-height: 1.4;
+}
