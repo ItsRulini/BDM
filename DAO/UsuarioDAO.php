@@ -40,17 +40,17 @@ class UsuarioDAO {
 
                 if (mysqli_stmt_execute($stmt)) {
                     mysqli_stmt_close($stmt);
-                    return true; // El SP se ejecutó correctamente
+                    return $usuario; // El SP se ejecutó correctamente
                 }
 
                 mysqli_stmt_close($stmt);
             }
         } catch (mysqli_sql_exception $e) {
             echo "Error: " . $e->getMessage();
-            return false;
+            return null;
         }
 
-        return false;
+        return $usuario;
     }
 
 }

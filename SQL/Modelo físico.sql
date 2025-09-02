@@ -14,7 +14,7 @@ CREATE TABLE Usuario (
   Nacionalidad INT,
   PaisNacimiento INT,
   Tipo ENUM('Usuario', 'Administrador'),
-  FotoPerfil BLOB,
+  FotoPerfil LONGBLOB,
   FechaNacimiento DATE,
   FechaRegistro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (Nacionalidad) REFERENCES Pais(IdPais),
@@ -90,8 +90,14 @@ CREATE TABLE Interaccion (
   IdInteraccion INT PRIMARY KEY AUTO_INCREMENT,
   FechaInteraccion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   IdUsuario INT,
-  FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario)
+  IdPublicacion INT,
+  FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario),
+  FOREIGN KEY (IdPublicacion) REFERENCES Publicacion(IdPublicacion)
 );
+
+ALTER TABLE Interaccion
+ADD IdPublicacion INT,
+ADD FOREIGN KEY (IdPublicacion) REFERENCES Publicacion(IdPublicacion);
 
 CREATE TABLE Comentario (
   IdComentario INT PRIMARY KEY,
@@ -102,9 +108,13 @@ CREATE TABLE Comentario (
 
 CREATE TABLE Reaccion (
   IdReaccion INT PRIMARY KEY,
-  Reaccion BOOLEAN DEFAULT FALSE,
+  Reaccion BOOLEAN DEFAULT TRUE,
   FOREIGN KEY (IdReaccion) REFERENCES Interaccion(IdInteraccion)
 );
+
+ALTER TABLE Reaccion
+MODIFY Reaccion BOOLEAN DEFAULT TRUE;
+
 
 CREATE TABLE Categoria (
 	IdCategoria INT PRIMARY KEY AUTO_INCREMENT,
@@ -121,7 +131,7 @@ CREATE TABLE Publicacion_Categoria(
 
 CREATE TABLE Multimedia (
 	IdMultimedia INT PRIMARY KEY AUTO_INCREMENT,
-    Contenido BLOB
+    Contenido LONGBLOB
 );
 
 CREATE TABLE Multimedia_Publicacion (
