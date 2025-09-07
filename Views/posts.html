@@ -8,13 +8,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="posts.css">
 
     <link rel="icon" type="image/png" href="icons/isotipo.png">
-
 </head>
 <body>
     <nav class="navbar">
-        <!-- <div class="logo">FootGG</div> -->
+        
         <div class="logo">
             <a href="index.html">
                 <img src="icons/isologo white.png" alt="FootGG Logo" class="logo-image">
@@ -22,8 +22,8 @@
         </div>
 
         <ul class="nav-menu">
-            <li><a href="index.html" class="active">Inicio</a></li>
-            <li><a href="posts.html">Posts</a></li>
+            <li><a href="index.html">Inicio</a></li>
+            <li><a href="posts.html" class="active">Posts</a></li>
             <li><a href="registro.html">Regístrate</a></li>
             <li><a href="login.html">Ingresar</a></li>
             </ul>
@@ -41,6 +41,7 @@
             <li><a href="login.html">Ingresar</a></li>
         </ul>
     </div>
+
     <section class="search-container">
         <div class="search-box">
             <i class="fas fa-search search-icon"></i>
@@ -61,16 +62,23 @@
     </section>
 
     <main class="main-content">
-        <section class="world-cups-section">
+        <section class="featured-posts">
             <h2 class="section-title">
-                <i class="fas fa-globe-americas"></i> Mundiales
+                <i class="fas fa-trophy trophy-icon"></i> Publicaciones Destacadas
             </h2>
-            <div class="world-cups-grid" id="worldCupsGrid">
-                </div>
+            <div class="posts-grid" id="featuredPosts">
+            </div>
         </section>
-        
+        <section class="recent-posts">
+            <h2 class="section-title">
+                <i class="fas fa-futbol ballon-icon"></i> Publicaciones Recientes
+            </h2>
+            <div class="posts-grid" id="recentPosts">
+            </div>
+        </section>
     </main>
+
     <script src="tools.js"></script>
-    <script src="index.js"></script>
+    <script src="posts.js"></script>
 </body>
 </html>
