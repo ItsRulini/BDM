@@ -9,6 +9,8 @@
     
     <link rel="stylesheet" href="style.css"> 
     <link rel="stylesheet" href="registro.css">
+
+    <link rel="icon" type="image/png" href="icons/isotipo.png">
 </head>
 <body>
 
@@ -18,7 +20,7 @@
     
     <div class="form-container">
         <h2>Registro de Usuario</h2>
-        <form id="registrationForm" action="../Controllers/insertUsuario.php" method="POST">
+        <form id="registrationForm" enctype="multipart/form-data">
             <div class="input-group">
                 <label for="nombres">Nombres:</label>
                 <input type="text" id="nombres" name="nombres" required>
@@ -46,7 +48,7 @@
             </div>
             <div class="input-group">
                 <label for="pais">País de Nacimiento:</label>
-                <input type="text" id="pais" name="pais" required>
+                <input type="text" id="pais" name="paisNacimiento" required>
             </div>
             <div class="input-group">
                 <label for="nacionalidad">Nacionalidad:</label>

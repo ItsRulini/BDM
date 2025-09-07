@@ -68,7 +68,7 @@ function createPostCard(post) {
                         <span>${post.comments}</span>
                     </button>
                     <button class="interaction-btn" onclick="event.stopPropagation(); sharePost(${post.id})">
-                        <i class="fas fa-share"></i>
+                        <i class="fas fa-eye"></i>
                         <span>${post.shares}</span>
                     </button>
                 </div>

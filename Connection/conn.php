@@ -78,6 +78,18 @@
             }
             return null;
         }
+
+        public function showConnectionInfo() {
+            $info = $this->getConnectionInfo();
+            if ($info) {
+                echo "<h2>Información de la Conexión:</h2>";
+                echo "DB Server: " . $info['server_info'] . "<br>";
+                echo "Host Info: " . $info['host_info'] . "<br>";
+                echo "Protocol Version: " . $info['protocol_version'] . "<br>";
+            } else {
+                echo "<h2>No hay conexión activa a la base de datos.</h2>";
+            }
+        }
     }
 
 
@@ -85,15 +97,5 @@
     $database = Connection::getInstance();
     $conn = $database->getConnection();
     // Mostrar info de la conexión
-    $connectionInfo = $database->getConnectionInfo();
-    if ($connectionInfo) {
-        print_r("<h1>Conexión exitosa a la base de datos.</h1>");
-        print_r(
-            "<h2>Info de la conexión: </h2>" .
-            "DB Server: " . $connectionInfo['server_info'] . "<br>
-            Host Info: " . $connectionInfo['host_info'] . "<br>
-            Protocol Version: " . $connectionInfo['protocol_version'] . "<br>");
-    } else {
-        error_log("<h1>No active database connection.</h1>");
-    }
+    //$database->showConnectionInfo();
 ?>

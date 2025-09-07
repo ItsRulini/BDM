@@ -1,43 +1,66 @@
 <?php
 
-require_once 'Connection/conn.php';
-require_once 'Models/Usuario.php';
-require_once 'DAO/UsuarioDAO.php';
+require_once '../Connection/conn.php';
+require_once '../Models/Usuario.php';
+require_once '../DAO/UsuarioDAO.php';
+
+
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    
+    $data = json_decode(file_get_contents("php://input"), true);
+
     $usuario = new Usuario();
 
-    $usuario->setCorreo($_POST['correo']);
-    $usuario->setContraseña($_POST['contraseña']);
-    $usuario->setNombre($_POST['nombres']);
-    $usuario->setApellidoPaterno($_POST['paterno']);
-    $usuario->setApellidoMaterno($_POST['materno']);
-    $usuario->setGenero($_POST['genero']);
-    $usuario->setGeneroEspecifico($_POST['generoEspecifico']);
-    $usuario->setNacionalidad((int)$_POST['nacionalidad']);
-    $usuario->setPaisNacimiento((int)$_POST['paisNacimiento']);
-    $usuario->setTipo($_POST['tipo']);
-    //$usuario->setFotoPerfil($_FILES['fotoPerfil']['name']);
+    $usuario->setCorreo($data['correo'] ?? '');
+    $usuario->setContraseña($data['contrasena'] ?? '');
+    $usuario->setNombre($data['nombres'] ?? '');
+    $usuario->setApellidoPaterno($data['paterno'] ?? '');
+    $usuario->setApellidoMaterno($data['materno'] ?? '');
+    $usuario->setGenero($data['genero'] ?? '');
+    $usuario->setGeneroEspecifico($data['generoEspecifico'] ?? '');
+    $usuario->setNacionalidad(isset($data['nacionalidad']) ? (int)$data['nacionalidad'] : null);
+    $usuario->setPaisNacimiento(isset($data['paisNacimiento']) ? (int)$data['paisNacimiento'] : null);
+    $usuario->setTipo($data['tipo'] ?? '');
 
-    // 🔹 Guardar el contenido binario de la foto
-    if (isset($_FILES['fotoPerfil']) && $_FILES['fotoPerfil']['error'] === UPLOAD_ERR_OK) {
-        $fotoBinaria = file_get_contents($_FILES['fotoPerfil']['tmp_name']);
+    // Foto de perfil: espera base64 en $data['fotoPerfil']
+    if (!empty($data['fotoPerfil'])) {
+        $fotoBinaria = base64_decode($data['fotoPerfil']);
         $usuario->setFotoPerfil($fotoBinaria);
     } else {
-        $usuario->setFotoPerfil(null); // o manejar error si la foto es obligatoria
+        $usuario->setFotoPerfil(null);
     }
 
-    $usuario->setFechaNacimiento($_POST['nacimiento']);
-    //$usuario->setFechaRegistro(date('Y-m-d H:i:s'));
+    $usuario->setFechaNacimiento($data['nacimiento'] ?? null);
+    
     $usuarioDAO = new UsuarioDAO($conn);
 
+    //Administador se inserta por defecto
+    $usuario->setTipo('Usuario'); // Establecer el tipo de usuario
     $result = $usuarioDAO->createUsuario($usuario);
 
     if ($result) {
-        echo "Usuario creado con éxito. ID: " . $result->getIdUsuario();
+        echo json_encode([
+            'success' => true,
+            'message' => 'Usuario creado con éxito',
+            'data' => [
+                'id' => $result->getIdUsuario(),
+                'correo' => $result->getCorreo(),
+                'nombre' => $result->getNombre()
+            ]
+        ]);
+        
     } else {
-        echo "Error al crear el usuario.";
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error al crear el usuario'
+        ]);
+        //throw new Exception("No se pudo crear el usuario");
     }
 } else {
-    echo "Método no permitido. Use POST para enviar datos.";
+    echo json_encode([
+        'success' => false,
+        'message' => 'Método no permitido'
+    ]);
 }

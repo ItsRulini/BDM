@@ -11,11 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const nacimiento = document.getElementById('nacimiento').value;
             const correo = document.getElementById('correo').value;
             const contrasena = document.getElementById('contrasena').value;
+            const genero = document.getElementById('genero').value;
+            const paisNacimiento = document.getElementById('pais').value;
+            const nacionalidad = document.getElementById('nacionalidad').value;
 
             // Validación de la edad
             const birthDate = new Date(nacimiento);
             const today = new Date();
-            const age = today.getFullYear() - birthDate.getFullYear();
+            let age = today.getFullYear() - birthDate.getFullYear();
             const m = today.getMonth() - birthDate.getMonth();
             if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
                 age--;
@@ -31,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Datos del usuario para enviar:", { nombres, paterno, materno, nacimiento, correo, contrasena });
             alert("¡Formulario validado! Ahora se enviaría al servidor.");
             // En un proyecto real, aquí usarías `fetch()` o `XMLHttpRequest` para comunicarte con `procesar_registro.php`
-            fetch('insertUsuario.php', {
+            fetch('../Controllers/insertUsuario.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -42,7 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     materno,
                     nacimiento,
                     correo,
-                    contrasena
+                    contrasena,
+                    genero,
+                    paisNacimiento,
+                    nacionalidad
                 })
             })
             .then(response => response.json())

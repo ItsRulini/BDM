@@ -2,6 +2,7 @@ USE BDM;
 
 
 DELIMITER **
+DROP PROCEDURE IF EXISTS sp_crearUsuario;
 CREATE PROCEDURE sp_crearUsuario (
     IN p_correo VARCHAR(255),
     IN p_pass VARCHAR(255),
@@ -25,8 +26,8 @@ BEGIN
         ApellidoMaterno, 
         Genero, 
         GeneroEspecifico, 
-        Nacionalidad, 
-        PaisNacimiento, 
+        -- Nacionalidad, 
+        -- PaisNacimiento, 
         Tipo, 
         FotoPerfil, 
         FechaNacimiento
@@ -38,12 +39,36 @@ BEGIN
         p_apellidoMaterno, 
         p_genero, 
         p_generoEspecifico, 
-        p_nacionalidad, 
-        p_paisNacimiento, 
+        -- p_nacionalidad, 
+        -- p_paisNacimiento, 
         p_tipo, 
         p_fotoPerfil, 
         p_fechaNacimiento
     );
+END**
+
+DELIMITER **
+DROP PROCEDURE IF EXISTS sp_obtenerUsuarioPorCorreo;
+CREATE PROCEDURE sp_obtenerUsuarioPorCorreo(
+	IN p_correo VARCHAR(255)
+)
+BEGIN
+    SELECT 
+        IdUsuario,
+        Correo,
+        Contraseña,
+        Nombre,
+        ApellidoPaterno,
+        ApellidoMaterno,
+        Genero,
+        GeneroEspecifico,
+        Nacionalidad,
+        PaisNacimiento,
+        Tipo,
+        FotoPerfil,
+        FechaNacimiento
+    FROM Usuario 
+    WHERE Correo = p_correo;
 END**
 
 
