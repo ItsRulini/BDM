@@ -115,6 +115,10 @@ CREATE TABLE Reaccion (
 ALTER TABLE Reaccion
 MODIFY Reaccion BOOLEAN DEFAULT TRUE;
 
+CREATE TABLE Vista (
+  IdVista INT PRIMARY KEY,
+  FOREIGN KEY (IdVista) REFERENCES Interaccion(IdInteraccion)
+);
 
 CREATE TABLE Categoria (
 	IdCategoria INT PRIMARY KEY AUTO_INCREMENT,
