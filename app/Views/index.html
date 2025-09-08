@@ -7,26 +7,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <link rel="stylesheet" href="../public/css/index.css">
 
-    <link rel="icon" type="image/png" href="icons/isotipo.png">
+    <link rel="icon" type="image/png" href="../public/assets/isotipo.png">
 
 </head>
 <body>
     <nav class="navbar">
         <!-- <div class="logo">FootGG</div> -->
         <div class="logo">
-            <a href="index.html">
-                <img src="icons/isologo white.png" alt="FootGG Logo" class="logo-image">
+            <a href="index.php?controller=home&action=index">
+                <img src="../public/assets/isologo white.png" alt="FootGG Logo" class="logo-image">
             </a>
         </div>
 
         <ul class="nav-menu">
-            <li><a href="index.html" class="active">Inicio</a></li>
-            <li><a href="posts.html">Posts</a></li>
-            <li><a href="registro.html">Regístrate</a></li>
-            <li><a href="login.html">Ingresar</a></li>
+            <li><a href="index.php?controller=home&action=index" class="active">Inicio</a></li>
+            <li><a href="index.php?controller=home&action=posts">Posts</a></li>
+            <li><a href=".index.php?controller=home&action=posts">Regístrate</a></li>
+            <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
             </ul>
         <div class="hamburger" onclick="toggleMobileMenu()">
             <span></span>
@@ -36,10 +36,10 @@
     </nav>
     <div class="mobile-menu" id="mobileMenu">
         <ul>
-            <li><a href="index.html">Inicio</a></li>
-            <li><a href="posts.html">Posts</a></li>
-            <li><a href="registro.html">Regístrate</a></li>
-            <li><a href="login.html">Ingresar</a></li>
+            <li><a href="index.php?controller=home&action=index">Inicio</a></li>
+            <li><a href="index.php?controller=home&action=posts">Posts</a></li>
+            <li><a href="index.php?controller=home&action=registro">Regístrate</a></li>
+            <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
         </ul>
     </div>
     <section class="search-container">
@@ -71,7 +71,7 @@
         </section>
         
     </main>
-    <script src="tools.js"></script>
-    <script src="index.js"></script>
+    <script src="../public/js/tools.js"></script>
+    <script src="../public/js/index.js"></script>
 </body>
 </html>
