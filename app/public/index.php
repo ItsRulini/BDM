@@ -38,6 +38,15 @@ if (!method_exists($controller, $action)) {
     exit;
 }
 
+
 // Llamar a la acción del controlador
-$controller->$action();
+// Pasar el parámetro id si existe en la URL
+if (isset($_GET['id'])) {
+    $controller->$action($_GET['id']);
+} else {
+    $controller->$action();
+}
+
+// Llamar a la acción del controlador
+//$controller->$action();
 //call_user_func(array($controller, $action));

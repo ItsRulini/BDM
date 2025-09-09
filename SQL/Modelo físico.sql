@@ -40,9 +40,13 @@ CREATE TABLE Pais(
 
 CREATE TABLE Mundial(
   IdMundial INT PRIMARY KEY AUTO_INCREMENT,
-  Año DATE,
+  Año YEAR,
   Descripcion VARCHAR(255)
 );
+-- use bdm;
+ALTER TABLE Mundial
+MODIFY COLUMN Año YEAR;
+
 
 CREATE TABLE Seleccion (
   IdSeleccion INT PRIMARY KEY,
