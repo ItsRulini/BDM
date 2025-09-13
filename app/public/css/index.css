@@ -140,3 +140,652 @@
     font-size: 1rem;
     line-height: 1.4;
 }
+
+
+
+
+
+
+/* === ESTILOS PARA EL NUEVO CARRUSEL DE MUNDIALES === */
+
+.carousel-container {
+    position: relative;
+    padding: 0 40px; /* Espacio lateral para las flechas */
+}
+
+.worldCupSwiper {
+    padding-top: 10px;
+    padding-bottom: 20px;
+}
+
+.swiper-slide {
+    display: flex;
+    justify-content: center;
+}
+
+/* Personalización de las flechas */
+.swiper-button-next,
+.swiper-button-prev {
+    color: #ffffff;
+    background-color: rgba(0, 0, 0, 0.4);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.swiper-button-next::after,
+.swiper-button-prev::after {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+
+
+
+
+
+
+/* === NUEVOS ESTILOS ESTILO FIFA === */
+
+.carousel-wrapper {
+    /* Este es el nuevo contenedor principal */
+    position: relative;
+}
+
+.worldCupSwiper {
+    /* Le quitamos el padding lateral al carrusel */
+    padding-top: 10px;
+    padding-bottom: 20px;
+}
+
+/* --- Estilo de las Tarjetas --- */
+.world-cup-card {
+    /* 1. Quitamos fondo, borde y sombra para un look limpio */
+    background: none;
+    backdrop-filter: none;
+    border: none;
+    border-radius: 0;
+    text-align: center;
+    cursor: pointer;
+    overflow: visible; /* Permitimos que la sombra de la imagen se vea */
+}
+
+.world-cup-card:hover img {
+    /* 2. Efecto sutil al pasar el mouse sobre la tarjeta */
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.world-cup-card img {
+    width: 100%;
+    height: 220px; /* Ajusta la altura si es necesario */
+    object-fit: cover;
+    display: block;
+    border-radius: 12px; /* Esquinas redondeadas como en la web de FIFA */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.world-cup-info {
+    padding: 1rem 0.5rem;
+}
+
+.world-cup-info h3 {
+    color: #fff;
+    font-size: 1.1rem; /* Un poco más pequeño y limpio */
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+}
+
+/* --- Estilo y Posición de las Flechas --- */
+.swiper-navigation {
+    /* 3. Posicionamos el contenedor de las flechas */
+    display: flex;
+    justify-content: flex-end; /* Las alineamos a la derecha */
+    gap: 0.5rem;
+    margin-top: 1rem; /* Espacio entre el carrusel y las flechas */
+    padding-right: 10px;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    /* 4. Les damos el estilo de círculo con borde */
+    position: static; /* Reseteamos la posición que Swiper les da por defecto */
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    color: #ffffff;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+}
+
+.swiper-button-next::after,
+.swiper-button-prev::after {
+    font-size: 16px; /* Hacemos los íconos de flecha más pequeños */
+    font-weight: bold;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* === ESTILOS PARA LA NUEVA SECCIÓN DE CLASIFICACIONES === */
+
+.rankings-section {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 2rem auto; /* Añade espacio arriba y abajo */
+}
+
+/* Contenedor de las dos columnas */
+.rankings-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* Estilos generales para cada columna */
+.ranking-column {
+    display: flex;
+    flex-direction: column;
+}
+.ranking-header {
+    margin-bottom: 1rem;
+    
+}
+.ranking-header h2 {
+    font-size: 1.5rem;
+    color: #ffffff; /* Color de texto blanco para tema oscuro */
+}
+.ranking-header span {
+    font-size: 0.9rem;
+    color: #bbb; /* Color de texto gris claro */
+}
+
+/* Estilo de la tabla */
+.ranking-table {
+    background-color: #0d2818; /* Fondo oscuro para que combine */
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    flex-grow: 1;
+}
+
+/* Filas (tanto header como body) */
+.table-header, .table-row {
+    display: grid;
+    align-items: center;
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+}
+.ranking-table .table-header {
+    color: #888;
+    font-weight: 600;
+    font-size: 1.0rem; /* <-- AHORA PUEDES CAMBIAR ESTE VALOR */
+    text-transform: uppercase;
+}
+.table-row:last-child {
+    border-bottom: none;
+}
+.table-row {
+    font-weight: 500;
+    color: #fff;
+    
+}
+
+/* Definición de columnas para la tabla de Ranking FIFA */
+.rankings-container .ranking-column:first-child .table-header,
+.rankings-container .ranking-column:first-child .table-row {
+    grid-template-columns: 50px 1fr 120px 100px;
+}
+/* Definición de columnas para las tablas de eliminatorias */
+.qualifiersSwiper .table-header,
+.qualifiersSwiper .table-row {
+    grid-template-columns: 50px 1fr 80px 80px;
+}
+
+/* Estilo de las celdas individuales */
+.col-rank { text-align: center; }
+.col-team { display: flex; align-items: center; gap: 0.75rem; }
+.col-team .flag { font-size: 1.5rem; }
+.col-points, .col-change, .col-played { text-align: right; }
+.col-change.positive { color: #00ff88; }
+.col-change.negative { color: #ff4d4d; }
+
+/* Botón inferior */
+.btn-view-full {
+    background-color: rgba(0, 255, 136, 0.1);
+    color: #00ff88;
+    text-align: center;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+.btn-view-full:hover {
+    background-color: rgba(0, 255, 136, 0.2);
+}
+
+/* --- Estilos para el Carrusel de la Derecha --- */
+.qualifiersSwiper {
+    height: 100%;
+}
+.swiper-slide {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Paginación personalizada */
+/* Apuntamos al nuevo nombre único */
+.qualifiers-pagination {
+    position: static;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center; /* Centramos los botones */
+    gap: 0.5rem;
+}
+.qualifiers-pagination .swiper-pagination-bullet {
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    background-color: rgba(0, 255, 136, 0.1);
+    color: #00ff88;
+    font-weight: 600;
+    opacity: 0.7;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+}
+.qualifiers-pagination .swiper-pagination-bullet-active {
+    opacity: 1;
+    background-color: #00ff88;
+    color: #0d2818;
+}
+
+@media (max-width: 900px) {
+    .rankings-container {
+        grid-template-columns: 1fr; /* Una columna en pantallas pequeñas */
+    }
+}
+
+
+
+
+/*TABLA DE GRUPOS UEFA === */
+
+.header-with-selector {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.group-selector {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+/* Contenedor específico de la tabla UEFA */
+.uefa-table .table-header,
+.uefa-table .table-row {
+    display: grid;
+    /* [Pos] [Club] [PJ] [G] [E] [P] [GF] [GC] [DG] [Pts] */
+    grid-template-columns: 25px 1.8fr repeat(8, 1fr);
+    gap: 0.75rem;
+    align-items: center;
+    text-align: center;
+    font-size: 1.0rem;
+    padding: 1.2rem 0.5rem;
+}
+
+/* Estilo para el nombre del club y la bandera */
+.uefa-table .col-team-uefa {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+}
+
+/* Estilo para las celdas de estadísticas */
+.uefa-table .col-pj,
+.uefa-table .col-g,
+.uefa-table .col-e,
+.uefa-table .col-p,
+.uefa-table .col-gf,
+.uefa-table .col-gc,
+.uefa-table .col-dg {
+    color: #bbb;
+}
+
+/* Estilo para los Puntos (Pts) */
+.uefa-table .col-pts {
+    font-weight: 700;
+    color: #fff !important;
+}
+
+/* Estilo para el header de la tabla UEFA */
+.uefa-table .table-header {
+    color: #888;
+    font-size: 1.0rem;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+
+
+/*botones de cambair conmebol y europa eliminatorias*/
+
+.qualifiers-navigation {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    gap: 10px;
+}
+.btn-qualifier {
+    background: #111;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-size: 14px;
+}
+.btn-qualifier:hover {
+    background: #333;
+}
+
+
+
+
+
+
+
+/* === ESTILOS PARA EL FOOTER === */
+
+.site-footer {
+    background-color: #0a140d; /* Un negro un poco más suave que el fondo */
+    color: #888;
+    padding: 3rem 2rem;
+    border-top: 1px solid #2f3336; /* Línea separadora sutil */
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-logo img {
+    width: 100px;
+    margin-bottom: 1rem;
+}
+
+.footer-logo p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    max-width: 300px;
+}
+
+.footer-links h4,
+.footer-social h4 {
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.footer-links ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links ul li {
+    margin-bottom: 0.75rem;
+}
+
+.footer-links a {
+    color: #888;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.footer-links a:hover {
+    color: #00ff88;
+}
+
+.footer-social a {
+    color: #888;
+    font-size: 1.5rem;
+    margin-right: 1.5rem;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.footer-social a:hover {
+    color: #00ff88;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid #2f3336;
+    font-size: 0.9rem;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* === ESTILOS PARA LA NUEVA SECCIÓN DE NOTICIAS === */
+
+.news-section {
+    margin-bottom: 3rem; /* Espacio debajo de la sección */
+}
+
+.news-grid {
+    display: grid;
+    /* Crea una rejilla responsive que se adapta al tamaño de la pantalla */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.news-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Alinea el texto en la parte de abajo */
+    min-height: 400px;
+    border-radius: 12px;
+    overflow: hidden; /* Asegura que la imagen no se salga de los bordes redondeados */
+    position: relative;
+    text-decoration: none;
+    
+    /* Estilos para la imagen de fondo */
+    background-size: cover;
+    background-position: center;
+
+    transition: transform 0.3s ease;
+}
+
+.news-card:hover {
+    transform: translateY(-5px); /* Efecto de "levantar" la tarjeta */
+}
+
+/* Capa oscura para que el texto se lea mejor sobre la imagen */
+.news-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 50%);
+    z-index: 1; /* Se asegura que esté entre la imagen y el texto */
+}
+
+.news-card-content {
+    padding: 1.5rem;
+    position: relative;
+    z-index: 2; /* Pone el contenido por encima de la capa oscura */
+}
+
+.news-card-category {
+    display: inline-block;
+    background-color: #00ff88;
+    color: #000;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.news-card-content h3 {
+    font-family: 'Montserrat', sans-serif;
+    color: #fff;
+    font-size: 1.4rem;
+    margin: 0;
+    line-height: 1.3;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* === ESTILOS PARA SECCIONES DE LEYENDAS === */
+
+.section-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #00ff88;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* --- Tabla de Goleadores --- */
+.table-container {
+    background-color: #0d2818;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 4rem; /* Espacio para separar de la siguiente sección */
+}
+
+.table-container .table-header, 
+.table-container .scorer-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 100px;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+}
+
+.table-container .table-header {
+    color: #888;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.scorer-row {
+    color: #fff;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+}
+.scorer-row:last-child { border-bottom: none; }
+.scorer-row:nth-child(even) { background-color: rgba(0, 0, 0, 0.2); }
+
+.scorer-rank { font-weight: bold; color: #888; }
+.scorer-name { display: flex; align-items: center; gap: 1rem; }
+.flag-img { width: 25px; }
+.scorer-goals { font-weight: bold; font-size: 1.2rem; text-align: center; }
+
+/* --- Galería Balón de Oro --- */
+.golden-ball-section {
+    margin-top: 4rem;
+}
+
+.winners-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.winner-card {
+    background-color: #0d2818;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 12px;
+    text-align: center;
+    padding: 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.winner-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.15);
+}
+
+.winner-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #00ff88;
+    margin-bottom: 1rem;
+}
+
+.year-badge {
+    background-color: #00ff88;
+    color: #000;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 1rem;
+}
+
+.winner-info h3 { margin: 0.5rem 0; font-family: 'Montserrat', sans-serif; font-size: 1.4rem; color: #fff; }
+.winner-info p { margin: 0; color: #888; font-size: 1rem; }

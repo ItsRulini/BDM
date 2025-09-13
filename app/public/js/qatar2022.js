@@ -1,26 +1,26 @@
-// Datos de ejemplo para el nuevo diseño
-const allPosts = [
+// Datos de ejemplo específicos del Mundial Qatar 2022
+const qatar2022Posts = [
     {
-        id: 1, user: "Diego_Futbol", handle: "@diegofut", avatar: "assets/default-avatar.png", time: "2h",
-        content: "No puedo creer lo que acabo de ver. Esa jugada de Messi en el minuto 89 fue simplemente mágica. Argentina sigue demostrando por qué son los campeones del mundo.",
-        image: null,
-        comments: 89, retweets: 34, likes: 245
+        id: 1, user: "AlbicelesteFan", handle: "@argcampeon", avatar: "assets/default-avatar.png", time: "1h",
+        content: "¡POR FIN! 36 años después, somos campeones del mundo. Gracias eternas a Messi y a todo el equipo. ¡Qué final de infarto!",
+        image: "https://e00-marca.uecdn.es/assets/multimedia/imagenes/2022/12/18/1671388 marca_18_12_22_arg_fra_partido_final_mundial_qatar_2022_12_crop1671391583279.jpg",
+        comments: 1204, retweets: 890, likes: 5400
     },
     {
-        id: 2, user: "Mundial Fan", handle: "@mundial2022fan", avatar: "assets/default-avatar.png", time: "4h",
-        content: "He compilado los 20 mejores goles del mundial de Qatar. Desde el golazo de Richarlison hasta el tiro libre perfecto de Messi. ¿Cuál fue tu favorito?",
+        id: 2, user: "AnalistaTáctico", handle: "@futbolpro", avatar: "assets/default-avatar.png", time: "3h",
+        content: "La actuación de Marruecos en este mundial pasará a la historia. Demostraron que con orden táctico y corazón se puede competir contra cualquiera. ¡Increíble semifinal!",
+        image: null,
+        comments: 256, retweets: 180, likes: 980
+    },
+    {
+        id: 3, user: "GolesMemorables", handle: "@golazos", avatar: "assets/default-avatar.png", time: "5h",
+        content: "El gol de chilena de Richarlison contra Serbia. Sin duda, el mejor gol de todo el torneo. Pura magia brasileña. 🇧🇷✨",
         image: "https://e00-marca.uecdn.es/assets/multimedia/imagenes/2022/11/24/16693214479986.jpg",
-        comments: 67, retweets: 23, likes: 189
-    },
-    {
-        id: 4, user: "Leo Messi Fan", handle: "@leomessifan", avatar: "assets/default-avatar.png", time: "30m",
-        content: "Después de ganar el Mundial, ya no hay discusión posible. Leo demostró que es el mejor de todos los tiempos. #GOAT",
-        image: null,
-        comments: 23, retweets: 8, likes: 67
+        comments: 450, retweets: 320, likes: 2100
     }
 ];
 
-// Función para crear la tarjeta de una publicación
+// Función para crear la tarjeta de una publicación (sin cambios)
 function createPostCard(post) {
     return `
         <article class="post">
@@ -50,7 +50,8 @@ function createPostCard(post) {
 
 // Función para mostrar las publicaciones en el feed
 function displayPosts(posts) {
-    const feedContainer = document.getElementById('posts-feed');
+    // Apuntamos al nuevo ID del contenedor de esta página
+    const feedContainer = document.getElementById('posts-feed-qatar2022');
     if (feedContainer) {
         feedContainer.innerHTML = posts.map(post => createPostCard(post)).join('');
     }
@@ -58,5 +59,6 @@ function displayPosts(posts) {
 
 // Se ejecuta cuando la página ha cargado
 document.addEventListener('DOMContentLoaded', function() {
-    displayPosts(allPosts);
+    // Usamos la nueva variable de datos
+    displayPosts(qatar2022Posts);
 });

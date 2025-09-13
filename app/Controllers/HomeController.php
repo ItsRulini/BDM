@@ -22,4 +22,9 @@ class HomeController {
         // Aquí puedes cargar la vista de about o hacer cualquier otra lógica necesaria
         require '../Views/about.html';
     }
+
+    public function categorias() {
+        
+        require '../Views/categorias.html';
+    }
 }
