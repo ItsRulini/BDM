@@ -393,10 +393,10 @@
         font-size: 0.85rem;
     }
 
-    .search-filters {
+    /* .search-filters {
         flex-direction: column;
         gap: 0.5rem;
-    }
+    } */
 
     .search-filters select {
         width: 100%;
@@ -1007,10 +1007,10 @@
         font-size: 0.85rem;
     }
 
-    .search-filters {
+    /* .search-filters {
         flex-direction: column;
         gap: 0.5rem;
-    }
+    } */
 
     .search-filters select {
         width: 100%;

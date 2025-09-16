@@ -7,7 +7,7 @@ class AdminController {
 
     public function crearMundial() {
         // Lógica para la gestión del Mundial
-        require_once '../Views/Users/Admin/mundial.html';
+        require_once '../Views/Users/Admin/mundialAdmin.html';
     }
     public function editarMundial($id) {
         // El parámetro $id se recibe desde la ruta o el request
@@ -16,7 +16,7 @@ class AdminController {
         // Ejemplo de uso:
         // $datosMundial = ModeloMundial::obtenerPorId($id);
         //echo "Editando mundial con ID: " . htmlspecialchars($id);
-        require_once '../Views/Users/Admin/mundial.html';
+        require_once '../Views/Users/Admin/mundialAdmin.html';
     }
 
 

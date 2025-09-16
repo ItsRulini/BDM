@@ -9,10 +9,7 @@ class HomeController {
         // Aquí puedes cargar la vista de publicaciones o hacer cualquier otra lógica necesaria
         require '../Views/posts.html';
     }
-    // public function makePost() {
-    //     // Aquí puedes cargar la vista de publicaciones o hacer cualquier otra lógica necesaria
-    //     require '../Views/makePost.html';
-    // }
+    
     public function registro() {
         // Aquí puedes cargar la vista de registro o hacer cualquier otra lógica necesaria
         require '../Views/registro.html';
@@ -22,7 +19,7 @@ class HomeController {
         require '../Views/login.html';
     }
 
-    public function mundial() {
+    public function mundial($id) {
         
         require '../Views/mundial.html';
     }

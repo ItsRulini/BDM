@@ -1,326 +1,194 @@
-.mundial-form {
-    max-width: 800px;
-    margin: 2rem auto;
-}
+/* Estilos para la página específica de un mundial */
 
-.mundial-preview {
-    text-align: center;
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 2rem;
-    background: rgba(0, 255, 136, 0.1);
-    border-radius: 12px;
-    border: 2px solid #00ff88;
-    margin-bottom: 2rem;
 }
 
-#mundialTitle {
-    font-size: 2.5rem;
-    color: #00ff88;
-    margin-bottom: 0.5rem;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-}
-
-#mundialSubtitle {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 1.1rem;
-}
-
-.country-selector {
+/* --- HEADER ---
+.mundial-header {
+    height: 350px;
+    border-radius: 16px;
+    background-size: cover;
+    background-position: center;
     position: relative;
-}
-
-.selected-countries {
-    min-height: 60px;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(0, 255, 136, 0.3);
-    border-radius: 8px;
-    margin-bottom: 1rem;
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.placeholder-text {
-    color: rgba(255, 255, 255, 0.6);
-    font-style: italic;
-}
-
-.country-tag {
-    background: #00ff88;
-    color: #000;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.country-tag:hover {
-    background: #00cc6a;
-    transform: scale(0.95);
-}
-
-.country-dropdown {
-    background: rgba(0, 0, 0, 0.9);
-    border: 1px solid rgba(0, 255, 136, 0.3);
-    border-radius: 8px;
-    max-height: 300px;
+    align-items: flex-end;
+    padding: 2.5rem;
+    margin-bottom: 2.5rem;
     overflow: hidden;
 }
 
-.country-search {
+.header-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+    z-index: 1;
+} */
+
+#mundial-name {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    color: #fff;
     position: relative;
-    padding: 1rem;
+    z-index: 2;
+    text-shadow: 2px 2px 12px rgba(0,0,0,0.6);
+    margin-bottom: 3rem;
+}
+
+/* --- CONTENIDO PRINCIPAL --- */
+.mundial-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem; /* Espacio entre las tarjetas */
+}
+
+/* --- ESTILO GENERAL DE LAS TARJETAS --- */
+.mundial-card {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    overflow: hidden;
+}
+
+.card-header {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1.25rem 1.75rem;
     border-bottom: 1px solid rgba(0, 255, 136, 0.2);
 }
 
-.country-search input {
+.card-header h2 {
+    font-size: 1.3rem;
+    color: #00ff88;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.card-body {
+    padding: 1.75rem;
+}
+
+/* --- TARJETA DE DESCRIPCIÓN --- */
+.description-card .card-body p {
+    line-height: 1.7;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 1rem;
+}
+
+.description-card .card-body p:last-child {
+    margin-bottom: 0;
+}
+
+/* --- TARJETA DE GALERÍA --- */
+.gallery-card .card-body {
+    padding: 1rem; /* Menos padding para que el carrusel se ajuste mejor */
+}
+
+.media-swiper {
     width: 100%;
-    padding: 0.8rem 2.5rem 0.8rem 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(0, 255, 136, 0.3);
-    border-radius: 8px;
-    color: #fff;
-}
-
-.country-search i {
-    position: absolute;
-    right: 1.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #00ff88;
-}
-
-.country-list {
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 0.5rem 0;
-}
-
-.country-item {
-    padding: 1rem 1.5rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    color: #fff;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.country-item:hover {
-    background: rgba(0, 255, 136, 0.2);
-}
-
-.country-item:last-child {
-    border-bottom: none;
-}
-
-.multimedia-container {
-    position: relative;
-    background: rgba(0, 0, 0, 0.3);
+    height: 400px;
     border-radius: 12px;
-    padding: 1rem;
-    border: 2px dashed rgba(0, 255, 136, 0.3);
-    transition: border-color 0.3s ease;
 }
 
-.multimedia-container:hover {
-    border-color: #00ff88;
-}
-
-.multimedia-carousel {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    padding: 1rem 0;
-    min-height: 200px;
-    align-items: center;
-}
-
-.multimedia-carousel::-webkit-scrollbar {
-    height: 8px;
-}
-
-.multimedia-carousel::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-.multimedia-carousel::-webkit-scrollbar-thumb {
-    background: #00ff88;
-    border-radius: 4px;
-}
-
-.upload-placeholder {
-    min-width: 200px;
-    height: 150px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px dashed rgba(0, 255, 136, 0.5);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    flex-shrink: 0;
-}
-
-.upload-placeholder:hover {
-    background: rgba(0, 255, 136, 0.1);
-    border-color: #00ff88;
-}
-
-.upload-placeholder i {
-    font-size: 2rem;
-    color: #00ff88;
-    margin-bottom: 0.5rem;
-}
-
-.upload-placeholder p {
-    color: #fff;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-}
-
-.upload-placeholder span {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-}
-
-.media-item {
-    min-width: 150px;
-    height: 150px;
-    position: relative;
-    border-radius: 8px;
-    overflow: hidden;
-    flex-shrink: 0;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-}
-
-.media-item:hover {
-    transform: scale(1.05);
-}
-
-.media-item img,
-.media-item video {
+.media-swiper .swiper-slide img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.media-item .file-icon {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 255, 136, 0.2);
-    color: #00ff88;
-    font-size: 2rem;
-}
-
-.media-item .remove-btn {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: rgba(255, 68, 68, 0.9);
+.media-swiper .swiper-button-next,
+.media-swiper .swiper-button-prev {
     color: #fff;
-    border: none;
+    background-color: rgba(0,0,0,0.3);
     border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    width: 50px;
+    height: 50px;
+}
+.media-swiper .swiper-button-next:after,
+.media-swiper .swiper-button-prev:after {
+    font-size: 1.5rem;
 }
 
-.media-item:hover .remove-btn {
-    opacity: 1;
+/* --- SECCIÓN DEL BOTÓN A POSTS --- */
+.posts-link-section {
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 16px;
+    text-align: center;
+    padding: 2.5rem;
 }
 
-.carousel-controls {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 1rem;
+.posts-link-section h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.8rem;
+    color: #fff;
+    margin: 0 0 0.75rem 0;
 }
 
-.carousel-btn {
-    background: rgba(0, 255, 136, 0.2);
-    border: 1px solid #00ff88;
-    color: #00ff88;
-    padding: 0.8rem;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 45px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.posts-link-section p {
+    margin-bottom: 2rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.carousel-btn:hover {
+.btn-ver-posts {
     background: #00ff88;
     color: #000;
+    text-decoration: none;
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    display: inline-block;
 }
 
-.carousel-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.btn-ver-posts:hover {
+    background: #00cc6a;
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 255, 136, 0.25);
 }
 
-textarea {
-    width: 100%;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 255, 136, 0.3);
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    font-family: inherit;
-    resize: vertical;
-    min-height: 120px;
-}
-
-textarea:focus {
-    outline: none;
-    border-color: #00ff88;
-}
-
-textarea::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-}
-
+/* --- RESPONSIVE DESIGN --- */
 @media (max-width: 768px) {
-    .mundial-form {
-        margin: 1rem;
+    .main-content {
+        padding: 1rem;
+    }
+    
+    .mundial-header {
+        height: 250px;
         padding: 1.5rem;
     }
 
-    #mundialTitle {
-        font-size: 2rem;
+    #mundial-name {
+        font-size: 2.2rem;
     }
 
-    .multimedia-carousel {
-        min-height: 150px;
+    .card-header h2 {
+        font-size: 1.1rem;
     }
 
-    .media-item {
-        min-width: 120px;
-        height: 120px;
+    .card-body {
+        padding: 1.25rem;
     }
 
-    .upload-placeholder {
-        min-width: 150px;
-        height: 120px;
+    .media-swiper {
+        height: 250px;
+    }
+
+    .posts-link-section h3 {
+        font-size: 1.5rem;
     }
 }

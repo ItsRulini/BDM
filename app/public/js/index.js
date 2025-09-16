@@ -157,10 +157,8 @@ function initWorldCupSwiper() {
 function goToWorldCupPage(id) {
     console.log(`Redirigiendo a la página del Mundial ${id}`);
     // Aquí podrías redirigir a una página específica para ese mundial, por ejemplo:
-    // window.location.href = `mundial.html?id=${id}`;
+    window.location.href = `index.php?controller=home&action=mundial&id=${id}`;
 }
-
-
 
 
 // Datos de ejemplo
