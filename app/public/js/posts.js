@@ -8,6 +8,8 @@ class PostsManager {
         this.posts = [];
         this.filteredPosts = [];
         this.isLoading = false;
+        this.currentPostId = null;
+        this.postComments = [];
         
         this.initializeElements();
         this.bindEvents();
@@ -26,6 +28,15 @@ class PostsManager {
         this.filterCountry = document.getElementById('filterCountry');
         this.filterCategory = document.getElementById('filterCategory');
         this.orderBy = document.getElementById('orderBy');
+
+        // Elementos del modal de comentarios
+        this.commentsModal = document.getElementById('commentsModal');
+        this.modalOverlay = document.getElementById('modalOverlay');
+        this.newCommentText = document.getElementById('newCommentText');
+        this.commentCharCount = document.getElementById('commentCharCount');
+        this.commentsList = document.getElementById('commentsList');
+        this.noComments = document.getElementById('noComments');
+        this.loadingComments = document.getElementById('loadingComments');
     }
 
     bindEvents() {
@@ -35,8 +46,20 @@ class PostsManager {
         this.filterCategory?.addEventListener('change', () => this.filterAndSearch());
         this.orderBy?.addEventListener('change', () => this.filterAndSearch());
         
-        // Botón del menú móvil
+        // Eventos del modal de comentarios
+        this.modalOverlay?.addEventListener('click', () => this.closeCommentsModal());
+        this.newCommentText?.addEventListener('input', () => this.updateCommentCounter());
+        
+        // Eventos globales
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') this.closeCommentsModal();
+        });
+
+        // Funciones globales
         window.toggleMobileMenu = this.toggleMobileMenu.bind(this);
+        window.closeCommentsModal = this.closeCommentsModal.bind(this);
+        window.clearComment = this.clearComment.bind(this);
+        window.submitComment = this.submitComment.bind(this);
     }
 
     // Utility function para debounce
@@ -56,7 +79,6 @@ class PostsManager {
         this.showLoading(true);
         
         try {
-            // Simulación de carga de datos - aquí conectarías con tu backend
             const mockPosts = this.generateMockPosts();
             
             // Simular delay de red
@@ -101,7 +123,7 @@ class PostsManager {
                 title: "El gol más importante en la historia de los mundiales",
                 content: "Analizamos los goles que cambiaron el curso de la historia en las Copas del Mundo. Desde el gol de Maradona en 1986 hasta el penal de Messi en 2022.",
                 category: "historia",
-                mundial: mundiales[3], // México 1986
+                mundial: mundiales[3],
                 user: users[0],
                 date: "2024-03-15",
                 likes: 234,
@@ -118,7 +140,7 @@ class PostsManager {
                 title: "Estadísticas sorprendentes del Mundial de Qatar 2022",
                 content: "Los números que quizás no conocías del último mundial. Records, datos curiosos y análisis estadístico profundo del torneo más visto de la historia.",
                 category: "estadisticas",
-                mundial: mundiales[2], // Qatar 2022
+                mundial: mundiales[2],
                 user: users[1],
                 date: "2024-03-14",
                 likes: 156,
@@ -134,7 +156,7 @@ class PostsManager {
                 title: "Predicciones para el próximo Mundial 2026",
                 content: "¿Qué selecciones tienen más posibilidades? Análisis detallado de las selecciones favoritas para el Mundial que se disputará en Estados Unidos, México y Canadá.",
                 category: "predicciones",
-                mundial: mundiales[1], // Rusia 2018
+                mundial: mundiales[1],
                 user: users[2],
                 date: "2024-03-13",
                 likes: 189,
@@ -190,9 +212,7 @@ class PostsManager {
             return matchesSearch && matchesMundial && matchesCategory;
         });
 
-        // Aplicar ordenamiento
         this.sortPosts(orderValue);
-        
         this.renderPosts();
         this.updatePostsCounter();
     }
@@ -218,7 +238,6 @@ class PostsManager {
                 this.filteredPosts.sort((a, b) => new Date(a.date) - new Date(b.date));
                 break;
             default:
-                // Orden por defecto: más recientes primero
                 this.filteredPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
         }
     }
@@ -235,10 +254,7 @@ class PostsManager {
         this.showNoResults(false);
         this.postsContainer.innerHTML = this.filteredPosts.map(post => this.createPostHTML(post)).join('');
         
-        // Agregar eventos a los botones de interacción
         this.bindPostInteractions();
-
-        // Inicializar carruseles
         this.initializeCarousels();
 
         // Añadir animación de fade-in
@@ -381,9 +397,259 @@ class PostsManager {
         `;
     }
 
+    // ================================
+    // COMMENTS FUNCTIONALITY
+    // ================================
+
+    async openCommentsModal(postId) {
+        const post = this.posts.find(p => p.id === postId);
+        if (!post) return;
+
+        this.currentPostId = postId;
+        this.showCommentsModal();
+        this.populatePostSummary(post);
+        await this.loadPostComments(postId);
+    }
+
+    showCommentsModal() {
+        if (this.commentsModal && this.modalOverlay) {
+            this.modalOverlay.classList.add('active');
+            this.commentsModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            this.clearComment();
+        }
+    }
+
+    closeCommentsModal() {
+        if (this.commentsModal && this.modalOverlay) {
+            this.commentsModal.classList.remove('active');
+            this.modalOverlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            this.currentPostId = null;
+            this.postComments = [];
+        }
+    }
+
+    populatePostSummary(post) {
+        const title = document.getElementById('commentPostTitle');
+        const author = document.getElementById('commentPostAuthor');
+        const date = document.getElementById('commentPostDate');
+
+        if (title) title.textContent = post.title;
+        if (author) author.textContent = `Por ${post.user.name}`;
+        if (date) date.textContent = this.formatDate(post.date);
+    }
+
+    async loadPostComments(postId) {
+        if (this.loadingComments) {
+            this.loadingComments.style.display = 'flex';
+        }
+        
+        try {
+            // Simular carga de comentarios desde el backend
+            const mockComments = this.generateMockComments(postId);
+            
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            this.postComments = mockComments;
+            this.renderComments();
+        } catch (error) {
+            console.error('Error al cargar comentarios:', error);
+            this.showError('Error al cargar los comentarios');
+        } finally {
+            if (this.loadingComments) {
+                this.loadingComments.style.display = 'none';
+            }
+        }
+    }
+
+    generateMockComments(postId) {
+        const users = [
+            { name: 'Ana García', avatar: 'assets/avatars/user1.jpg' },
+            { name: 'Luis Martínez', avatar: 'assets/avatars/user2.jpg' },
+            { name: 'Sofia López', avatar: 'assets/avatars/user3.jpg' },
+            { name: 'Miguel Torres', avatar: 'assets/avatars/user4.jpg' },
+            { name: 'Carmen Ruiz', avatar: 'assets/avatars/user5.jpg' }
+        ];
+
+        const sampleComments = [
+            "¡Excelente análisis! Me encantó tu perspectiva sobre este mundial.",
+            "Totalmente de acuerdo contigo. Ese mundial fue histórico por muchas razones.",
+            "Muy interesante tu punto de vista. ¿Podrías profundizar más en este tema?",
+            "No había pensado en eso antes. Gracias por compartir esta información.",
+            "Gran post! Me trae muchos recuerdos de ese mundial.",
+            "Interesante teoría, aunque creo que hay otros factores a considerar.",
+            "¡Qué nostalgia! Recuerdo ver ese mundial con mi familia.",
+            "Datos muy útiles. ¿Tienes alguna fuente para profundizar más?",
+            "Me parece una observación muy acertada sobre el fútbol moderno.",
+            "Gracias por tomarte el tiempo de escribir esto tan detalladamente."
+        ];
+
+        const numComments = Math.floor(Math.random() * 8) + 2; // 2-9 comentarios
+        const comments = [];
+
+        for (let i = 0; i < numComments; i++) {
+            const randomUser = users[Math.floor(Math.random() * users.length)];
+            const randomComment = sampleComments[Math.floor(Math.random() * sampleComments.length)];
+            const randomDate = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
+
+            comments.push({
+                id: i + 1,
+                user: randomUser,
+                comment: randomComment,
+                date: randomDate.toISOString().split('T')[0],
+                timestamp: randomDate.toISOString()
+            });
+        }
+
+        // Ordenar por fecha más reciente primero
+        return comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    }
+
+    renderComments() {
+        if (!this.commentsList) return;
+
+        if (this.postComments.length === 0) {
+            this.commentsList.style.display = 'none';
+            this.noComments.style.display = 'block';
+            return;
+        }
+
+        this.commentsList.style.display = 'block';
+        this.noComments.style.display = 'none';
+
+        this.commentsList.innerHTML = this.postComments.map(comment => this.createCommentHTML(comment)).join('');
+    }
+
+    createCommentHTML(comment) {
+        return `
+            <div class="comment-item fade-in">
+                <img src="${comment.user.avatar}" alt="${comment.user.name}" class="comment-avatar" 
+                     onerror="this.src='assets/default-avatar.png'">
+                <div class="comment-content">
+                    <div class="comment-header">
+                        <span class="comment-user">${comment.user.name}</span>
+                        <span class="comment-date">${this.formatTimeAgo(comment.timestamp)}</span>
+                    </div>
+                    <p class="comment-text">${comment.comment}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    updateCommentsCount() {
+        const commentsCount = document.getElementById('commentsCount');
+        if (commentsCount) {
+            commentsCount.textContent = this.postComments.length;
+        }
+    }
+
+    updateCommentCounter() {
+        if (!this.newCommentText || !this.commentCharCount) return;
+
+        const text = this.newCommentText.value;
+        const count = text.length;
+        const maxLength = 500;
+
+        this.commentCharCount.textContent = count;
+
+        const counter = this.commentCharCount.parentElement;
+        counter.classList.remove('warning', 'danger');
+
+        if (count > maxLength * 0.9) {
+            counter.classList.add('danger');
+        } else if (count > maxLength * 0.8) {
+            counter.classList.add('warning');
+        }
+
+        // Habilitar/deshabilitar botón de envío
+        const submitBtn = document.getElementById('submitCommentBtn');
+        if (submitBtn) {
+            submitBtn.disabled = count === 0 || count > maxLength;
+        }
+    }
+
+    clearComment() {
+        if (this.newCommentText) {
+            this.newCommentText.value = '';
+            this.updateCommentCounter();
+        }
+    }
+
+    async submitComment() {
+        if (!this.newCommentText || !this.currentPostId) return;
+
+        const commentText = this.newCommentText.value.trim();
+        if (!commentText) {
+            this.showError('Por favor escribe un comentario');
+            return;
+        }
+
+        if (commentText.length > 500) {
+            this.showError('El comentario no puede superar los 500 caracteres');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitCommentBtn');
+        const originalText = submitBtn.innerHTML;
+        
+        try {
+            // Deshabilitar botón y mostrar carga
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+            // Simular envío al backend
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Crear nuevo comentario
+            const newComment = {
+                id: this.postComments.length + 1,
+                user: { name: 'Tú', avatar: 'assets/default-avatar.png' },
+                comment: commentText,
+                date: new Date().toISOString().split('T')[0],
+                timestamp: new Date().toISOString()
+            };
+
+            // Agregar al principio de la lista
+            this.postComments.unshift(newComment);
+
+            // Actualizar contador en el post original
+            const post = this.posts.find(p => p.id === this.currentPostId);
+            if (post) {
+                post.comments++;
+                // Actualizar el contador en la interfaz del post
+                const postCard = document.querySelector(`[data-post-id="${this.currentPostId}"]`);
+                if (postCard) {
+                    const commentCount = postCard.querySelector('.comment-btn .interaction-count');
+                    if (commentCount) {
+                        commentCount.textContent = post.comments;
+                    }
+                }
+            }
+
+            // Actualizar la vista
+            this.renderComments();
+            this.updateCommentsCount();
+            this.clearComment();
+
+            this.showSuccess('Comentario agregado exitosamente');
+
+        } catch (error) {
+            console.error('Error al enviar comentario:', error);
+            this.showError('Error al enviar el comentario');
+        } finally {
+            // Restaurar botón
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    }
+
+    // ================================
+    // CAROUSEL FUNCTIONALITY
+    // ================================
+
     initializeCarousels() {
         const carousels = this.postsContainer.querySelectorAll('.multimedia-carousel');
-        
         carousels.forEach(carousel => {
             this.setupCarousel(carousel);
         });
@@ -458,6 +724,10 @@ class PostsManager {
         });
     }
 
+    // ================================
+    // POST INTERACTIONS
+    // ================================
+
     bindPostInteractions() {
         // Eventos para botones de like
         const likeButtons = this.postsContainer.querySelectorAll('.like-btn');
@@ -494,7 +764,7 @@ class PostsManager {
             button.style.transform = 'scale(1)';
         }, 150);
 
-        // Aquí enviarías la información al backend
+        // Enviar al backend
         this.sendLikeToServer(postId, post.liked);
     }
 
@@ -502,12 +772,8 @@ class PostsManager {
         const button = event.currentTarget;
         const postId = parseInt(button.dataset.postId);
         
-        // Aquí implementarías la lógica para mostrar/ocultar comentarios
-        // Por ahora solo mostramos una alerta como placeholder
-        alert(`Funcionalidad de comentarios para el post ${postId} - En desarrollo`);
-        
-        // En el futuro, esto podría abrir un modal de comentarios o
-        // navegar a una página de detalle del post
+        // Abrir modal de comentarios
+        this.openCommentsModal(postId);
     }
 
     async sendLikeToServer(postId, liked) {
@@ -528,9 +794,12 @@ class PostsManager {
             console.log(`Like ${liked ? 'agregado' : 'removido'} para post ${postId}`);
         } catch (error) {
             console.error('Error al enviar like:', error);
-            // Aquí podrías revertir el cambio en la UI si falla el servidor
         }
     }
+
+    // ================================
+    // UTILITY FUNCTIONS
+    // ================================
 
     showLoading(show) {
         if (this.loadingSpinner) {
@@ -561,75 +830,102 @@ class PostsManager {
         }
     }
 
-    showError(message) {
-        // Crear elemento de error temporal
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
-        errorDiv.style.cssText = `
-            position: fixed;
-            top: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 0, 0, 0.9);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 10px;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        `;
-        errorDiv.textContent = message;
-        
-        document.body.appendChild(errorDiv);
-        
-        // Remover después de 5 segundos
-        setTimeout(() => {
-            errorDiv.remove();
-        }, 5000);
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
     }
-}
 
-// Funciones utilitarias globales
-function formatTimeAgo(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    
-    const intervals = [
-        { label: 'año', seconds: 31536000 },
-        { label: 'mes', seconds: 2592000 },
-        { label: 'semana', seconds: 604800 },
-        { label: 'día', seconds: 86400 },
-        { label: 'hora', seconds: 3600 },
-        { label: 'minuto', seconds: 60 }
-    ];
-    
-    for (const interval of intervals) {
-        const count = Math.floor(diffInSeconds / interval.seconds);
-        if (count >= 1) {
-            return `hace ${count} ${interval.label}${count > 1 ? 's' : ''}`;
+    formatTimeAgo(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        const intervals = [
+            { label: 'año', seconds: 31536000 },
+            { label: 'mes', seconds: 2592000 },
+            { label: 'semana', seconds: 604800 },
+            { label: 'día', seconds: 86400 },
+            { label: 'hora', seconds: 3600 },
+            { label: 'minuto', seconds: 60 }
+        ];
+        
+        for (const interval of intervals) {
+            const count = Math.floor(diffInSeconds / interval.seconds);
+            if (count >= 1) {
+                return `hace ${count} ${interval.label}${count > 1 ? 's' : ''}`;
+            }
         }
+        
+        return 'hace un momento';
     }
-    
-    return 'hace un momento';
-}
 
-function truncateText(text, maxLength = 150) {
-    if (text.length <= maxLength) return text;
-    return text.substr(0, maxLength) + '...';
-}
+    showSuccess(message) {
+        this.showNotification(message, 'success');
+    }
 
-// Funciones para manejar errores de imágenes
-function handleImageError(img) {
-    img.style.display = 'none';
-    const parent = img.closest('.post-multimedia');
-    if (parent && parent.children.length === 1) {
-        parent.style.display = 'none';
+    showError(message) {
+        this.showNotification(message, 'error');
+    }
+
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'error' ? 'rgba(255, 71, 87, 0.95)' : 'rgba(0, 255, 136, 0.95)'};
+            color: ${type === 'error' ? '#fff' : '#000'};
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            font-weight: 500;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+
+        setTimeout(() => {
+            notification.style.transform = 'translateX(400px)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 4000);
+
+        notification.addEventListener('click', () => {
+            notification.style.transform = 'translateX(400px)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        });
     }
 }
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    // Verificar que estamos en la página de posts
     if (document.getElementById('postsContainer')) {
         window.postsManager = new PostsManager();
     }
@@ -648,23 +944,3 @@ document.addEventListener('click', (event) => {
         hamburger.classList.remove('active');
     }
 });
-
-// Lazy loading para imágenes (opcional)
-if ('IntersectionObserver' in window) {
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove('lazy');
-                observer.unobserve(img);
-            }
-        });
-    });
-
-    // Observer para imágenes lazy
-    document.addEventListener('DOMContentLoaded', () => {
-        const lazyImages = document.querySelectorAll('img[data-src]');
-        lazyImages.forEach(img => imageObserver.observe(img));
-    });
-}   

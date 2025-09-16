@@ -114,6 +114,92 @@
         </section>
     </main>
 
+    <!-- Modal de Comentarios -->
+    <div id="commentsModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2><i class="fas fa-comments"></i> Comentarios</h2>
+                <button class="close-btn" onclick="closeCommentsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="comments-section">
+                    <!-- Información del post -->
+                    <div class="post-summary">
+                        <div class="post-summary-content">
+                            <h3 id="commentPostTitle">Título del post</h3>
+                            <div class="post-summary-meta">
+                                <span id="commentPostAuthor">Por Usuario</span>
+                                <span id="commentPostDate">Fecha</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulario para nuevo comentario -->
+                    <div class="new-comment-section">
+                        <div class="comment-form">
+                            <div class="comment-input-group">
+                                <img src="assets/default-avatar.png" alt="Tu avatar" class="comment-avatar">
+                                <div class="comment-input-container">
+                                    <textarea 
+                                        id="newCommentText" 
+                                        placeholder="Escribe tu comentario aquí..." 
+                                        rows="3"
+                                        maxlength="500"></textarea>
+                                    <div class="comment-counter">
+                                        <span id="commentCharCount">0</span>/500
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="comment-actions">
+                                <button id="cancelCommentBtn" class="btn-cancel" onclick="clearComment()">
+                                    Cancelar
+                                </button>
+                                <button id="submitCommentBtn" class="btn-submit" onclick="submitComment()">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Comentar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de comentarios existentes -->
+                    <div class="comments-list-section">
+                        <div class="comments-header">
+                            <h4>
+                                <i class="fas fa-comment"></i>
+                                <span id="commentsCount">0</span> Comentarios
+                            </h4>
+                            <div class="comments-sort">
+                                <select id="commentsSortBy">
+                                    <option value="newest">Más recientes</option>
+                                    <option value="oldest">Más antiguos</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div id="commentsList" class="comments-list">
+                            <!-- Los comentarios se cargarán aquí -->
+                        </div>
+
+                        <div id="noComments" class="no-comments" style="display: none;">
+                            <i class="fas fa-comment-slash"></i>
+                            <h4>Sin comentarios aún</h4>
+                            <p>¡Sé el primero en comentar esta publicación!</p>
+                        </div>
+
+                        <div id="loadingComments" class="loading-comments" style="display: none;">
+                            <div class="small-spinner"></div>
+                            <span>Cargando comentarios...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay para modal -->
+    <div id="modalOverlay" class="modal-overlay"></div>
+
     <footer class="site-footer">
         <div class="footer-content">
             <div class="footer-logo">

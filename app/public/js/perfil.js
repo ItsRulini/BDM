@@ -1,3 +1,8 @@
+/**
+ * Profile Page JavaScript
+ * Maneja toda la funcionalidad de la página de perfil de usuario
+ */
+
 class ProfileManager {
     constructor() {
         this.currentTab = 'approved';
@@ -31,7 +36,12 @@ class ProfileManager {
         // Display elements
         this.userPostsGrid = document.getElementById('userPostsGrid');
         this.noPosts = document.getElementById('noPosts');
-    
+        
+        // Counter elements
+        this.approvedCount = document.getElementById('approvedCount');
+        this.pendingCount = document.getElementById('pendingCount');
+        this.rejectedCount = document.getElementById('rejectedCount');
+        
         // Character counter
         this.postContent = document.getElementById('postContent');
         this.charCount = document.getElementById('charCount');
@@ -42,11 +52,6 @@ class ProfileManager {
 
         // Tabs y post grid
         this.tabs = document.querySelectorAll('.tab-btn');
-
-        // Counter elements
-        this.approvedCount = document.getElementById('approvedCount');
-        this.pendingCount = document.getElementById('pendingCount');
-        this.rejectedCount = document.getElementById('rejectedCount');
     }
 
     bindEvents() {
@@ -82,6 +87,7 @@ class ProfileManager {
                 this.showPosts(status);
             });
         });
+
 
         // Global functions
         window.toggleMobileMenu = this.toggleMobileMenu.bind(this);
@@ -330,9 +336,10 @@ class ProfileManager {
         const config = statusConfig[post.status];
         const formattedDate = this.formatDate(post.fechaCreacion);
         const categories = Array.isArray(post.categorias) ? post.categorias.join(', ') : post.categorias;
+        const isClickable = post.status === 'approved';
 
         return `
-            <div class="post-card fade-in">
+            <div class="post-card fade-in ${isClickable ? 'clickable' : ''}" ${isClickable ? `onclick="profileManager.openPostStats(${post.id})"` : ''}>
                 <h4>${post.title}</h4>
                 <p>${this.truncateText(post.content, 150)}</p>
                 <div class="post-meta">
@@ -343,6 +350,7 @@ class ProfileManager {
                 <div class="post-status ${config.class}">
                     <i class="${config.icon}"></i> ${config.text}
                 </div>
+                ${isClickable ? '<div class="click-hint"><i class="fas fa-chart-line"></i> Click para ver estadísticas</div>' : ''}
             </div>
         `;
     }
@@ -434,9 +442,9 @@ class ProfileManager {
     populateInfoForm() {
         // Simular datos actuales del usuario
         const currentData = {
-            nombre: "Juan Alejandro",
-            apellidoPaterno: "Villarreal", 
-            apellidoMaterno: "Mojica",
+            nombre: "Villa",
+            apellidoPaterno: "González", 
+            apellidoMaterno: "Mendez",
             correo: "villa.vi@example.com",
             genero: "Masculino",
             fechaNacimiento: "1998-05-15",
@@ -718,6 +726,33 @@ class ProfileManager {
         this.updateCategoryCounter();
     }
 
+    // ================================
+    // VALIDATION
+    // ================================
+
+    validatePasswordStrength() {
+        const password = document.getElementById('newPassword').value;
+        const strengthIndicator = document.getElementById('passwordStrength');
+        
+        if (!strengthIndicator) return;
+
+        let strength = 'weak';
+        let message = 'Muy débil';
+        
+        if (password.length >= 8) {
+            strength = 'medium';
+            message = 'Media';
+            
+            if (password.match(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)) {
+                strength = 'strong';
+                message = 'Fuerte';
+            }
+        }
+
+        strengthIndicator.className = `password-strength ${strength}`;
+        strengthIndicator.innerHTML = `<i class="fas fa-shield-alt"></i> ${message}`;
+    }
+
     validatePasswordMatch() {
         const newPassword = document.getElementById('newPassword').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
@@ -782,7 +817,7 @@ class ProfileManager {
     logout() {
         if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
             // Aquí redirigirias al logout del backend
-            window.location.href = 'index.php?controller=home&action=index';
+            window.location.href = 'index.php?controller=auth&action=logout';
         }
     }
 
@@ -800,12 +835,145 @@ class ProfileManager {
         return text.substr(0, maxLength) + '...';
     }
 
-    formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    // ================================
+    // POST STATISTICS
+    // ================================
+
+    openPostStats(postId) {
+        const post = this.userPosts.find(p => p.id === postId);
+        if (!post || post.status !== 'approved') {
+            this.showError('Solo se pueden ver estadísticas de publicaciones aprobadas');
+            return;
+        }
+
+        this.loadPostStatistics(post);
+        this.showModal('postStatsModal');
+    }
+
+    async loadPostStatistics(post) {
+        // Simular datos de estadísticas - aquí conectarías con tu backend
+        const mockStats = {
+            views: Math.floor(Math.random() * 1000) + 50,
+            likes: post.likes || Math.floor(Math.random() * 200) + 10,
+            comments: post.comments || Math.floor(Math.random() * 50) + 5,
+            likedBy: [
+                { name: 'Ana García', avatar: 'assets/avatars/user1.jpg', date: '2024-12-10' },
+                { name: 'Luis Martínez', avatar: 'assets/avatars/user2.jpg', date: '2024-12-09' },
+                { name: 'Sofia López', avatar: 'assets/avatars/user3.jpg', date: '2024-12-08' },
+                { name: 'Miguel Torres', avatar: 'assets/avatars/user4.jpg', date: '2024-12-07' }
+            ],
+            recentComments: [
+                {
+                    user: 'Ana García',
+                    avatar: 'assets/avatars/user1.jpg',
+                    comment: '¡Excelente análisis! Me encantó tu perspectiva sobre este mundial.',
+                    date: '2024-12-10'
+                },
+                {
+                    user: 'Luis Martínez', 
+                    avatar: 'assets/avatars/user2.jpg',
+                    comment: 'Totalmente de acuerdo contigo. Ese mundial fue histórico.',
+                    date: '2024-12-09'
+                },
+                {
+                    user: 'Sofia López',
+                    avatar: 'assets/avatars/user3.jpg', 
+                    comment: 'Muy interesante tu punto de vista. ¿Podrías profundizar más?',
+                    date: '2024-12-08'
+                }
+            ]
+        };
+
+        this.displayPostStatistics(post, mockStats);
+    }
+
+    displayPostStatistics(post, stats) {
+        // Actualizar información del post
+        document.getElementById('statsPostTitle').textContent = post.title;
+        document.getElementById('statsPostContent').textContent = post.content;
+        document.getElementById('statsPostDate').textContent = `Publicado el ${this.formatDate(post.fechaCreacion)}`;
+        document.getElementById('statsPostMundial').textContent = post.mundial;
+
+        // Actualizar números de estadísticas
+        document.getElementById('statsViews').textContent = stats.views.toLocaleString();
+        document.getElementById('statsLikes').textContent = stats.likes.toLocaleString();
+        document.getElementById('statsComments').textContent = stats.comments.toLocaleString();
+
+        // Mostrar usuarios que dieron like
+        this.displayLikesList(stats.likedBy);
+        
+        // Mostrar comentarios recientes
+        this.displayCommentsList(stats.recentComments);
+        
+        // Asegurar que el tab de likes esté activo por defecto
+        this.showInteractionTab('likes');
+    }
+
+    displayLikesList(likedBy) {
+        const likesList = document.getElementById('likesList');
+        if (!likesList) return;
+
+        if (likedBy.length === 0) {
+            likesList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-heart-broken"></i>
+                    <h4>Sin likes aún</h4>
+                    <p>Sé el primero en dar like a esta publicación</p>
+                </div>
+            `;
+            return;
+        }
+
+        likesList.innerHTML = likedBy.map(user => `
+            <div class="user-item">
+                <img src="${user.avatar}" alt="${user.name}" onerror="this.src='assets/default-avatar.png'">
+                <div class="user-info">
+                    <div class="user-name">${user.name}</div>
+                    <div class="user-date">Le gustó el ${this.formatDate(user.date)}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    displayCommentsList(comments) {
+        const commentsList = document.getElementById('commentsList');
+        if (!commentsList) return;
+
+        if (comments.length === 0) {
+            commentsList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-comment-slash"></i>
+                    <h4>Sin comentarios aún</h4>
+                    <p>Sé el primero en comentar esta publicación</p>
+                </div>
+            `;
+            return;
+        }
+
+        commentsList.innerHTML = comments.map(comment => `
+            <div class="comment-item">
+                <div class="comment-header">
+                    <img src="${comment.avatar}" alt="${comment.user}" onerror="this.src='assets/default-avatar.png'">
+                    <span class="comment-user">${comment.user}</span>
+                    <span class="comment-date">${this.formatDate(comment.date)}</span>
+                </div>
+                <div class="comment-text">${comment.comment}</div>
+            </div>
+        `).join('');
+    }
+
+    showInteractionTab(tabName) {
+        // Remover clase active de todos los tabs
+        document.querySelectorAll('.section-tabs .tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelectorAll('.interaction-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+
+        // Activar el tab seleccionado
+        document.querySelector(`.section-tabs .tab-btn[onclick*="${tabName}"]`).classList.add('active');
+        document.getElementById(`${tabName}Tab`).classList.add('active');
     }
 
     simulateRequest(callback, delay = 1500) {
@@ -884,6 +1052,13 @@ function editProfile() {
         window.profileManager.openEditOptions();
     }
 }
+
+// Funciones globales para los tabs de estadísticas
+window.showInteractionTab = function(tabName) {
+    if (window.profileManager) {
+        window.profileManager.showInteractionTab(tabName);
+    }
+};
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {

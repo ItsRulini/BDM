@@ -21,7 +21,6 @@
             </a>
         </div>
         <ul class="nav-menu">
-            <li><a href="index.php?controller=home&action=index">Inicio</a></li>
             <li><a href="index.php?controller=home&action=posts">Posts</a></li>
             <li><a href="index.php?controller=user&action=perfil" class="active">Mi Perfil</a></li>
             <li><a href="#" onclick="logout()">Cerrar Sesión</a></li>
@@ -35,7 +34,6 @@
     
     <div class="mobile-menu" id="mobileMenu">
         <ul>
-            <li><a href="index.php?controller=home&action=index">Inicio</a></li>
             <li><a href="index.php?controller=home&action=posts">Posts</a></li>
             <li><a href="index.php?controller=user&action=perfil" class="active">Mi Perfil</a></li>
             <li><a href="#" onclick="logout()">Cerrar Sesión</a></li>
@@ -344,6 +342,85 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal para ver estadísticas de publicación -->
+    <div id="postStatsModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2><i class="fas fa-chart-line"></i> Estadísticas de Publicación</h2>
+                <button class="close-btn" onclick="closeModal('postStatsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="post-stats-content">
+                    <div class="post-preview">
+                        <h3 id="statsPostTitle">Título de la publicación</h3>
+                        <p id="statsPostContent">Contenido de la publicación...</p>
+                        <div class="post-meta-stats">
+                            <span id="statsPostDate">Fecha de publicación</span>
+                            <span id="statsPostMundial">Mundial</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card views">
+                            <div class="stat-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statsViews">0</span>
+                                <span class="stat-label">Visualizaciones</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card likes">
+                            <div class="stat-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statsLikes">0</span>
+                                <span class="stat-label">Me Gusta</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card comments">
+                            <div class="stat-icon">
+                                <i class="fas fa-comment"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statsComments">0</span>
+                                <span class="stat-label">Comentarios</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="interactions-section">
+                        <div class="section-tabs">
+                            <button class="tab-btn active" onclick="showInteractionTab('likes')">
+                                <i class="fas fa-heart"></i> Usuarios que dieron Like
+                            </button>
+                            <button class="tab-btn" onclick="showInteractionTab('comments')">
+                                <i class="fas fa-comment"></i> Comentarios Recientes
+                            </button>
+                        </div>
+                        
+                        <div class="interactions-content">
+                            <div id="likesTab" class="interaction-tab active">
+                                <div class="users-list" id="likesList">
+                                    <!-- Lista de usuarios que dieron like -->
+                                </div>
+                            </div>
+                            
+                            <div id="commentsTab" class="interaction-tab">
+                                <div class="comments-list" id="commentsList">
+                                    <!-- Lista de comentarios -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
