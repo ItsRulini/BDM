@@ -21,7 +21,7 @@ body {
     height: 100vh;
 }
 .sidebar-left .logo { padding: 12px 0; }
-.sidebar-left .logo img { width: 70px; height: 70px; }
+.sidebar-left .logo img { width: 130px; height: 70px; }
 .sidebar-left nav ul { list-style: none; padding: 0; margin: 0; }
 .sidebar-left nav a { display: inline-flex; align-items: center; padding: 12px; border-radius: 9999px; color: #e7e9ea; text-decoration: none; font-size: 30px; transition: background-color 0.2s; margin-bottom: 8px; }
 .sidebar-left nav a:hover { background-color: rgba(231, 233, 234, 0.1); }

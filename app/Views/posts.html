@@ -10,60 +10,47 @@
     <link rel="icon" type="image/png" href="/assets/isotipo.png">
 </head>
 <body>
-
     <div class="container">
         <aside class="sidebar-left">
-            <a href="index.php?controller=home&action=index" class="logo">
-                <img src="assets/isotipo.png" alt="FootGG Logo">
+    <div class="logo">
+            <a href="index.php?controller=home&action=index">
+                <img src="assets/isologo.png" alt="FootGG Logo" class="logo-image">
             </a>
-            <nav>
-                <ul>
-                    <li><a href="index.php?controller=home&action=index" class="active"><i class="fas fa-home"></i> <span>Inicio</span></a></li>
-                    <li><a href="index.php?controller=home&action=categorias"><i class="fas fa-hashtag"></i> <span>Categorías</span></a></li>
-                    <li><a href="index.php?controller=user&action=perfil"><i class="fas fa-user"></i> <span>Perfil</span></a></li>
-                </ul>
-            </nav>
-        </aside>
+        </div>
+    <nav>
+        <ul>
+            <li><a href="index.php?controller=home&action=index" class="active"><i class="fas fa-home"></i> <span>Inicio</span></a></li>
+            <li><a href="index.php?controller=home&action=Mundiales"><i class="fas fa-hashtag"></i> <span>Mundiales</span></a></li>
+            <li><a href="index.php?controller=home&action=posts"><i class="fas fa-file-alt"></i> <span>Posts</span></a></li>
+            <li><a href="index.php?controller=user&action=perfil"><i class="fas fa-user"></i> <span>Perfil</span></a></li>
+        </ul>
+    </nav>
+</aside>
 
         <main class="main-feed">
             <header class="feed-header">
-                <h2>Inicio</h2>
-            </header>
-
-            <div class="create-post">
-                <div class="create-post-input-container">
-                    <img src="assets/default-avatar.png" alt="Tu avatar" class="user-avatar-small">
-                    <textarea placeholder="¿Qué está pasando en el mundo del fútbol?"></textarea>
-                </div>
-                <div class="create-post-actions">
-                    <div class="action-icons">
-                        <button class="action-btn" title="Añadir imagen o video"><i class="fas fa-image"></i></button>
+                <div class="header-controls">
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="search" id="search-input" placeholder="Buscar en las publicaciones...">
                     </div>
-                    <button class="btn-post-main">Siguiente</button>
+                    <div class="sort-container">
+                        <select id="sort-select">
+                            <option value="recent">Más recientes</option>
+                            <option value="most-likes">Más Likes</option>
+                            <option value="least-likes">Menos Likes</option>
+                            <option value="most-comments">Más Comentarios</option>
+                            <option value="least-comments">Menos Comentarios</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
+            </header>
 
             <section class="feed" id="posts-feed">
                 </section>
         </main>
-
-        <aside class="sidebar-right">
-            <div class="widget">
-                <h3>¿Qué está pasando?</h3>
-                <div class="trend">
-                    <span>Tendencia en México</span>
-                    <h4>#FinalMundial</h4>
-                    <span>125 mil publicaciones</span>
-                </div>
-                 <div class="trend">
-                    <span>Fútbol · Tendencia</span>
-                    <h4>Cristiano Ronaldo</h4>
-                    <span>89 mil publicaciones</span>
-                </div>
-            </div>
-        </aside>
     </div>
 
-    <script src=".../js/posts.js"></script>
+    <script src="js/posts.js"></script>
 </body>
 </html>

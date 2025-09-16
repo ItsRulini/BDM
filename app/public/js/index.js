@@ -1,30 +1,76 @@
 document.addEventListener('DOMContentLoaded', function() {
-    displayWorldCups(allWorldCups); // Llamada para mostrar los mundiales
-    initWorldCupSwiper(); 
-    // --- Módulo 2: Sección de Clasificaciones ---
-    // Renderizar todas las tablas
+    // --- CÓDIGO QUE YA TENÍAS ---
+    displayWorldCups(allWorldCups);
+    initWorldCupSwiper();
     renderFifaRanking(fifaRankingData);
     renderConmebolTable(conmebolQualifiersData);
-
-     displayTopScorers(topScorersData);
-    
-    // Y esta orden dibuja las fotos de los ganadores del Balón de Oro.
+    displayTopScorers(topScorersData);
     displayGoldenBallWinners(goldenBallWinners);
-    
-    // Configurar la tabla de UEFA
     populateUefaGroupSelector();
-    renderUefaGroupTable(uefaQualifiersData['Grupo A']); // Carga el Grupo A por defecto
+    renderUefaGroupTable(uefaQualifiersData['Grupo A']);
     setupUefaGroupListener();
-    
-    // Activar el carrusel que permite cambiar entre UEFA y CONMEBOL
     initQualifiersSwiper();
-
-
-
     displayPosts(allPosts);
     document.querySelector('.search-input').addEventListener('input', handleSearchAndFilter);
     document.getElementById('filterCountry').addEventListener('change', handleSearchAndFilter);
     document.getElementById('orderBy').addEventListener('change', handleSearchAndFilter);
+
+    // --- NUEVO CÓDIGO INTEGRADO ---
+
+    // 1. Lógica para el botón "Siguiente"
+    const nextButton = document.getElementById('btn-siguiente-post'); // Asegúrate de que tu botón "Siguiente" tenga este ID
+    if (nextButton) {
+        nextButton.addEventListener('click', () => {
+            // Opcional: Guarda el texto que el usuario ya haya escrito
+            const postContent = document.querySelector('.main-feed textarea').value;
+            if (postContent) {
+                localStorage.setItem('postDraft', postContent);
+            }
+            // Redirige a la página de mundiales
+            window.location.href = 'mundiales.html';
+        });
+    }
+
+    // 2. Lógica para mostrar las categorías seleccionadas al volver
+    const selectedMundial = localStorage.getItem('selectedMundial');
+    const selectedCategoriesJSON = localStorage.getItem('selectedCategories');
+    const rightSidebar = document.querySelector('.sidebar-right');
+
+    if (selectedMundial && selectedCategoriesJSON && rightSidebar) {
+        const categories = JSON.parse(selectedCategoriesJSON);
+
+        // Creamos el nuevo widget para mostrar las selecciones
+        const selectionWidget = document.createElement('div');
+        selectionWidget.className = 'widget';
+        let categoriesHTML = categories.map(cat => `
+            <div class="trend">
+                <span>${cat}</span>
+            </div>
+        `).join('');
+
+        selectionWidget.innerHTML = `
+            <h3>Categorías Seleccionadas</h3>
+            <div class="trend">
+                <h4>${selectedMundial}</h4>
+            </div>
+            ${categoriesHTML}
+        `;
+
+        // Reemplazamos el contenido de la barra derecha
+        rightSidebar.innerHTML = '';
+        rightSidebar.appendChild(selectionWidget);
+        
+        // Opcional: Restauramos el borrador del post
+        const postDraft = localStorage.getItem('postDraft');
+        if (postDraft) {
+            document.querySelector('.main-feed textarea').value = postDraft;
+        }
+
+        // Limpiamos el localStorage para la próxima publicación
+        localStorage.removeItem('selectedMundial');
+        localStorage.removeItem('selectedCategories');
+        localStorage.removeItem('postDraft');
+    }
 });
 
 
