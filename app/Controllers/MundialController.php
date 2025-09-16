@@ -1,11 +1,6 @@
 <?php
 
 class MundialController {
-
-    /**
-     * Esta función (acción 'ver') se ejecuta cuando la URL pide ver un mundial.
-     * Recibe el ID del mundial desde la URL.
-     */
     public function ver($id) {
         $vistaACargar = ''; // Variable para guardar el nombre del archivo
 

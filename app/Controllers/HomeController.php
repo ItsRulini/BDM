@@ -3,7 +3,7 @@
 class HomeController {
     public function index() {
         // Aquí puedes cargar la vista principal o hacer cualquier otra lógica necesaria
-        require '../Views/index.html';
+        require '../Views/main.html';
     }
     public function posts() {
         // Aquí puedes cargar la vista de publicaciones o hacer cualquier otra lógica necesaria

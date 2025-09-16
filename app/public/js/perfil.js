@@ -1,45 +1,905 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const userProfileData = {
-        nombres: "Jane Doe",
-        username: "Jane_Doe",
-        nacimiento: "1998-05-15",
-        pais: "México",
-        nacionalidad: "Mexicana",
-        correo: "jane.doe@example.com",
-    };
+class ProfileManager {
+    constructor() {
+        this.currentTab = 'approved';
+        this.userPosts = [];
+        this.countries = [];
+        this.categories = [];
+        this.mundiales = [];
+        this.selectedFiles = [];
+        this.selectedCategories = [];
+        
+        this.initializeElements();
+        this.bindEvents();
+        this.loadUserData();
+        this.loadDropdownData();
+        this.loadUserPosts();
+    }
 
-    const userPosts = [
-        { title: "Mi primera publicación", content: "¡Hola a todos! Emocionada de unirme a la comunidad.", date: "2025-08-18" },
-        { title: "Análisis del Mundial 2018", content: "El Mundial de Rusia fue increíble, ¡especialmente el partido de Francia!", date: "2025-08-17" },
-    ];
+    initializeElements() {
+        // Modal elements
+        this.modalOverlay = document.getElementById('modalOverlay');
+        this.editOptionsModal = document.getElementById('editOptionsModal');
+        this.passwordModal = document.getElementById('passwordModal');
+        this.infoModal = document.getElementById('infoModal');
+        this.createPostModal = document.getElementById('createPostModal');
+        
+        // Form elements
+        this.passwordForm = document.getElementById('passwordForm');
+        this.infoForm = document.getElementById('infoForm');
+        this.createPostForm = document.getElementById('createPostForm');
+        
+        // Display elements
+        this.userPostsGrid = document.getElementById('userPostsGrid');
+        this.noPosts = document.getElementById('noPosts');
+    
+        // Character counter
+        this.postContent = document.getElementById('postContent');
+        this.charCount = document.getElementById('charCount');
+        
+        // File inputs
+        this.fotoPerfilInput = document.getElementById('fotoPerfil');
+        this.multimediaInput = document.getElementById('postMultimedia');
 
-    const profileName = document.querySelector('.profile-header h2');
-    const profileUsername = document.querySelector('.profile-header p');
-    const profileInfoList = document.querySelector('.profile-info ul');
-    const userPostsContainer = document.querySelector('.profile-content');
+        // Tabs y post grid
+        this.tabs = document.querySelectorAll('.tab-btn');
 
-    // Muestra la información del usuario
-    profileName.textContent = userProfileData.nombres;
-    profileUsername.textContent = `@${userProfileData.username}`;
-    profileInfoList.innerHTML = `
-        <li><strong>Nombre completo:</strong> ${userProfileData.nombres}</li>
-        <li><strong>Fecha de Nacimiento:</strong> ${userProfileData.nacimiento}</li>
-        <li><strong>País:</strong> ${userProfileData.pais}</li>
-        <li><strong>Nacionalidad:</strong> ${userProfileData.nacionalidad}</li>
-        <li><strong>Correo:</strong> ${userProfileData.correo}</li>
-    `;
+        // Counter elements
+        this.approvedCount = document.getElementById('approvedCount');
+        this.pendingCount = document.getElementById('pendingCount');
+        this.rejectedCount = document.getElementById('rejectedCount');
+    }
 
-    // Muestra las publicaciones del usuario
-    userPosts.forEach(post => {
-        const postElement = document.createElement('div');
-        postElement.className = 'post-card';
-        postElement.innerHTML = `
-            <h3>${post.title}</h3>
-            <p>${post.content}</p>
-            <span class="post-time">${post.date}</span>
+    bindEvents() {
+        // Modal events
+        this.modalOverlay?.addEventListener('click', () => this.closeAllModals());
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') this.closeAllModals();
+        });
+
+        // Form events
+        this.passwordForm?.addEventListener('submit', (e) => this.handlePasswordChange(e));
+        this.infoForm?.addEventListener('submit', (e) => this.handleInfoUpdate(e));
+        this.createPostForm?.addEventListener('submit', (e) => this.handleCreatePost(e));
+
+        // Password validation
+        const newPassword = document.getElementById('newPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+        
+        newPassword?.addEventListener('input', () => this.validatePasswordStrength());
+        confirmPassword?.addEventListener('input', () => this.validatePasswordMatch());
+
+        // Character counter
+        this.postContent?.addEventListener('input', () => this.updateCharCounter());
+
+        // File upload events
+        this.fotoPerfilInput?.addEventListener('change', (e) => this.handleProfileImageChange(e));
+        this.multimediaInput?.addEventListener('change', (e) => this.handleMultimediaChange(e));
+
+        // Tab buttons
+        this.tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const status = e.target.dataset.status.toLowerCase();
+                this.showPosts(status);
+            });
+        });
+
+        // Global functions
+        window.toggleMobileMenu = this.toggleMobileMenu.bind(this);
+        window.openEditOptions = this.openEditOptions.bind(this);
+        window.openPasswordModal = this.openPasswordModal.bind(this);
+        window.openInfoModal = this.openInfoModal.bind(this);
+        window.openCreatePostModal = this.openCreatePostModal.bind(this);
+        window.closeModal = this.closeModal.bind(this);
+        window.showPosts = this.showPosts.bind(this);
+        window.logout = this.logout.bind(this);
+    }
+
+    // ================================
+    // USER DATA MANAGEMENT
+    // ================================
+
+    loadUserData() {
+        // Simulación de datos del usuario - aquí conectarías con tu backend
+        const userData = {
+            nombre: "Villa",
+            apellidoPaterno: "González",
+            apellidoMaterno: "Mendez",
+            correo: "villa.vi@example.com",
+            genero: "Masculino",
+            fechaNacimiento: "1998-05-15",
+            nacionalidad: "Mexicana",
+            paisNacimiento: "México",
+            fotoPerfil: "assets/default-avatar.png"
+        };
+
+        this.displayUserInfo(userData);
+    }
+
+    displayUserInfo(userData) {
+        // Update display elements
+        const displayName = document.getElementById('displayName');
+        const displayUsername = document.getElementById('displayUsername');
+        const birthDate = document.getElementById('birthDate');
+        const gender = document.getElementById('gender');
+        const birthCountry = document.getElementById('birthCountry');
+        const nationality = document.getElementById('nationality');
+        const email = document.getElementById('email');
+        const profileImage = document.getElementById('profileImage');
+
+        if (displayName) displayName.textContent = `${userData.nombre} ${userData.apellidoPaterno}`;
+        if (displayUsername) displayUsername.textContent = `@${userData.nombre}`;
+        if (birthDate) birthDate.textContent = this.formatDate(userData.fechaNacimiento);
+        if (gender) gender.textContent = userData.genero;
+        if (birthCountry) birthCountry.textContent = userData.paisNacimiento;
+        if (nationality) nationality.textContent = userData.nacionalidad;
+        if (email) email.textContent = userData.correo;
+        if (profileImage) profileImage.src = userData.fotoPerfil;
+    }
+
+    async loadDropdownData() {
+        try {
+            // Simulación de carga de datos - aquí conectarías con tu backend
+            this.countries = [
+                { id: 1, name: 'México' },
+                { id: 2, name: 'Argentina' },
+                { id: 3, name: 'Brasil' },
+                { id: 4, name: 'España' },
+                { id: 5, name: 'Francia' },
+                { id: 6, name: 'Alemania' },
+                { id: 7, name: 'Inglaterra' },
+                { id: 8, name: 'Italia' }
+            ];
+
+            this.categories = [
+                { id: 1, name: 'Análisis' },
+                { id: 2, name: 'Historia' },
+                { id: 3, name: 'Estadísticas' },
+                { id: 4, name: 'Curiosidades' },
+                { id: 5, name: 'Predicciones' },
+                { id: 6, name: 'Opinión' },
+                { id: 7, name: 'Jugadores' },
+                { id: 8, name: 'Equipos' }
+            ];
+
+            this.mundiales = [
+                { id: 1, name: 'Qatar 2022', year: 2022, country: 'Qatar' },
+                { id: 2, name: 'Rusia 2018', year: 2018, country: 'Rusia' },
+                { id: 3, name: 'Brasil 2014', year: 2014, country: 'Brasil' },
+                { id: 4, name: 'Sudáfrica 2010', year: 2010, country: 'Sudáfrica' },
+                { id: 5, name: 'Alemania 2006', year: 2006, country: 'Alemania' },
+                { id: 6, name: 'Francia 1998', year: 1998, country: 'Francia' },
+                { id: 7, name: 'México 1986', year: 1986, country: 'México' }
+            ];
+
+            this.populateDropdowns();
+        } catch (error) {
+            console.error('Error loading dropdown data:', error);
+        }
+    }
+
+    populateDropdowns() {
+        // Populate countries dropdowns
+        const nacionalidadSelect = document.getElementById('nacionalidad');
+        const paisNacimientoSelect = document.getElementById('paisNacimiento');
+        
+        [nacionalidadSelect, paisNacimientoSelect].forEach(select => {
+            if (select) {
+                this.countries.forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country.id;
+                    option.textContent = country.name;
+                    select.appendChild(option);
+                });
+            }
+        });
+
+        // Populate mundiales dropdown
+        const mundialSelect = document.getElementById('postMundial');
+        if (mundialSelect) {
+            this.mundiales.forEach(mundial => {
+                const option = document.createElement('option');
+                option.value = mundial.id;
+                option.textContent = `${mundial.name} (${mundial.year})`;
+                mundialSelect.appendChild(option);
+            });
+        }
+
+        // Populate categories as interactive pills
+        const categoriesContainer = document.getElementById('categoriesContainer');
+        if (categoriesContainer) {
+            this.categories.forEach(category => {
+                const categoryItem = document.createElement('div');
+                categoryItem.className = 'category-item';
+                categoryItem.innerHTML = `
+                    <input type="checkbox" id="cat_${category.id}" value="${category.id}">
+                    <label for="cat_${category.id}" class="category-pill">
+                        <span class="category-name">${category.name}</span>
+                    </label>
+                `;
+                
+                const checkbox = categoryItem.querySelector('input');
+                const pill = categoryItem.querySelector('.category-pill');
+                
+                // Event listeners para el efecto visual
+                checkbox.addEventListener('change', () => {
+                    this.updateSelectedCategories();
+                    this.updateCategoryCounter();
+                });
+                
+                // Click en la píldora para alternar
+                pill.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+                });
+                
+                categoriesContainer.appendChild(categoryItem);
+            });
+        }
+    }
+
+    // ================================
+    // POSTS MANAGEMENT
+    // ================================
+
+    async loadUserPosts() {
+        try {
+            // Simulación de posts del usuario - aquí conectarías con tu backend
+            this.userPosts = [
+                {
+                    id: 1,
+                    title: "Mi análisis del Mundial de Qatar 2022",
+                    content: "El mundial de Qatar fue espectacular, especialmente la final entre Argentina y Francia...",
+                    status: "approved",
+                    fechaCreacion: "2024-12-15",
+                    mundial: "Qatar 2022",
+                    categorias: ["Análisis", "Opinión"]
+                },
+                {
+                    id: 2,
+                    title: "Historia de los mundiales mexicanos",
+                    content: "México ha sido sede de dos mundiales increíbles en 1970 y 1986...",
+                    status: "pending",
+                    fechaCreacion: "2024-12-14",
+                    mundial: "México 1986",
+                    categorias: ["Historia"]
+                },
+                {
+                    id: 3,
+                    title: "Predicciones para el Mundial 2026",
+                    content: "Con la expansión a 48 equipos, el próximo mundial será muy diferente...",
+                    status: "rejected",
+                    fechaCreacion: "2024-12-13",
+                    mundial: "Estados Unidos 2026",
+                    categorias: ["Predicciones"]
+                }
+            ];
+
+            this.updatePostsCounts();
+            this.showPosts(this.currentTab);
+        } catch (error) {
+            console.error('Error loading user posts:', error);
+        }
+    }
+
+    showPosts(status) {
+        this.currentTab = status;
+        
+        // Update tab buttons
+        this.tabs.forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        const activeBtn = Array.from(this.tabs)
+            .find(btn => btn.dataset.status === status);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        // Filter and display posts
+        const filteredPosts = this.userPosts.filter(post => {
+            // if (status === 'aprobadas') return post.status === 'approved';
+            // if (status === 'pendientes') return post.status === 'pending';
+            // if (status === 'rechazadas') return post.status === 'rejected';
+            return post.status === status;
+        });
+
+        this.renderPosts(filteredPosts);
+    }
+
+    renderPosts(posts) {
+        if (!this.userPostsGrid) return;
+
+        if (posts.length === 0) {
+            this.userPostsGrid.style.display = 'none';
+            this.noPosts.style.display = 'block';
+            return;
+        }
+
+        this.userPostsGrid.style.display = 'grid';
+        this.noPosts.style.display = 'none';
+
+        this.userPostsGrid.innerHTML = posts.map(post => this.createPostHTML(post)).join('');
+    }
+
+    createPostHTML(post) {
+        const statusConfig = {
+            approved: { icon: 'fas fa-check-circle', text: 'Aprobado', class: 'approved' },
+            pending: { icon: 'fas fa-clock', text: 'Pendiente', class: 'pending' },
+            rejected: { icon: 'fas fa-times-circle', text: 'Rechazado', class: 'rejected' }
+        };
+
+        const config = statusConfig[post.status];
+        const formattedDate = this.formatDate(post.fechaCreacion);
+        const categories = Array.isArray(post.categorias) ? post.categorias.join(', ') : post.categorias;
+
+        return `
+            <div class="post-card fade-in">
+                <h4>${post.title}</h4>
+                <p>${this.truncateText(post.content, 150)}</p>
+                <div class="post-meta">
+                    <small><strong>Mundial:</strong> ${post.mundial}</small>
+                    <small><strong>Categorías:</strong> ${categories}</small>
+                    <small><strong>Fecha:</strong> ${formattedDate}</small>
+                </div>
+                <div class="post-status ${config.class}">
+                    <i class="${config.icon}"></i> ${config.text}
+                </div>
+            </div>
         `;
-        userPostsContainer.appendChild(postElement);
-    });
+    }
 
-    console.log("Perfil cargado con datos de muestra.");
+    updatePostsCounts() {
+        const counts = {
+            approved: this.userPosts.filter(p => p.status === 'approved').length,
+            pending: this.userPosts.filter(p => p.status === 'pending').length,
+            rejected: this.userPosts.filter(p => p.status === 'rejected').length
+        };
+
+        if (this.approvedCount) this.approvedCount.textContent = counts.approved;
+        if (this.pendingCount) this.pendingCount.textContent = counts.pending;
+        if (this.rejectedCount) this.rejectedCount.textContent = counts.rejected;
+    }
+
+    // ================================
+    // MODAL MANAGEMENT
+    // ================================
+
+    openEditOptions() {
+        this.showModal('editOptionsModal');
+    }
+
+    openPasswordModal() {
+        this.closeModal('editOptionsModal');
+        this.showModal('passwordModal');
+        this.resetPasswordForm();
+    }
+
+    openInfoModal() {
+        this.closeModal('editOptionsModal');
+        this.showModal('infoModal');
+        this.populateInfoForm();
+    }
+
+    openCreatePostModal() {
+        this.showModal('createPostModal');
+        this.resetCreatePostForm();
+    }
+
+    showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal && this.modalOverlay) {
+            this.modalOverlay.classList.add('active');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('active');
+        }
+        
+        if (this.modalOverlay) {
+            this.modalOverlay.classList.remove('active');
+        }
+        
+        document.body.style.overflow = 'auto';
+    }
+
+    closeAllModals() {
+        const modals = document.querySelectorAll('.modal.active');
+        modals.forEach(modal => {
+            modal.classList.remove('active');
+        });
+        
+        if (this.modalOverlay) {
+            this.modalOverlay.classList.remove('active');
+        }
+        
+        document.body.style.overflow = 'auto';
+    }
+
+    // ================================
+    // FORM HANDLERS
+    // ================================
+
+    resetPasswordForm() {
+        if (this.passwordForm) {
+            this.passwordForm.reset();
+            document.getElementById('passwordStrength').textContent = '';
+            document.getElementById('passwordMatch').textContent = '';
+        }
+    }
+
+    populateInfoForm() {
+        // Simular datos actuales del usuario
+        const currentData = {
+            nombre: "Juan Alejandro",
+            apellidoPaterno: "Villarreal", 
+            apellidoMaterno: "Mojica",
+            correo: "villa.vi@example.com",
+            genero: "Masculino",
+            fechaNacimiento: "1998-05-15",
+            nacionalidad: 1,
+            paisNacimiento: 1
+        };
+
+        Object.keys(currentData).forEach(key => {
+            const field = document.getElementById(key);
+            if (field) {
+                field.value = currentData[key];
+            }
+        });
+    }
+
+    resetCreatePostForm() {
+        if (this.createPostForm) {
+            this.createPostForm.reset();
+            this.selectedFiles = [];
+            this.selectedCategories = [];
+            this.updateCharCounter();
+            this.clearMultimediaPreview();
+            this.clearCategorySelections();
+            this.updateCategoryCounter();
+            this.updateMultimediaCounter();
+        }
+    }
+
+    handlePasswordChange(e) {
+        e.preventDefault();
+        
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (newPassword !== confirmPassword) {
+            this.showError('Las contraseñas no coinciden');
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            this.showError('La contraseña debe tener al menos 8 caracteres');
+            return;
+        }
+
+        // Aquí enviarías la nueva contraseña al backend
+        this.simulateRequest(() => {
+            this.showSuccess('Contraseña actualizada exitosamente');
+            this.closeModal('passwordModal');
+        });
+    }
+
+    handleInfoUpdate(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this.infoForm);
+        const userData = {};
+        
+        for (let [key, value] of formData.entries()) {
+            if (key !== 'fotoPerfil' || value.size > 0) {
+                userData[key] = value;
+            }
+        }
+
+        // Aquí enviarías los datos al backend
+        this.simulateRequest(() => {
+            this.showSuccess('Información actualizada exitosamente');
+            this.closeModal('infoModal');
+            // Actualizar la visualización con los nuevos datos
+            this.loadUserData();
+        });
+    }
+
+    handleCreatePost(e) {
+        e.preventDefault();
+        
+        const content = document.getElementById('postContent').value;
+        const mundialId = document.getElementById('postMundial').value;
+        
+        if (!content.trim()) {
+            this.showError('El contenido de la publicación es obligatorio');
+            return;
+        }
+
+        if (!mundialId) {
+            this.showError('Debes seleccionar un mundial');
+            return;
+        }
+
+        if (this.selectedCategories.length === 0) {
+            this.showError('Debes seleccionar al menos una categoría');
+            return;
+        }
+
+        const postData = {
+            contenido: content,
+            idMundial: mundialId,
+            categorias: this.selectedCategories,
+            multimedia: this.selectedFiles
+        };
+
+        // Aquí enviarías la publicación al backend
+        this.simulateRequest(() => {
+            this.showSuccess('Publicación enviada para revisión');
+            this.closeModal('createPostModal');
+            // Agregar el nuevo post a la lista (con estado pendiente)
+            const newPost = {
+                id: Date.now(),
+                title: content.substring(0, 50) + '...',
+                content: content,
+                status: 'pending',
+                fechaCreacion: new Date().toISOString().split('T')[0],
+                mundial: this.mundiales.find(m => m.id == mundialId)?.name || 'Unknown',
+                categorias: this.selectedCategories.map(id => 
+                    this.categories.find(c => c.id == id)?.name || 'Unknown'
+                )
+            };
+            
+            this.userPosts.unshift(newPost);
+            this.updatePostsCounts();
+            
+            if (this.currentTab === 'pending' || this.currentTab === 'pendientes') {
+                this.showPosts('pending');
+            }
+        });
+    }
+
+    // ================================
+    // FILE HANDLING
+    // ================================
+
+    handleProfileImageChange(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            this.showError('Solo se permiten archivos de imagen');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB
+            this.showError('La imagen no puede superar los 5MB');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const preview = document.getElementById('imagePreview');
+            if (preview) {
+                preview.innerHTML = `
+                    <div class="preview-item">
+                        <img src="${e.target.result}" alt="Vista previa">
+                        <button type="button" class="preview-remove" onclick="this.parentElement.parentElement.innerHTML=''">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    handleMultimediaChange(e) {
+        const newFiles = Array.from(e.target.files);
+        let validFiles = [];
+
+        newFiles.forEach(file => {
+            if (file.size > 10 * 1024 * 1024) { // 10MB
+                this.showError(`El archivo ${file.name} supera los 10MB permitidos`);
+                return;
+            }
+
+            if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+                this.showError(`El archivo ${file.name} no es un formato válido`);
+                return;
+            }
+
+            // Verificar que el archivo no esté ya agregado (por nombre y tamaño)
+            const isDuplicate = this.selectedFiles.some(existingFile => 
+                existingFile.name === file.name && existingFile.size === file.size
+            );
+
+            if (!isDuplicate) {
+                validFiles.push(file);
+            }
+        });
+
+        // Agregar archivos válidos a la lista existente (acumular)
+        this.selectedFiles = [...this.selectedFiles, ...validFiles];
+
+        // Limpiar el input para permitir seleccionar los mismos archivos nuevamente si es necesario
+        e.target.value = '';
+
+        this.displayMultimediaPreview();
+        this.updateMultimediaCounter();
+    }
+
+    displayMultimediaPreview() {
+        const preview = document.getElementById('multimediaPreview');
+        if (!preview) return;
+
+        preview.innerHTML = '';
+
+        this.selectedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item fade-in';
+
+                const mediaElement = file.type.startsWith('image/') 
+                    ? `<img src="${e.target.result}" alt="Vista previa" title="${file.name}">` 
+                    : `<video src="${e.target.result}" controls title="${file.name}"></video>`;
+
+                previewItem.innerHTML = `
+                    ${mediaElement}
+                    <button type="button" class="preview-remove" onclick="profileManager.removeFile(${index})" title="Eliminar archivo">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="file-info">
+                        <span class="file-name">${this.truncateText(file.name, 15)}</span>
+                        <span class="file-size">${this.formatFileSize(file.size)}</span>
+                    </div>
+                `;
+
+                preview.appendChild(previewItem);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    removeFile(index) {
+        this.selectedFiles.splice(index, 1);
+        this.displayMultimediaPreview();
+        this.updateMultimediaCounter();
+    }
+
+    clearMultimediaPreview() {
+        const preview = document.getElementById('multimediaPreview');
+        if (preview) {
+            preview.innerHTML = '';
+        }
+        this.updateMultimediaCounter();
+    }
+
+    updateMultimediaCounter() {
+        const counter = document.getElementById('multimediaCounter');
+        const fileCount = document.getElementById('fileCount');
+        
+        if (counter && fileCount) {
+            if (this.selectedFiles.length > 0) {
+                counter.style.display = 'flex';
+                fileCount.textContent = this.selectedFiles.length;
+            } else {
+                counter.style.display = 'none';
+            }
+        }
+    }
+
+    updateSelectedCategories() {
+        this.selectedCategories = [];
+        document.querySelectorAll('#categoriesContainer input[type="checkbox"]:checked')
+            .forEach(checkbox => {
+                this.selectedCategories.push(parseInt(checkbox.value));
+            });
+    }
+
+    updateCategoryCounter() {
+        const categoryCount = document.getElementById('categoryCount');
+        if (categoryCount) {
+            categoryCount.textContent = this.selectedCategories.length;
+        }
+    }
+
+    clearCategorySelections() {
+        document.querySelectorAll('#categoriesContainer input[type="checkbox"]')
+            .forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        this.selectedCategories = [];
+        this.updateCategoryCounter();
+    }
+
+    validatePasswordMatch() {
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const matchIndicator = document.getElementById('passwordMatch');
+        
+        if (!matchIndicator || !confirmPassword) return;
+
+        const isMatch = newPassword === confirmPassword;
+        matchIndicator.className = `password-match ${isMatch ? 'match' : 'no-match'}`;
+        matchIndicator.innerHTML = isMatch 
+            ? '<i class="fas fa-check"></i> Las contraseñas coinciden'
+            : '<i class="fas fa-times"></i> Las contraseñas no coinciden';
+    }
+
+    updateCharCounter() {
+        const content = this.postContent?.value || '';
+        const counter = this.charCount;
+        
+        if (counter) {
+            counter.textContent = content.length;
+            
+            const counterElement = counter.parentElement;
+            counterElement.classList.remove('warning', 'danger');
+            
+            if (content.length > 4500) {
+                counterElement.classList.add('danger');
+            } else if (content.length > 4000) {
+                counterElement.classList.add('warning');
+            }
+        }
+    }
+
+    updateSelectedCategories() {
+        this.selectedCategories = [];
+        document.querySelectorAll('#categoriesContainer input[type="checkbox"]:checked')
+            .forEach(checkbox => {
+                this.selectedCategories.push(parseInt(checkbox.value));
+            });
+    }
+
+    clearCategorySelections() {
+        document.querySelectorAll('#categoriesContainer input[type="checkbox"]')
+            .forEach(checkbox => {
+                checkbox.checked = false;
+            });
+    }
+
+    // ================================
+    // UTILITY FUNCTIONS
+    // ================================
+
+    toggleMobileMenu() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        const hamburger = document.querySelector('.hamburger');
+        
+        if (mobileMenu && hamburger) {
+            mobileMenu.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        }
+    }
+
+    logout() {
+        if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+            // Aquí redirigirias al logout del backend
+            window.location.href = 'index.php?controller=home&action=index';
+        }
+    }
+
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+
+    truncateText(text, maxLength) {
+        if (text.length <= maxLength) return text;
+        return text.substr(0, maxLength) + '...';
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    simulateRequest(callback, delay = 1500) {
+        // Simula una petición al servidor
+        setTimeout(callback, delay);
+    }
+
+    showSuccess(message) {
+        this.showNotification(message, 'success');
+    }
+
+    showError(message) {
+        this.showNotification(message, 'error');
+    }
+
+    showNotification(message, type = 'info') {
+        // Crear notificación temporal
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'error' ? 'rgba(255, 71, 87, 0.95)' : 'rgba(0, 255, 136, 0.95)'};
+            color: ${type === 'error' ? '#fff' : '#000'};
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            font-weight: 500;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Animación de entrada
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+
+        // Auto-remove después de 4 segundos
+        setTimeout(() => {
+            notification.style.transform = 'translateX(400px)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 4000);
+
+        // Click para cerrar
+        notification.addEventListener('click', () => {
+            notification.style.transform = 'translateX(400px)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        });
+    }
+}
+
+// Funciones utilitarias globales
+function editProfile() {
+    if (window.profileManager) {
+        window.profileManager.openEditOptions();
+    }
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    window.profileManager = new ProfileManager();
+});
+
+// Manejar clicks fuera del menú móvil para cerrarlo
+document.addEventListener('click', (event) => {
+    const mobileMenu = document.getElementById('mobileMenu');
+    const hamburger = document.querySelector('.hamburger');
+    
+    if (mobileMenu && hamburger && 
+        mobileMenu.classList.contains('active') && 
+        !mobileMenu.contains(event.target) && 
+        !hamburger.contains(event.target)) {
+        mobileMenu.classList.remove('active');
+        hamburger.classList.remove('active');
+    }
 });

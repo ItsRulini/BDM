@@ -1,7 +1,6 @@
 <?php
 
-require_once '../Connection/conn.php';
-require_once '../Models/Usuario.php';
+include_once '../Models/Usuario.php';
 
 class UsuarioDAO {
     private $conn;
