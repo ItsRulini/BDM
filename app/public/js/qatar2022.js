@@ -50,15 +50,53 @@ function createPostCard(post) {
 
 // Función para mostrar las publicaciones en el feed
 function displayPosts(posts) {
-    // Apuntamos al nuevo ID del contenedor de esta página
     const feedContainer = document.getElementById('posts-feed-qatar2022');
     if (feedContainer) {
         feedContainer.innerHTML = posts.map(post => createPostCard(post)).join('');
     }
 }
 
+
+// --- INICIO DEL CÓDIGO COMBINADO ---
+
 // Se ejecuta cuando la página ha cargado
 document.addEventListener('DOMContentLoaded', function() {
-    // Usamos la nueva variable de datos
+    
+    // ---- PARTE 1: TU LÓGICA EXISTENTE ----
+    // Esto muestra las publicaciones del mundial como ya lo hacía
     displayPosts(qatar2022Posts);
+
+    // ---- PARTE 2: NUEVA LÓGICA INTEGRADA ----
+    // Esto revisa si hay categorías seleccionadas y las muestra en la barra derecha
+    
+    // 1. Leemos los datos de localStorage
+    const mundialName = localStorage.getItem('selectedMundial');
+    const selectedCategoriesJSON = localStorage.getItem('selectedCategories');
+    
+    // 2. Apuntamos al contenedor de la barra derecha
+    // (Asegúrate de que tu HTML tenga <div id="selected-categories-widget" class="widget"></div>)
+    const widgetContainer = document.getElementById('selected-categories-widget');
+
+    // 3. Verificamos que tengamos datos que mostrar
+    if (mundialName && selectedCategoriesJSON && widgetContainer) {
+        const categories = JSON.parse(selectedCategoriesJSON);
+
+        // 4. Creamos el HTML para el nuevo widget
+        let categoriesHTML = categories.map(cat => `
+            <div class="trend">
+                <span>${cat}</span>
+            </div>
+        `).join('');
+
+        // 5. Remplazamos el contenido del widget con la información seleccionada
+        widgetContainer.innerHTML = `
+            <h3>Categorías para ${mundialName}</h3>
+            ${categoriesHTML}
+        `;
+
+        // 6. Limpiamos localStorage para futuras publicaciones
+        localStorage.removeItem('selectedMundial');
+        localStorage.removeItem('selectedCategories');
+        localStorage.removeItem('selectedMundialId');
+    }
 });

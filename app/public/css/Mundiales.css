@@ -20,12 +20,12 @@ body {
     top: 0;
     height: 100vh;
 }
-.sidebar-left { border-right: 1px solid #2f3336; }
+.sidebar-left { border-right: 1px solid #535455; }
 .sidebar-left .logo { padding: 12px 0; }
-.sidebar-left .logo img { width: 70px; height: 70px; }
+.sidebar-left .logo img { width: 130px; height: 70px; }
 .sidebar-left nav ul { list-style: none; padding: 0; margin: 0; }
 .sidebar-left nav a { display: inline-flex; align-items: center; padding: 12px; border-radius: 9999px; color: #e7e9ea; text-decoration: none; font-size: 30px; transition: background-color 0.2s; margin-bottom: 8px; }
-.sidebar-left nav a:hover { background-color: rgba(231, 233, 234, 0.1); }
+.sidebar-left nav a:hover { background-color: rgba(69, 157, 201, 0.1); }
 .sidebar-left nav a.active { font-weight: bold; }
 .sidebar-left nav a i { width: 26px; margin-right: 20px; }
 .btn-post-sidebar { background-color: #00ff88; color: #000; border: none; border-radius: 9999px; padding: 16px; font-size: 17px; font-weight: bold; cursor: pointer; margin-top: 16px; width: 90%; }
@@ -120,4 +120,65 @@ body {
 .category-item h4 {
     margin: 2px 0;
     font-size: 15px;
+}
+
+
+
+
+
+
+
+
+/* --- ESTILOS PARA LA SELECCIÓN --- */
+.selection-title {
+    color: #fff;
+    font-size: 24px;
+    padding: 20px;
+    border-bottom: 1px solid #333;
+}
+
+.category-item.selectable {
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.category-item.selectable:hover {
+    background-color: #2a2a2a;
+}
+
+.category-item.selectable.selected {
+    background-color: #00ff9d; /* Un color verde brillante para la selección */
+    color: #121212; /* Texto oscuro para que contraste */
+    border-left: 4px solid #ffffff;
+}
+
+.category-item.selectable.selected span {
+    font-weight: bold;
+}
+
+#finish-selection-btn {
+    display: block;
+    width: 80%;
+    margin: 30px auto;
+    padding: 15px;
+    font-size: 18px;
+}
+
+
+
+
+
+/* --- ESTILOS PARA EL NUEVO WIDGET DE IMÁGENES --- */
+
+.image-widget {
+    display: flex;
+    flex-direction: column; /* Apila los elementos verticalmente */
+    gap: 16px; /* Espacio entre las dos imágenes */
+}
+
+.image-widget img {
+    width: 100%; /* La imagen ocupa todo el ancho de la barra */
+    height: auto; /* La altura se ajusta para no deformar la imagen */
+    border-radius: 16px; /* Bordes redondeados como los otros widgets */
+    display: block; /* Elimina cualquier espacio extra debajo de la imagen */
 }

@@ -13,14 +13,16 @@
 
     <div class="container">
         <aside class="sidebar-left">
-            <a href="index.php?controller=home&action=index" class="logo">
-                <img src="assets/isotipo.png" alt="FootGG Logo">
+            <div class="logo">
+            <a href="index.php?controller=home&action=index">
+                <img src="assets/isologo.png" alt="FootGG Logo" class="logo-image">
             </a>
+        </div>
             <nav>
                 <ul>
                     <li><a href="index.php?controller=home&action=posts"><i class="fas fa-home"></i> <span>Inicio</span></a></li>
-                    <li><a href="index.php?controller=home&action=categorias"><i class="fas fa-hashtag"></i> <span>Categorías</span></a></li>
-                    <li><a href="#"><i class="fas fa-user"></i> <span>Perfil</span></a></li>
+                    <li><a href="index.php?controller=home&action=Mundiales"><i class="fas fa-hashtag"></i> <span>Mundiales</span></a></li>
+                    <li><a href="index.php?controller=user&action=perfil"><i class="fas fa-user"></i> <span>Perfil</span></a></li>
                 </ul>
             </nav>
             <button class="btn-post-sidebar">Publicar</button>
@@ -49,20 +51,9 @@
         </main>
 
         <aside class="sidebar-right">
-            <div class="widget">
-                <h3>Tendencias de Qatar 2022</h3>
-                <div class="trend">
-                    <span>Tendencia</span>
-                    <h4>#MessiCampeon</h4>
-                    <span>1.2M publicaciones</span>
-                </div>
-                 <div class="trend">
-                    <span>Fútbol · Tendencia</span>
-                    <h4>Mbappé</h4>
-                    <span>780 mil publicaciones</span>
-                </div>
-            </div>
-        </aside>
+    <div id="selected-categories-widget" class="widget">
+        </div>
+</aside>
     </div>
 
     <script src="js/qatar2022.js"></script>

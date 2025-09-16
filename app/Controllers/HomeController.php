@@ -27,8 +27,8 @@ class HomeController {
         require '../Views/about.html';
     }
 
-    public function categorias() {
+    public function Mundiales() {
         
-        require '../Views/categorias.html';
+        require '../Views/mundiales.html';
     }
 }
