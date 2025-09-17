@@ -974,17 +974,17 @@
     transform: translateY(-2px);
 }
 
-.stat-card.views {
-    border-left: 4px solid #3498db;
+.stat-card {
+    border-left: 4px solid #00ff88;
 }
 
-.stat-card.likes {
+/* .stat-card.likes {
     border-left: 4px solid #e74c3c;
 }
 
 .stat-card.comments {
     border-left: 4px solid #f39c12;
-}
+} */
 
 .stat-icon {
     width: 50px;
@@ -996,12 +996,12 @@
     font-size: 1.5rem;
 }
 
-.stat-card.views .stat-icon {
+.stat-card .stat-icon {
     background: rgba(52, 152, 219, 0.1);
-    color: #3498db;
+    color: #00ff88;
 }
 
-.stat-card.likes .stat-icon {
+/* .stat-card.likes .stat-icon {
     background: rgba(231, 76, 60, 0.1);
     color: #e74c3c;
 }
@@ -1009,7 +1009,7 @@
 .stat-card.comments .stat-icon {
     background: rgba(243, 156, 18, 0.1);
     color: #f39c12;
-}
+} */
 
 .stat-info {
     display: flex;

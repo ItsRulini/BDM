@@ -894,28 +894,28 @@ export default class ProfileManager {
     // VALIDATION
     // ================================
 
-    validatePasswordStrength() {
-        const password = document.getElementById('newPassword').value;
-        const strengthIndicator = document.getElementById('passwordStrength');
+    // validatePasswordStrength() {
+    //     const password = document.getElementById('newPassword').value;
+    //     const strengthIndicator = document.getElementById('passwordStrength');
         
-        if (!strengthIndicator) return;
+    //     if (!strengthIndicator) return;
 
-        let strength = 'weak';
-        let message = 'Muy débil';
+    //     let strength = 'weak';
+    //     let message = 'Muy débil';
         
-        if (password.length >= 8) {
-            strength = 'medium';
-            message = 'Media';
+    //     if (password.length >= 8) {
+    //         strength = 'medium';
+    //         message = 'Media';
             
-            if (password.match(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)) {
-                strength = 'strong';
-                message = 'Fuerte';
-            }
-        }
+    //         if (password.match(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)) {
+    //             strength = 'strong';
+    //             message = 'Fuerte';
+    //         }
+    //     }
 
-        strengthIndicator.className = `password-strength ${strength}`;
-        strengthIndicator.innerHTML = `<i class="fas fa-shield-alt"></i> ${message}`;
-    }
+    //     strengthIndicator.className = `password-strength ${strength}`;
+    //     strengthIndicator.innerHTML = `<i class="fas fa-shield-alt"></i> ${message}`;
+    // }
 
     validatePasswordMatch() {
         const newPassword = document.getElementById('newPassword').value;

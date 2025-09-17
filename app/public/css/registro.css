@@ -64,7 +64,10 @@
     font-weight: 500;
 }
 
-
+select option {
+    background-color: #0d2818; /* Fondo oscuro */
+    color: #fff; /* Letras blancas */
+}
 
 /* Botón de regreso en la esquina superior izquierda */
 .back-link {

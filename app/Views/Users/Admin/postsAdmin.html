@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FootGG - Posts</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <title>FootGG - Administración de Posts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/postsAdmin.css">
     <link rel="icon" type="image/png" href="assets/isotipo.png">
 </head>
 <body>
@@ -19,7 +20,7 @@
         </div>
 
         <ul class="nav-menu">
-            <li><a href="index.php?controller=admin&action=index">Dashboard Admin</a></li>
+            <li><a href="index.php?controller=admin&action=index">Inicio Admin</a></li>
             <li><a href="index.php?controller=admin&action=posts" class="active">Posts</a></li>
             <li><a href="index.php?controller=admin&action=perfil">Mi Perfil</a></li>
             <li><a href="#" onclick="logout()">Cerrar Sesión</a></li>
@@ -30,18 +31,227 @@
             <span></span>
         </div>
     </nav>
+
     <div class="mobile-menu" id="mobileMenu">
         <ul>
-            <li><a href="index.php?controller=admin&action=index">Dashboard Admin</a></li>
+            <li><a href="index.php?controller=admin&action=index">Inicio Admin</a></li>
             <li><a href="index.php?controller=admin&action=posts" class="active">Posts</a></li>
             <li><a href="index.php?controller=admin&action=perfil">Mi Perfil</a></li>
             <li><a href="#" onclick="logout()">Cerrar Sesión</a></li>
         </ul>
     </div>
 
-    <main class="main-content">
+    <section class="search-container">
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" id="searchInput" placeholder="Buscar por categoría, año, sede, o usuario...">
+        </div>
+        <div class="search-filters">
+            <select id="filterCountry">
+                <option value="">Filtrar por Mundial</option>
+                <option value="brasil">Brasil 2014</option>
+                <option value="argentina">Argentina 1978</option>
+                <option value="alemania">Alemania 2006</option>
+                <option value="francia">Francia 1998</option>
+                <option value="mexico">México 1986</option>
+                <option value="rusia">Rusia 2018</option>
+                <option value="qatar">Qatar 2022</option>
+                <option value="sudafrica">Sudáfrica 2010</option>
+            </select>
+            <select id="filterCategory">
+                <option value="">Filtrar por Categoría</option>
+                <option value="analisis">Análisis</option>
+                <option value="historia">Historia</option>
+                <option value="estadisticas">Estadísticas</option>
+                <option value="curiosidades">Curiosidades</option>
+                <option value="predicciones">Predicciones</option>
+            </select>
+            <select id="orderBy">
+                <option value="">Ordenar por</option>
+                <option value="likes_desc">Likes (Desc.)</option>
+                <option value="likes_asc">Likes (Asc.)</option>
+                <option value="comments_desc">Comentarios (Desc.)</option>
+                <option value="comments_asc">Comentarios (Asc.)</option>
+                <option value="date_desc">Más recientes</option>
+                <option value="date_asc">Más antiguos</option>
+            </select>
+        </div>
+    </section>
 
+    <main class="main-content">
+        <section class="posts-section">
+            <div class="posts-header">
+                <h2 class="section-title">
+                    <i class="fas fa-cogs"></i>
+                    Administración de Posts
+                </h2>
+                <div class="posts-stats">
+                    <span id="postsCount" class="posts-counter">Cargando posts...</span>
+                </div>
+            </div>
+
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p>Cargando publicaciones...</p>
+            </div>
+
+            <div id="postsContainer" class="posts-grid">
+                <!-- Las publicaciones se cargarán dinámicamente aquí -->
+            </div>
+
+            <div class="no-results" id="noResults" style="display: none;">
+                <i class="fas fa-search"></i>
+                <h3>No se encontraron publicaciones</h3>
+                <p>Intenta ajustar tus filtros de búsqueda</p>
+            </div>
+        </section>
     </main>
+
+    <!-- Modal para ver detalles de la publicación -->
+    <div id="postDetailModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2 id="modalPostTitle">
+                    <i class="fas fa-eye"></i>
+                    Detalles de la Publicación
+                </h2>
+                <button class="close-btn" onclick="closePostDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="post-detail-content">
+                    <!-- Header con información del post -->
+                    <div class="post-detail-header">
+                        <div class="post-detail-meta">
+                            <div class="post-badges">
+                                <span id="postDetailMundial" class="post-mundial-badge"></span>
+                                <span id="postDetailCategory" class="post-category-badge"></span>
+                            </div>
+                            <h3 id="postDetailTitle" class="post-detail-title"></h3>
+                            <div class="post-author-info">
+                                <img id="postDetailAvatar" src="" alt="Avatar" class="profile-pic">
+                                <div class="author-details">
+                                    <span id="postDetailAuthor" class="author-name"></span>
+                                    <span id="postDetailDate" class="post-date"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contenido del post -->
+                    <div class="post-detail-body">
+                        <div class="post-text-content">
+                            <p id="postDetailText"></p>
+                        </div>
+                        <div id="postDetailMultimedia" class="post-multimedia-container">
+                            <!-- El carousel de multimedia se insertará aquí -->
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas y acciones -->
+                    <div class="post-detail-stats">
+                        <div class="stats-info">
+                            <div class="stat-item">
+                                <i class="fas fa-heart"></i>
+                                <span id="postDetailLikes">0</span> Likes
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-comment"></i>
+                                <span id="postDetailCommentsCount">0</span> Comentarios
+                            </div>
+                        </div>
+                        <div class="admin-actions">
+                            <button id="viewCommentsBtn" class="btn-view-comments">
+                                <i class="fas fa-comment"></i>
+                                Ver Comentarios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Comentarios -->
+    <div id="commentsModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2><i class="fas fa-comment"></i> Gestión de Comentarios</h2>
+                <button class="close-btn" onclick="closeCommentsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="comments-section">
+                    <!-- Información del post -->
+                    <div class="post-summary">
+                        <div class="post-summary-content">
+                            <h3 id="commentPostTitle">Título del post</h3>
+                            <div class="post-summary-meta">
+                                <span id="commentPostAuthor">Por Usuario</span>
+                                <span id="commentPostDate">Fecha</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de comentarios con opciones de administración -->
+                    <div class="comments-list-section">
+                        <div class="comments-header">
+                            <h4>
+                                <i class="fas fa-comment"></i>
+                                <span id="commentsCount">0</span> Comentarios
+                            </h4>
+                            <div class="comments-sort">
+                                <select id="commentsSortBy">
+                                    <option value="newest">Más recientes</option>
+                                    <option value="oldest">Más antiguos</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div id="commentsList" class="comments-list admin">
+                            <!-- Los comentarios se cargarán aquí -->
+                        </div>
+
+                        <div id="noComments" class="no-comments" style="display: none;">
+                            <i class="fas fa-comment-slash"></i>
+                            <h4>Sin comentarios aún</h4>
+                            <p>Esta publicación no tiene comentarios.</p>
+                        </div>
+
+                        <div id="loadingComments" class="loading-comments" style="display: none;">
+                            <div class="small-spinner"></div>
+                            <span>Cargando comentarios...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación para eliminar -->
+    <div id="confirmDeleteModal" class="modal">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <h2><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h2>
+                <button class="close-btn" onclick="closeConfirmDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-delete-content">
+                    <p id="confirmDeleteMessage">¿Estás seguro de que deseas eliminar este elemento?</p>
+                    <div class="confirm-actions">
+                        <button id="cancelDeleteBtn" class="btn-cancel" onclick="closeConfirmDeleteModal()">
+                            Cancelar
+                        </button>
+                        <button id="confirmDeleteBtn" class="btn-delete">
+                            <i class="fas fa-trash"></i>
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay para modales -->
+    <div id="modalOverlay" class="modal-overlay"></div>
 
     <footer class="site-footer">
         <div class="footer-content">
@@ -52,19 +262,20 @@
             <div class="footer-links">
                 <h4>Navegación</h4>
                 <ul>
-                    <li><a href="index.php?controller=admin&action=index" class="active">Inicio</a></li>
-                    <li><a href="index.php?controller=admin&action=posts">Posts</a></li>
+                    <li><a href="index.php?controller=admin&action=index">Inicio Admin</a></li>
+                    <li><a href="index.php?controller=admin&action=posts" class="active">Posts</a></li>
                 </ul>
             </div>
             <div class="footer-social">
                 <h4>Síguenos</h4>
-                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
             </div>
         </div>
         <div class="footer-bottom">
             <p>&copy; 2025 FootGG. Todos los derechos reservados.</p>
         </div>
     </footer>
-    
+
+    <script src="js/postsAdmin.js"></script>
 </body>
 </html>

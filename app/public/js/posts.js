@@ -380,7 +380,7 @@ class PostsManager {
                         <button class="like-btn ${post.liked ? 'liked' : ''}" 
                                 data-post-id="${post.id}" 
                                 aria-label="Dar like a esta publicación">
-                            <i class="fas fa-thumbs-up"></i>
+                            <i class="fas fa-heart"></i>
                             Like
                             <span class="interaction-count">${post.likes}</span>
                         </button>
