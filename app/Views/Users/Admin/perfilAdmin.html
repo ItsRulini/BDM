@@ -8,19 +8,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <link rel="stylesheet" href="css/style.css"> 
-    <link rel="stylesheet" href="css/perfilAdmin.css"> 
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/perfil.css">
+    <link rel="stylesheet" href="css/perfilAdmin.css">
     <link rel="icon" type="image/png" href="assets/isotipo.png">
 </head>
 <body>
 
     <nav class="navbar">
         <div class="logo">
-            <a href="index.php?controller=home&action=index"> <img src="assets/isologo white.png" alt="FootGG Logo" class="logo-image">
+            <a href="index.php?controller=admin&action=index">
+                <img src="assets/isologo white.png" alt="FootGG Logo" class="logo-image">
             </a>
         </div>
         <ul class="nav-menu">
-            <li><a href="index.php?controller=admin&action=dashboard">Dashboard</a></li> 
+            <li><a href="index.php?controller=admin&action=index">Dashboard</a></li>
+            <li><a href="index.php?controller=admin&action=posts">Posts</a></li>
             <li><a href="index.php?controller=admin&action=perfilAdmin" class="active">Mi Perfil</a></li>
             <li><a href="#" onclick="logout()">Cerrar Sesión</a></li>
         </ul>
@@ -30,9 +33,11 @@
             <span></span>
         </div>
     </nav>
+    
     <div class="mobile-menu" id="mobileMenu">
         <ul>
-            <li><a href="index.php?controller=admin&action=dashboard">Dashboard</a></li>
+            <li><a href="index.php?controller=admin&action=index">Dashboard</a></li>
+            <li><a href="index.php?controller=admin&action=posts">Posts</a></li>
             <li><a href="index.php?controller=admin&action=perfilAdmin" class="active">Mi Perfil</a></li>
             <li><a href="#" onclick="logout()">Cerrar Sesión</a></li>
         </ul>
@@ -41,74 +46,371 @@
     <main class="main-content">
         <section class="profile-main-header">
             <h1><i class="fas fa-user-shield"></i> Perfil de Administrador</h1>
-            <p>Aquí puedes ver tu información y gestionar la actividad de FootGG.</p>
+            <p>Aquí puedes ver tu información y gestionar las publicaciones de FootGG.</p>
         </section>
 
         <div class="profile-grid">
             <aside class="profile-sidebar">
                 <div class="profile-card">
                     <div class="profile-avatar">
-                        <img src="assets/default-avatar.png" alt="Avatar de Administrador">
+                        <img id="profileImage" src="assets/default-avatar.png" alt="Avatar de Administrador">
+                        <div class="avatar-overlay">
+                            <i class="fas fa-camera"></i>
+                        </div>
                     </div>
                     <div class="profile-name">
-                        <h2>Admin</h2>
-                        <p>@admin_footgg</p>
+                        <h2 id="displayName">Admin FootGG</h2>
+                        <p id="displayUsername">@admin_footgg</p>
                     </div>
-                    <button class="edit-profile-btn" onclick="editProfile()">
+                    <button class="edit-profile-btn" onclick="openEditOptions()">
                         <i class="fas fa-edit"></i> Editar Perfil
                     </button>
                 </div>
 
                 <div class="info-card">
                     <h3><i class="fas fa-id-card"></i> Información Personal</h3>
-                    <ul>
+                    <ul id="userInfoList">
                         <li>
                             <i class="fas fa-calendar-alt"></i>
                             <strong>Fecha de Nacimiento:</strong>
-                            <span>01/01/1990</span>
+                            <span id="birthDate">01/01/1990</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-venus-mars"></i>
+                            <strong>Género:</strong>
+                            <span id="gender">Masculino</span>
                         </li>
                         <li>
                             <i class="fas fa-flag"></i>
-                            <strong>País:</strong>
-                            <span>México</span>
+                            <strong>País de Nacimiento:</strong>
+                            <span id="birthCountry">México</span>
                         </li>
                         <li>
                             <i class="fas fa-globe"></i>
                             <strong>Nacionalidad:</strong>
-                            <span>Mexicano</span>
+                            <span id="nationality">Mexicana</span>
                         </li>
                         <li>
                             <i class="fas fa-envelope"></i>
                             <strong>Correo:</strong>
-                            <span>admin@footgg.com</span>
+                            <span id="email">admin@footgg.com</span>
                         </li>
                     </ul>
                 </div>
             </aside>
 
             <section class="posts-section">
-                <h2><i class="fas fa-tasks"></i> Actividad Reciente</h2>
+                <div class="posts-header">
+                    <h2><i class="fas fa-tasks"></i> Gestión de Publicaciones</h2>
+                </div>
                 
                 <div class="post-tabs">
-                    <button class="tab-btn active" onclick="showPosts('approved')">Aprobadas</button>
-                    <button class="tab-btn" onclick="showPosts('pending')">Pendientes</button>
-                    <button class="tab-btn" onclick="showPosts('rejected')">Rechazadas</button>
+                    <button class="tab-btn active" data-status="pending">
+                        Pendientes <span class="tab-count" id="pendingCount">0</span>
+                    </button>
+                    <button class="tab-btn" data-status="approved">
+                        Aprobadas <span class="tab-count" id="approvedCount">0</span>
+                    </button>
+                    <button class="tab-btn" data-status="rejected">
+                        Rechazadas <span class="tab-count" id="rejectedCount">0</span>
+                    </button>
                 </div>
 
                 <div class="posts-grid" id="userPostsGrid">
-                    <div class="post-card">
-                        <h4>Revisión de post: "Mi opinión sobre el mundial de 2014"</h4>
-                        <p>Usuario: @Villa</p>
-                        <div class="post-status approved">
-                            <i class="fas fa-check-circle"></i> Aprobado
-                        </div>
-                    </div>
+                    <!-- Los posts se cargarán dinámicamente -->
+                </div>
+
+                <div class="no-posts" id="noPosts" style="display: none;">
+                    <i class="fas fa-file-text"></i>
+                    <h3>No hay publicaciones</h3>
+                    <p>No se encontraron publicaciones en esta categoría</p>
                 </div>
             </section>
         </div>
     </main>
 
-    <script src="js/tools.js"></script> 
-    <script src="js/perfilAdmin.js"></script>
+    <!-- Modal para opciones de edición -->
+    <div id="editOptionsModal" class="modal">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> Opciones de Edición</h2>
+                <button class="close-btn" onclick="closeModal('editOptionsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="edit-options">
+                    <button class="option-btn" onclick="openPasswordModal()">
+                        <i class="fas fa-lock"></i>
+                        <span>Cambiar Contraseña</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="option-btn" onclick="openInfoModal()">
+                        <i class="fas fa-user-edit"></i>
+                        <span>Editar Información</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para cambiar contraseña -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-lock"></i> Cambiar Contraseña</h2>
+                <button class="close-btn" onclick="closeModal('passwordModal')">&times;</button>
+            </div>
+            <form id="passwordForm" class="modal-body">
+                <div class="form-group">
+                    <label for="newPassword">
+                        <i class="fas fa-key"></i> Nueva Contraseña
+                    </label>
+                    <input type="password" id="newPassword" name="newPassword" required minlength="8">
+                    <div class="password-strength" id="passwordStrength"></div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">
+                        <i class="fas fa-check"></i> Confirmar Contraseña
+                    </label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <div class="password-match" id="passwordMatch"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('passwordModal')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Cambiar Contraseña</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para editar información -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-edit"></i> Editar Información Personal</h2>
+                <button class="close-btn" onclick="closeModal('infoModal')">&times;</button>
+            </div>
+            <form id="infoForm" class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nombre">
+                            <i class="fas fa-user"></i> Nombre
+                        </label>
+                        <input type="text" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apellidoPaterno">
+                            <i class="fas fa-user"></i> Apellido Paterno
+                        </label>
+                        <input type="text" id="apellidoPaterno" name="apellidoPaterno" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apellidoMaterno">
+                            <i class="fas fa-user"></i> Apellido Materno
+                        </label>
+                        <input type="text" id="apellidoMaterno" name="apellidoMaterno">
+                    </div>
+                    <div class="form-group">
+                        <label for="correo">
+                            <i class="fas fa-envelope"></i> Correo Electrónico
+                        </label>
+                        <input type="email" id="correo" name="correo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="genero">
+                            <i class="fas fa-venus-mars"></i> Género
+                        </label>
+                        <select id="genero" name="genero" required>
+                            <option value="">Selecciona tu género</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="fechaNacimiento">
+                            <i class="fas fa-calendar-alt"></i> Fecha de Nacimiento
+                        </label>
+                        <input type="date" id="fechaNacimiento" name="fechaNacimiento" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nacionalidad">
+                            <i class="fas fa-globe"></i> Nacionalidad
+                        </label>
+                        <select id="nacionalidad" name="nacionalidad" required>
+                            <option value="">Selecciona tu nacionalidad</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="paisNacimiento">
+                            <i class="fas fa-flag"></i> País de Nacimiento
+                        </label>
+                        <select id="paisNacimiento" name="paisNacimiento" required>
+                            <option value="">Selecciona tu país de nacimiento</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group full-width">
+                    <label for="fotoPerfil">
+                        <i class="fas fa-camera"></i> Foto de Perfil
+                    </label>
+                    <div class="file-upload-area">
+                        <input type="file" id="fotoPerfil" name="fotoPerfil" accept="image/*">
+                        <div class="upload-placeholder">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Haz clic para seleccionar una imagen o arrastra aquí</p>
+                            <span>PNG, JPG hasta 5MB</span>
+                        </div>
+                        <div class="image-preview" id="imagePreview"></div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('infoModal')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para ver estadísticas de publicación CON funcionalidad de eliminar comentarios -->
+    <div id="postStatsModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h2><i class="fas fa-chart-line"></i> Estadísticas de Publicación</h2>
+                <button class="close-btn" onclick="closeModal('postStatsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="post-stats-content">
+                    <div class="post-preview">
+                        <h3 id="statsPostTitle">Título de la publicación</h3>
+                        <p id="statsPostContent">Contenido de la publicación...</p>
+                        
+                        <div class="post-meta-stats">
+                            <span id="statsPostDate">Fecha de publicación</span>
+                            <span id="statsPostMundial">Mundial</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card views">
+                            <div class="stat-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statsViews">0</span>
+                                <span class="stat-label">Visualizaciones</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card likes">
+                            <div class="stat-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statsLikes">0</span>
+                                <span class="stat-label">Me Gusta</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card comments">
+                            <div class="stat-icon">
+                                <i class="fas fa-comment"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="statsComments">0</span>
+                                <span class="stat-label">Comentarios</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="interactions-section">
+                        <div class="section-tabs">
+                            <button class="tab-btn active" onclick="showInteractionTab('likes')">
+                                <i class="fas fa-heart"></i> Usuarios que dieron Like
+                            </button>
+                            <button class="tab-btn" onclick="showInteractionTab('comments')">
+                                <i class="fas fa-comment"></i> Comentarios
+                            </button>
+                        </div>
+                        
+                        <div class="interactions-content">
+                            <div id="likesTab" class="interaction-tab active">
+                                <div class="users-list" id="likesList">
+                                    <!-- Lista de usuarios que dieron like -->
+                                </div>
+                            </div>
+                            
+                            <div id="commentsTab" class="interaction-tab">
+                                <div class="comments-list" id="commentsList">
+                                    <!-- Lista de comentarios CON botones de eliminar -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para aprobar/rechazar posts -->
+    <div id="postActionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-gavel"></i> Moderación de Publicación</h2>
+                <button class="close-btn" onclick="closeModal('postActionModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="post-moderation">
+                    <div class="post-preview">
+                        <h3 id="moderationPostTitle">Título del post</h3>
+                        <p id="moderationPostContent">Contenido del post...</p>
+                        <div class="post-meta">
+                            <span id="moderationPostAuthor">Por Usuario</span>
+                            <span id="moderationPostDate">Fecha</span>
+                        </div>
+                    </div>
+                    
+                    <div class="moderation-actions">
+                        <button class="btn-approve" onclick="approvePost()">
+                            <i class="fas fa-check"></i>
+                            Aprobar Publicación
+                        </button>
+                        <button class="btn-reject" onclick="rejectPost()">
+                            <i class="fas fa-times"></i>
+                            Rechazar Publicación
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay para modales -->
+    <div id="modalOverlay" class="modal-overlay"></div>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="assets/isologo white.png" alt="FootGG Logo">
+                <p>Tu fuente #1 para todo sobre la Copa del Mundo.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Navegación</h4>
+                <ul>
+                    <li><a href="index.php?controller=admin&action=index">Dashboard</a></li>
+                    <li><a href="index.php?controller=admin&action=posts">Posts</a></li>
+                </ul>
+            </div>
+            <div class="footer-social">
+                <h4>Síguenos</h4>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 FootGG. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script type="module" src="js/perfilAdmin.js"></script>
 </body>
 </html>

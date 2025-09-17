@@ -1,164 +1,756 @@
-/* Estilos para el contenido principal del perfil */
-.main-content {
-    padding: 2rem;
-    background-color: #143D2C; /* Un fondo suave */
+/* ================================
+   MULTIMEDIA CAROUSEL STYLES
+   ================================ */
+
+.post-multimedia {
+    margin: 1rem 0;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
-.profile-main-header {
-    background: rgb(255, 255, 255, 0.1);
-    padding: 1.5rem 2rem;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-}
-
-.profile-main-header h1 {
-    margin: 0;
-    font-size: 2rem;
-    color: #ccc6c6;
-}
-
-.profile-main-header p {
-    margin-top: 0.5rem;
-    color: #ffffff;
-}
-
-/* Diseño de rejilla para el perfil */
-.profile-grid {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: 2rem;
-}
-
-/* Tarjetas de la barra lateral */
-.profile-sidebar .profile-card, .profile-sidebar .info-card {
-    background: rgb(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    margin-bottom: 2rem;
-}
-
-/* Estilos de la tarjeta de perfil */
-.profile-card {
-    text-align: center;
-}
-
-.profile-avatar img {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 4px solid #ddd;
-    margin-bottom: 1rem;
-}
-
-.profile-name h2 {
-    margin: 0;
-    font-size: 1.5rem;
-}
-
-.profile-name p {
-    color: #888;
-    margin-top: 0.25rem;
-}
-
-.edit-profile-btn {
+.multimedia-carousel {
+    position: relative;
     width: 100%;
-    padding: 0.75rem;
-    margin-top: 1.5rem;
-    background-color: #032210b2;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.3s;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
 }
 
-.edit-profile-btn:hover {
-    background-color: #0056b3;
+.carousel-container {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
 }
 
-/* Estilos de la tarjeta de información */
-.info-card h3 {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 0.75rem;
-    margin-bottom: 1rem;
-}
-
-.info-card ul {
-    list-style: none;   
-    padding: 0;
-}
-
-.info-card li {
+.carousel-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
     display: flex;
     align-items: center;
-    margin-bottom: 1rem;
-    color: #ffffff;
+    justify-content: center;
 }
 
-.info-card li i {
-    color: #0a8f20;
+.carousel-slide.active {
+    opacity: 1;
+}
+
+.carousel-slide img,
+.carousel-slide video {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.carousel-slide video {
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    z-index: 10;
+    backdrop-filter: blur(5px);
+}
+
+.carousel-nav:hover {
+    background: rgba(0, 255, 136, 0.8);
+    color: #000;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav.prev {
+    left: 10px;
+}
+
+.carousel-nav.next {
+    right: 10px;
+}
+
+.carousel-indicators {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.carousel-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-indicator.active,
+.carousel-indicator:hover {
+    background: #00ff88;
+    transform: scale(1.2);
+}
+
+/* Responsive carousel */
+@media (max-width: 768px) {
+    .carousel-container {
+        height: 200px;
+    }
+    
+    .carousel-nav {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+    
+    .carousel-nav.prev {
+        left: 5px;
+    }
+    
+    .carousel-nav.next {
+        right: 5px;
+    }
+}
+
+/* ================================
+   POST CARD LAYOUT UPDATES
+   ================================ */
+
+.post-card .post-header {
+    margin-bottom: 1rem;
+}
+
+.post-card .post-header h4 {
+    margin-bottom: 0.5rem;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.post-author-info {
+    display: flex;
+    gap: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85rem;
+}
+
+.post-author-info span {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.post-author-info i {
+    color: #00ff88;
+    font-size: 0.8rem;
+}
+
+.post-content {
+    margin-bottom: 1rem;
+}
+
+.post-content p {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+/* ================================
+   ADMIN PROFILE SPECIFIC STYLES
+   ================================ */
+
+/* Admin stats card específica para el sidebar */
+.admin-stats-card {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+}
+
+.admin-stats-card:hover {
+    border-color: rgba(255, 193, 7, 0.5);
+    transform: translateY(-2px);
+}
+
+.admin-stats-card h3 {
+    color: #ffc107;
+    border-bottom: 2px solid rgba(255, 193, 7, 0.2);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-stats-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.admin-stats-card li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.2rem;
+    color: #fff;
+    line-height: 1.4;
+}
+
+.admin-stats-card li:last-child {
+    margin-bottom: 0;
+}
+
+.admin-stats-card li i {
+    color: #ffc107;
     margin-right: 1rem;
     width: 20px;
     text-align: center;
+    font-size: 1.1rem;
 }
 
-/* Estilos de la sección de posts */
-.posts-section {
-    background: rgb(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+.admin-stats-card li strong {
+    min-width: 120px;
+    margin-right: 0.5rem;
 }
 
-.post-tabs {
-    display: flex;
-    border-bottom: 2px solid #eee;
-    margin-bottom: 1.5rem;
-}
+/* ================================
+   POST CARDS - ADMIN SPECIFIC
+   ================================ */
 
-.tab-btn {
-    background: none;
-    border: none;
-    padding: 0.75rem 1rem;
+/* Estilos específicos para posts pendientes */
+.post-card.pending-moderation {
+    /* border: 2px solid rgba(255, 193, 7, 0.4); */
+    background: rgba(255, 193, 7, 0.05);
     cursor: pointer;
-    font-size: 1rem;
-    color: #ffffff;
-    border-bottom: 3px solid transparent;
+    position: relative;
 }
 
-.tab-btn.active {
-    color: #04a547b6;
-    border-bottom-color: #09a82b;
+.post-card.pending-moderation:hover {
+    /* border-color: rgba(255, 193, 7, 0.6); */
+    transform: translateY(-3px);
+    /* box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3); */
 }
 
-.posts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
+.post-card.pending-moderation::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    /* background: linear-gradient(45deg, #ffc107, #ff9800, #ffc107); */
+    border-radius: 15px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-.post-card {
-    border: 1px solid #e0e0e0;
-    padding: 1rem;
-    border-radius: 8px;
+.post-card.pending-moderation:hover::before {
+    opacity: 0.1;
 }
-.post-status {
+
+/* Botones de moderación en las tarjetas */
+.moderation-buttons {
+    display: flex;
+    gap: 0.5rem;
     margin-top: 1rem;
-    font-weight: 600;
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    display: inline-block;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
-.post-status.approved { color: #28a745; background-color: #e9f5ec; }
-/* Agrega estilos para .pending y .rejected */
 
-/* --- Responsividad para móviles --- */
-@media (max-width: 768px) {
-    .profile-grid {
-        grid-template-columns: 1fr;
+.btn-moderate {
+    flex: 1;
+    padding: 0.6rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.btn-moderate.approve {
+    background: linear-gradient(135deg, #00ff88, #00cc6a);
+    color: #000;
+}
+
+.btn-moderate.approve:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 255, 136, 0.4);
+}
+
+.btn-moderate.reject {
+    background: linear-gradient(135deg, #ff4757, #ff3742);
+    color: #fff;
+}
+
+.btn-moderate.reject:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 71, 87, 0.4);
+}
+
+/* ================================
+   POST MODERATION MODAL
+   ================================ */
+
+.post-moderation {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.post-moderation .post-preview {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2rem;
+    border-radius: 15px;
+    border: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+.post-moderation .post-preview h3 {
+    color: #00ff88;
+    margin-bottom: 1rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.post-moderation .post-preview p {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.post-meta {
+    display: flex;
+    gap: 1.5rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1rem;
+}
+
+.moderation-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-approve,
+.btn-reject {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 180px;
+    justify-content: center;
+}
+
+.btn-approve {
+    background: linear-gradient(135deg, #00ff88, #00cc6a);
+    color: #000;
+    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
+}
+
+.btn-approve:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+}
+
+.btn-reject {
+    background: linear-gradient(135deg, #ff4757, #ff3742);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.2);
+}
+
+.btn-reject:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 71, 87, 0.4);
+}
+
+/* ================================
+   COMMENT MODERATION - ADMIN FEATURE
+   ================================ */
+
+.comment-item.admin-view {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.comment-item.admin-view:hover {
+    background: rgba(0, 0, 0, 0.4);
+    border-left-color: #ffc107;
+}
+
+.comment-actions {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.comment-item.admin-view:hover .comment-actions {
+    opacity: 1;
+}
+
+.btn-delete-comment {
+    background: rgba(255, 71, 87, 0.8);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.btn-delete-comment:hover {
+    background: rgba(255, 71, 87, 1);
+    transform: scale(1.05);
+}
+
+/* Confirmation overlay para eliminar comentarios */
+.delete-confirmation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 71, 87, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.delete-confirmation.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.delete-confirmation p {
+    color: #fff;
+    font-weight: 600;
+    text-align: center;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.delete-confirmation-buttons {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.btn-confirm-delete,
+.btn-cancel-delete {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+
+.btn-confirm-delete {
+    background: #fff;
+    color: #ff4757;
+}
+
+.btn-confirm-delete:hover {
+    background: #f8f9fa;
+    transform: scale(1.05);
+}
+
+.btn-cancel-delete {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-cancel-delete:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+/* ================================
+   ADMIN POST STATUS INDICATORS
+   ================================ */
+
+.post-status.pending {
+    color: #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    animation: pulse-pending 2s infinite;
+}
+
+@keyframes pulse-pending {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(255, 193, 7, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(255, 193, 7, 0.6);
     }
 }
+
+.post-status.rejected {
+    color: #ff4757;
+    background-color: rgba(255, 71, 87, 0.1);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+/* ================================
+   TABS SPECIFIC FOR ADMIN
+   ================================ */
+
+/* .post-tabs .tab-btn[data-status="pending"].active {
+    color: #ffc107;
+    border-bottom-color: #ffc107;
+}
+
+.post-tabs .tab-btn[data-status="pending"] .tab-count {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+
+.post-tabs .tab-btn[data-status="rejected"] .tab-count {
+    background: rgba(255, 71, 87, 0.2);
+    color: #ff4757;
+}
+
+.post-tabs .tab-btn[data-status="rejected"].active {
+    color: #ff4757;
+    border-bottom-color: #ff4757;
+} */
+
+/* ================================
+   ADMIN NOTIFICATIONS
+   ================================ */
+
+.admin-notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    color: #fff;
+    max-width: 350px;
+    z-index: 9999;
+    transform: translateX(400px);
+    transition: transform 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.admin-notification.show {
+    transform: translateX(0);
+}
+
+.admin-notification.success {
+    border-color: rgba(0, 255, 136, 0.5);
+}
+
+.admin-notification.warning {
+    border-color: rgba(255, 193, 7, 0.5);
+}
+
+.admin-notification.error {
+    border-color: rgba(255, 71, 87, 0.5);
+}
+
+.notification-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.notification-header i.success {
+    color: #00ff88;
+}
+
+.notification-header i.warning {
+    color: #ffc107;
+}
+
+.notification-header i.error {
+    color: #ff4757;
+}
+
+/* ================================
+   RESPONSIVE DESIGN - ADMIN SPECIFIC
+   ================================ */
+
+@media (max-width: 768px) {
+    .admin-stats-card {
+        padding: 1.5rem;
+    }
+    
+    .admin-stats-card li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .admin-stats-card li strong {
+        min-width: auto;
+        margin-right: 0;
+    }
+    
+    .moderation-actions {
+        flex-direction: column;
+    }
+    
+    .btn-approve,
+    .btn-reject {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .moderation-buttons {
+        flex-direction: column;
+    }
+    
+    .comment-actions {
+        position: static;
+        opacity: 1;
+        margin-top: 0.75rem;
+        text-align: right;
+    }
+}
+
+@media (max-width: 480px) {
+    .post-moderation .post-preview {
+        padding: 1.5rem;
+    }
+    
+    .post-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .delete-confirmation {
+        padding: 1rem;
+    }
+    
+    .delete-confirmation-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-confirm-delete,
+    .btn-cancel-delete {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ================================
+   LOADING STATES
+   ================================ */
+
+.moderating {
+    pointer-events: none;
+    opacity: 0.7;
+    position: relative;
+}
+
+.moderating::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    /* border: 2px solid #ffc107; */
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ================================
+   UTILITY CLASSES - ADMIN
+   ================================ */
+
+.admin-badge {
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: #000;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* .priority-high {
+    border-left: 4px solid #ff4757 !important;
+}
+
+.priority-medium {
+    border-left: 4px solid #ffc107 !important;
+}
+
+.priority-low {
+    border-left: 4px solid #00ff88 !important;
+} */
