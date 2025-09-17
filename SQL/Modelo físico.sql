@@ -2,6 +2,16 @@ CREATE DATABASE BDM;
 
 USE BDM;
 
+CREATE TABLE Pais(
+  IdPais INT PRIMARY KEY AUTO_INCREMENT,
+  Pais VARCHAR(255),
+  Nacionalidad VARCHAR(255)
+);
+
+ALTER TABLE Pais
+CHANGE COLUMN Nombre Pais VARCHAR(255),
+CHANGE COLUMN Gentilicio Nacionalidad VARCHAR(255);
+
 CREATE TABLE Usuario (
   IdUsuario INT PRIMARY KEY AUTO_INCREMENT,
   Correo VARCHAR(255) BINARY UNIQUE NOT NULL,
@@ -10,7 +20,6 @@ CREATE TABLE Usuario (
   ApellidoPaterno VARCHAR(255),
   ApellidoMaterno VARCHAR(255),
   Genero ENUM('Masculino', 'Femenino', 'Otro'),
-  GeneroEspecifico VARCHAR(255),
   Nacionalidad INT,
   PaisNacimiento INT,
   Tipo ENUM('Usuario', 'Administrador'),
@@ -20,6 +29,9 @@ CREATE TABLE Usuario (
   FOREIGN KEY (Nacionalidad) REFERENCES Pais(IdPais),
   FOREIGN KEY (PaisNacimiento) REFERENCES Pais(IdPais)
 );
+
+ALTER TABLE Usuario
+DROP COLUMN GeneroEspecifico;
 
 ALTER TABLE Usuario
 MODIFY Correo VARCHAR(255) BINARY UNIQUE NOT NULL,
@@ -32,12 +44,6 @@ alter table usuario
 add FechaNacimiento DATE 
 AFTER FotoPerfil;
 
-CREATE TABLE Pais(
-  IdPais INT PRIMARY KEY AUTO_INCREMENT,
-  Nombre VARCHAR(255),
-  Gentilicio VARCHAR(255)
-);
-
 CREATE TABLE Mundial(
   IdMundial INT PRIMARY KEY AUTO_INCREMENT,
   Año YEAR,
@@ -46,21 +52,6 @@ CREATE TABLE Mundial(
 -- use bdm;
 ALTER TABLE Mundial
 MODIFY COLUMN Año YEAR;
-
-
-CREATE TABLE Seleccion (
-  IdSeleccion INT PRIMARY KEY,
-  Nombre VARCHAR(255),
-  FOREIGN KEY (IdSeleccion) REFERENCES Pais(IdPais)
-);
-
-CREATE TABLE Mundial_Seleccion (
-	IdMundial INT,
-    IdSeleccion INT,
-    PRIMARY KEY (IdMundial, IdSeleccion),
-    FOREIGN KEY (IdMundial) REFERENCES Mundial(IdMundial),
-    FOREIGN KEY (IdSeleccion) REFERENCES Seleccion(IdSeleccion)
-);
 
 CREATE TABLE Sedes (
 	IdMundial INT,
@@ -90,39 +81,60 @@ CREATE TABLE Publicacion (
   FOREIGN KEY (IdMundial) REFERENCES Mundial(IdMundial)
 );
 
-CREATE TABLE Interaccion (
-  IdInteraccion INT PRIMARY KEY AUTO_INCREMENT,
-  FechaInteraccion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+-- CREATE TABLE Interaccion (
+--   IdInteraccion INT PRIMARY KEY AUTO_INCREMENT,
+--   FechaInteraccion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--   IdUsuario INT,
+--   IdPublicacion INT,
+--   FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario),
+--   FOREIGN KEY (IdPublicacion) REFERENCES Publicacion(IdPublicacion)
+-- );
+
+ALTER TABLE Interaccion
+ADD IdPublicacion INT,
+ADD FOREIGN KEY (IdPublicacion) REFERENCES Publicacion(IdPublicacion);
+
+-- drop table Comentario;
+-- drop table Reaccion;
+-- drop table Vista;
+-- drop table Interaccion;
+
+CREATE TABLE Comentario (
+  IdComentario INT PRIMARY KEY AUTO_INCREMENT,
+  Comentario TEXT,
+  Estatus BOOLEAN DEFAULT TRUE,
+  FechaComentario TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   IdUsuario INT,
   IdPublicacion INT,
   FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario),
   FOREIGN KEY (IdPublicacion) REFERENCES Publicacion(IdPublicacion)
 );
 
-ALTER TABLE Interaccion
-ADD IdPublicacion INT,
-ADD FOREIGN KEY (IdPublicacion) REFERENCES Publicacion(IdPublicacion);
-
-CREATE TABLE Comentario (
-  IdComentario INT PRIMARY KEY,
-  Comentario TEXT,
-  Estatus BOOLEAN DEFAULT TRUE,
-  FOREIGN KEY (IdComentario) REFERENCES Interaccion(IdInteraccion)
-);
-
 CREATE TABLE Reaccion (
-  IdReaccion INT PRIMARY KEY,
-  Reaccion BOOLEAN DEFAULT TRUE,
-  FOREIGN KEY (IdReaccion) REFERENCES Interaccion(IdInteraccion)
+  IdReaccion INT PRIMARY KEY AUTO_INCREMENT,
+  IdUsuario INT,
+  IdPublicacion INT,
+  FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario),
+  FOREIGN KEY (IdPublicacion) REFERENCES Publicacion(IdPublicacion)
 );
 
 ALTER TABLE Reaccion
 MODIFY Reaccion BOOLEAN DEFAULT TRUE;
 
+-- Por el momento se podrá hacer con solo usuarios registrador
+-- (en dado caso de que el profe diga lo contrario quitar el IdUsuario
 CREATE TABLE Vista (
-  IdVista INT PRIMARY KEY,
-  FOREIGN KEY (IdVista) REFERENCES Interaccion(IdInteraccion)
+  IdVista INT PRIMARY KEY AUTO_INCREMENT,
+  IdUsuario INT,
+  IdPublicacion INT,
+  FOREIGN KEY (IdUsuario) REFERENCES Usuario(IdUsuario),
+  FOREIGN KEY (IdPublicacion) REFERENCES Publicacion(IdPublicacion)
 );
+
+alter table vista
+add IdUsuario INT AFTER IdVista,
+add constraint foreign key (IdUsuario) REFERENCES Usuario(IdUsuario);
+
 
 CREATE TABLE Categoria (
 	IdCategoria INT PRIMARY KEY AUTO_INCREMENT,
