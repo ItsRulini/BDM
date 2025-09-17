@@ -88,7 +88,6 @@ export default class ProfileManager {
             });
         });
 
-
         // Global functions
         window.toggleMobileMenu = this.toggleMobileMenu.bind(this);
         window.openEditOptions = this.openEditOptions.bind(this);
@@ -250,34 +249,70 @@ export default class ProfileManager {
 
     async loadUserPosts() {
         try {
-            // Simulación de posts del usuario - aquí conectarías con tu backend
+            // Simulación de posts del usuario con multimedia - aquí conectarías con tu backend
             this.userPosts = [
                 {
                     id: 1,
                     title: "Mi análisis del Mundial de Qatar 2022",
-                    content: "El mundial de Qatar fue espectacular, especialmente la final entre Argentina y Francia...",
+                    content: "El mundial de Qatar fue espectacular, especialmente la final entre Argentina y Francia. Messi finalmente consiguió su tan ansiado mundial y demostró por qué es considerado el GOAT por muchos. La final fue épica con penales incluidos.",
                     status: "approved",
                     fechaCreacion: "2024-12-15",
                     mundial: "Qatar 2022",
-                    categorias: ["Análisis", "Opinión"]
+                    categorias: ["Análisis", "Opinión"],
+                    multimedia: [
+                        {
+                            type: 'image',
+                            src: 'assets/posts/qatar-final.jpg',
+                            alt: 'Final de Qatar 2022'
+                        },
+                        {
+                            type: 'image',
+                            src: 'assets/posts/messi-trofeo.jpg',
+                            alt: 'Messi con el trofeo'
+                        },
+                        {
+                            type: 'video',
+                            src: 'assets/posts/highlights-final.mp4',
+                            poster: 'assets/posts/video-poster.jpg'
+                        }
+                    ]
                 },
                 {
                     id: 2,
                     title: "Historia de los mundiales mexicanos",
-                    content: "México ha sido sede de dos mundiales increíbles en 1970 y 1986...",
+                    content: "México ha sido sede de dos mundiales increíbles en 1970 y 1986. En 1970 fue el primer mundial transmitido a color y en 1986 vimos la mano de Dios de Maradona. Ambos eventos marcaron la historia del fútbol mundial.",
                     status: "pending",
                     fechaCreacion: "2024-12-14",
                     mundial: "México 1986",
-                    categorias: ["Historia"]
+                    categorias: ["Historia"],
+                    multimedia: [
+                        {
+                            type: 'image',
+                            src: 'assets/posts/mexico-70.jpg',
+                            alt: 'Mundial México 1970'
+                        },
+                        {
+                            type: 'image',
+                            src: 'assets/posts/maradona-86.jpg',
+                            alt: 'Maradona 1986'
+                        }
+                    ]
                 },
                 {
                     id: 3,
                     title: "Predicciones para el Mundial 2026",
-                    content: "Con la expansión a 48 equipos, el próximo mundial será muy diferente...",
+                    content: "Con la expansión a 48 equipos, el próximo mundial será muy diferente. Estados Unidos, México y Canadá serán sedes conjuntas por primera vez en la historia. ¿Estará preparado el mundo para este cambio?",
                     status: "rejected",
                     fechaCreacion: "2024-12-13",
                     mundial: "Estados Unidos 2026",
-                    categorias: ["Predicciones"]
+                    categorias: ["Predicciones"],
+                    multimedia: [
+                        {
+                            type: 'image',
+                            src: 'assets/posts/mundial-2026.jpg',
+                            alt: 'Logo Mundial 2026'
+                        }
+                    ]
                 }
             ];
 
@@ -302,9 +337,6 @@ export default class ProfileManager {
 
         // Filter and display posts
         const filteredPosts = this.userPosts.filter(post => {
-            // if (status === 'aprobadas') return post.status === 'approved';
-            // if (status === 'pendientes') return post.status === 'pending';
-            // if (status === 'rechazadas') return post.status === 'rejected';
             return post.status === status;
         });
 
@@ -338,21 +370,150 @@ export default class ProfileManager {
         const categories = Array.isArray(post.categorias) ? post.categorias.join(', ') : post.categorias;
         const isClickable = post.status === 'approved';
 
+        // Crear carrusel de multimedia
+        const createMultimediaCarousel = (multimedia) => {
+            if (!multimedia || multimedia.length === 0) return '';
+            
+            const carouselId = `carousel-${post.id}`;
+            
+            const slides = multimedia.map((item, index) => {
+                if (item.type === 'image') {
+                    return `
+                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <img src="${item.src}" alt="${item.alt}" onerror="this.parentElement.style.display='none'">
+                        </div>
+                    `;
+                } else if (item.type === 'video') {
+                    return `
+                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <video controls poster="${item.poster || ''}" preload="metadata">
+                                <source src="${item.src}" type="video/mp4">
+                                Tu navegador no soporta el elemento video.
+                            </video>
+                        </div>
+                    `;
+                }
+                return '';
+            }).join('');
+
+            const indicators = multimedia.length > 1 ? multimedia.map((_, index) => 
+                `<button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-slide="${index}" onclick="event.stopPropagation(); profileManager.goToSlide('${carouselId}', ${index})"></button>`
+            ).join('') : '';
+
+            const navigation = multimedia.length > 1 ? `
+                <button class="carousel-nav prev" onclick="event.stopPropagation(); profileManager.prevSlide('${carouselId}')" aria-label="Anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-nav next" onclick="event.stopPropagation(); profileManager.nextSlide('${carouselId}')" aria-label="Siguiente">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            ` : '';
+
+            return `
+                <div class="post-multimedia">
+                    <div class="multimedia-carousel" id="${carouselId}">
+                        <div class="carousel-container">
+                            ${slides}
+                        </div>
+                        ${navigation}
+                        ${indicators ? `<div class="carousel-indicators">${indicators}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        };
+
         return `
             <div class="post-card fade-in ${isClickable ? 'clickable' : ''}" ${isClickable ? `onclick="profileManager.openPostStats(${post.id})"` : ''}>
-                <h4>${post.title}</h4>
-                <p>${this.truncateText(post.content, 150)}</p>
+                <div class="post-header">
+                    <h4>${post.title}</h4>
+                    <div class="post-author-info">
+                        <span><i class="fas fa-calendar"></i> ${formattedDate}</span>
+                    </div>
+                </div>
+                
+                <div class="post-content">
+                    <p>${this.truncateText(post.content, 150)}</p>
+                    ${createMultimediaCarousel(post.multimedia)}
+                </div>
+                
                 <div class="post-meta">
                     <small><strong>Mundial:</strong> ${post.mundial}</small>
                     <small><strong>Categorías:</strong> ${categories}</small>
-                    <small><strong>Fecha:</strong> ${formattedDate}</small>
                 </div>
+                
                 <div class="post-status ${config.class}">
                     <i class="${config.icon}"></i> ${config.text}
                 </div>
+                
                 ${isClickable ? '<div class="click-hint"><i class="fas fa-chart-line"></i> Click para ver estadísticas</div>' : ''}
             </div>
         `;
+    }
+
+    // ================================
+    // CAROUSEL FUNCTIONALITY
+    // ================================
+
+    nextSlide(carouselId) {
+        const carousel = document.getElementById(carouselId);
+        if (!carousel) return;
+
+        const slides = carousel.querySelectorAll('.carousel-slide');
+        const indicators = carousel.querySelectorAll('.carousel-indicator');
+        const activeSlide = carousel.querySelector('.carousel-slide.active');
+        const activeIndicator = carousel.querySelector('.carousel-indicator.active');
+        
+        if (!activeSlide) return;
+
+        let currentIndex = parseInt(activeSlide.dataset.index);
+        let nextIndex = (currentIndex + 1) % slides.length;
+
+        // Remove active class from current elements
+        activeSlide.classList.remove('active');
+        if (activeIndicator) activeIndicator.classList.remove('active');
+
+        // Add active class to next elements
+        slides[nextIndex].classList.add('active');
+        if (indicators[nextIndex]) indicators[nextIndex].classList.add('active');
+    }
+
+    prevSlide(carouselId) {
+        const carousel = document.getElementById(carouselId);
+        if (!carousel) return;
+
+        const slides = carousel.querySelectorAll('.carousel-slide');
+        const indicators = carousel.querySelectorAll('.carousel-indicator');
+        const activeSlide = carousel.querySelector('.carousel-slide.active');
+        const activeIndicator = carousel.querySelector('.carousel-indicator.active');
+        
+        if (!activeSlide) return;
+
+        let currentIndex = parseInt(activeSlide.dataset.index);
+        let prevIndex = currentIndex === 0 ? slides.length - 1 : currentIndex - 1;
+
+        // Remove active class from current elements
+        activeSlide.classList.remove('active');
+        if (activeIndicator) activeIndicator.classList.remove('active');
+
+        // Add active class to previous elements
+        slides[prevIndex].classList.add('active');
+        if (indicators[prevIndex]) indicators[prevIndex].classList.add('active');
+    }
+
+    goToSlide(carouselId, slideIndex) {
+        const carousel = document.getElementById(carouselId);
+        if (!carousel) return;
+
+        const slides = carousel.querySelectorAll('.carousel-slide');
+        const indicators = carousel.querySelectorAll('.carousel-indicator');
+        
+        // Remove active class from all elements
+        slides.forEach(slide => slide.classList.remove('active'));
+        indicators.forEach(indicator => indicator.classList.remove('active'));
+
+        // Add active class to target elements
+        if (slides[slideIndex]) slides[slideIndex].classList.add('active');
+        if (indicators[slideIndex]) indicators[slideIndex].classList.add('active');
     }
 
     updatePostsCounts() {
@@ -434,8 +595,10 @@ export default class ProfileManager {
     resetPasswordForm() {
         if (this.passwordForm) {
             this.passwordForm.reset();
-            document.getElementById('passwordStrength').textContent = '';
-            document.getElementById('passwordMatch').textContent = '';
+            const passwordStrength = document.getElementById('passwordStrength');
+            const passwordMatch = document.getElementById('passwordMatch');
+            if (passwordStrength) passwordStrength.textContent = '';
+            if (passwordMatch) passwordMatch.textContent = '';
         }
     }
 
@@ -559,13 +722,14 @@ export default class ProfileManager {
                 mundial: this.mundiales.find(m => m.id == mundialId)?.name || 'Unknown',
                 categorias: this.selectedCategories.map(id => 
                     this.categories.find(c => c.id == id)?.name || 'Unknown'
-                )
+                ),
+                multimedia: [] // Los archivos se procesarían en el backend
             };
             
             this.userPosts.unshift(newPost);
             this.updatePostsCounts();
             
-            if (this.currentTab === 'pending' || this.currentTab === 'pendientes') {
+            if (this.currentTab === 'pending') {
                 this.showPosts('pending');
             }
         });
@@ -730,28 +894,28 @@ export default class ProfileManager {
     // VALIDATION
     // ================================
 
-    // validatePasswordStrength() {
-    //     const password = document.getElementById('newPassword').value;
-    //     const strengthIndicator = document.getElementById('passwordStrength');
+    validatePasswordStrength() {
+        const password = document.getElementById('newPassword').value;
+        const strengthIndicator = document.getElementById('passwordStrength');
         
-    //     if (!strengthIndicator) return;
+        if (!strengthIndicator) return;
 
-    //     let strength = 'weak';
-    //     let message = 'Muy débil';
+        let strength = 'weak';
+        let message = 'Muy débil';
         
-    //     if (password.length >= 8) {
-    //         strength = 'medium';
-    //         message = 'Media';
+        if (password.length >= 8) {
+            strength = 'medium';
+            message = 'Media';
             
-    //         if (password.match(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)) {
-    //             strength = 'strong';
-    //             message = 'Fuerte';
-    //         }
-    //     }
+            if (password.match(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)) {
+                strength = 'strong';
+                message = 'Fuerte';
+            }
+        }
 
-    //     strengthIndicator.className = `password-strength ${strength}`;
-    //     strengthIndicator.innerHTML = `<i class="fas fa-shield-alt"></i> ${message}`;
-    // }
+        strengthIndicator.className = `password-strength ${strength}`;
+        strengthIndicator.innerHTML = `<i class="fas fa-shield-alt"></i> ${message}`;
+    }
 
     validatePasswordMatch() {
         const newPassword = document.getElementById('newPassword').value;
@@ -783,21 +947,6 @@ export default class ProfileManager {
                 counterElement.classList.add('warning');
             }
         }
-    }
-
-    updateSelectedCategories() {
-        this.selectedCategories = [];
-        document.querySelectorAll('#categoriesContainer input[type="checkbox"]:checked')
-            .forEach(checkbox => {
-                this.selectedCategories.push(parseInt(checkbox.value));
-            });
-    }
-
-    clearCategorySelections() {
-        document.querySelectorAll('#categoriesContainer input[type="checkbox"]')
-            .forEach(checkbox => {
-                checkbox.checked = false;
-            });
     }
 
     // ================================
@@ -833,6 +982,14 @@ export default class ProfileManager {
     truncateText(text, maxLength) {
         if (text.length <= maxLength) return text;
         return text.substr(0, maxLength) + '...';
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
     // ================================
@@ -893,6 +1050,58 @@ export default class ProfileManager {
         document.getElementById('statsPostContent').textContent = post.content;
         document.getElementById('statsPostDate').textContent = `Publicado el ${this.formatDate(post.fechaCreacion)}`;
         document.getElementById('statsPostMundial').textContent = post.mundial;
+
+        // Generar carrusel de multimedia para el modal de estadísticas
+        const statsMultimediaContainer = document.getElementById('statsPostMultimedia');
+        if (statsMultimediaContainer && post.multimedia && post.multimedia.length > 0) {
+            const carouselId = `stats-carousel-${post.id}`;
+            
+            const slides = post.multimedia.map((item, index) => {
+                if (item.type === 'image') {
+                    return `
+                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <img src="${item.src}" alt="${item.alt}" onerror="this.parentElement.style.display='none'">
+                        </div>
+                    `;
+                } else if (item.type === 'video') {
+                    return `
+                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <video controls poster="${item.poster || ''}" preload="metadata">
+                                <source src="${item.src}" type="video/mp4">
+                                Tu navegador no soporta el elemento video.
+                            </video>
+                        </div>
+                    `;
+                }
+                return '';
+            }).join('');
+
+            const indicators = post.multimedia.length > 1 ? post.multimedia.map((_, index) => 
+                `<button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-slide="${index}" onclick="profileManager.goToSlide('${carouselId}', ${index})"></button>`
+            ).join('') : '';
+
+            const navigation = post.multimedia.length > 1 ? `
+                <button class="carousel-nav prev" onclick="profileManager.prevSlide('${carouselId}')" aria-label="Anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-nav next" onclick="profileManager.nextSlide('${carouselId}')" aria-label="Siguiente">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            ` : '';
+
+            statsMultimediaContainer.innerHTML = `
+                <div class="multimedia-carousel" id="${carouselId}">
+                    <div class="carousel-container">
+                        ${slides}
+                    </div>
+                    ${navigation}
+                    ${indicators ? `<div class="carousel-indicators">${indicators}</div>` : ''}
+                </div>
+            `;
+        } else if (statsMultimediaContainer) {
+            // Limpiar el contenedor si no hay multimedia
+            statsMultimediaContainer.innerHTML = '';
+        }
 
         // Actualizar números de estadísticas
         document.getElementById('statsViews').textContent = stats.views.toLocaleString();

@@ -420,6 +420,16 @@ class AdminProfile extends ProfileManager {
     // ================================
     // MODERACIÓN DE POSTS
     // ================================
+    openPostStats(postId) {
+        const post = this.userPosts.find(p => p.id === postId);
+        if (!post || post.status !== 'approved') {
+            this.showError('Solo se pueden ver estadísticas de publicaciones aprobadas');
+            return;
+        }
+
+        this.loadPostStatistics(post);
+        this.showModal('postStatsModal');
+    }
 
     moderatePost(postId) {
         const post = this.userPosts.find(p => p.id === postId);
@@ -435,6 +445,71 @@ class AdminProfile extends ProfileManager {
         document.getElementById('moderationPostContent').textContent = post.content;
         document.getElementById('moderationPostAuthor').textContent = `Por ${post.autor}`;
         document.getElementById('moderationPostDate').textContent = this.formatDate(post.fechaCreacion);
+
+        // Generar carrusel de multimedia para el modal de moderación
+        const moderationPostContainer = document.querySelector('#postActionModal .post-preview');
+        
+        // Buscar si ya existe un contenedor de multimedia y eliminarlo
+        const existingMultimedia = moderationPostContainer.querySelector('.post-multimedia-moderation');
+        if (existingMultimedia) {
+            existingMultimedia.remove();
+        }
+
+        // Crear carrusel de multimedia si existe
+        if (post.multimedia && post.multimedia.length > 0) {
+            const carouselId = `moderation-carousel-${post.id}`;
+            
+            const slides = post.multimedia.map((item, index) => {
+                if (item.type === 'image') {
+                    return `
+                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <img src="${item.src}" alt="${item.alt}" onerror="this.parentElement.style.display='none'">
+                        </div>
+                    `;
+                } else if (item.type === 'video') {
+                    return `
+                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <video controls poster="${item.poster || ''}" preload="metadata">
+                                <source src="${item.src}" type="video/mp4">
+                                Tu navegador no soporta el elemento video.
+                            </video>
+                        </div>
+                    `;
+                }
+                return '';
+            }).join('');
+
+            const indicators = post.multimedia.length > 1 ? post.multimedia.map((_, index) => 
+                `<button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-slide="${index}" onclick="adminProfile.goToSlide('${carouselId}', ${index})"></button>`
+            ).join('') : '';
+
+            const navigation = post.multimedia.length > 1 ? `
+                <button class="carousel-nav prev" onclick="adminProfile.prevSlide('${carouselId}')" aria-label="Anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-nav next" onclick="adminProfile.nextSlide('${carouselId}')" aria-label="Siguiente">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            ` : '';
+
+            const multimediaHTML = `
+                <div class="post-multimedia-moderation">
+                    <div class="multimedia-carousel" id="${carouselId}">
+                        <div class="carousel-container">
+                            ${slides}
+                        </div>
+                        ${navigation}
+                        ${indicators ? `<div class="carousel-indicators">${indicators}</div>` : ''}
+                    </div>
+                </div>
+            `;
+
+            // Insertar el carrusel después del contenido del post
+            const postContent = moderationPostContainer.querySelector('p');
+            if (postContent) {
+                postContent.insertAdjacentHTML('afterend', multimediaHTML);
+            }
+        }
 
         this.showModal('postActionModal');
     }

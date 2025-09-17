@@ -1429,3 +1429,202 @@
         transform: rotate(360deg);
     }
 }
+
+/* ================================
+   MULTIMEDIA CAROUSEL IN STATS MODAL
+   ================================ */
+
+.post-multimedia-stats {
+    margin: 1.5rem 0;
+    border-radius: 15px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.post-multimedia-stats .multimedia-carousel {
+    border-radius: 15px;
+}
+
+.post-multimedia-stats .carousel-container {
+    height: 300px;
+    border-radius: 15px;
+}
+
+.post-multimedia-stats .carousel-slide img,
+.post-multimedia-stats .carousel-slide video {
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.post-multimedia-stats .carousel-nav {
+    background: rgba(0, 255, 136, 0.8);
+    color: #000;
+    border: 2px solid rgba(0, 255, 136, 0.3);
+}
+
+.post-multimedia-stats .carousel-nav:hover {
+    background: rgba(0, 255, 136, 1);
+    border-color: rgba(0, 255, 136, 0.8);
+    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.4);
+}
+
+.post-multimedia-stats .carousel-indicator {
+    background: rgba(0, 255, 136, 0.4);
+    border: 1px solid rgba(0, 255, 136, 0.6);
+}
+
+.post-multimedia-stats .carousel-indicator.active,
+.post-multimedia-stats .carousel-indicator:hover {
+    background: #00ff88;
+    border-color: #00ff88;
+    box-shadow: 0 2px 8px rgba(0, 255, 136, 0.5);
+}
+
+/* Media query for stats modal carousel */
+@media (max-width: 768px) {
+    .post-multimedia-stats .carousel-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    .post-multimedia-stats .carousel-container {
+        height: 200px;
+    }
+}
+
+/* ================================
+   MULTIMEDIA CAROUSEL STYLES
+   ================================ */
+
+.post-multimedia {
+    margin: 1rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.multimedia-carousel {
+    position: relative;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
+}
+
+.carousel-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-slide.active {
+    opacity: 1;
+}
+
+.carousel-slide img,
+.carousel-slide video {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.carousel-slide video {
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    z-index: 10;
+    backdrop-filter: blur(5px);
+}
+
+.carousel-nav:hover {
+    background: rgba(0, 255, 136, 0.8);
+    color: #000;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav.prev {
+    left: 10px;
+}
+
+.carousel-nav.next {
+    right: 10px;
+}
+
+.carousel-indicators {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.carousel-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-indicator.active,
+.carousel-indicator:hover {
+    background: #00ff88;
+    transform: scale(1.2);
+}
+
+/* Responsive carousel */
+@media (max-width: 768px) {
+    .carousel-container {
+        height: 200px;
+    }
+    
+    .carousel-nav {
+        width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+    
+    .carousel-nav.prev {
+        left: 5px;
+    }
+    
+    .carousel-nav.next {
+        right: 5px;
+    }
+}
