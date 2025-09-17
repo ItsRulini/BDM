@@ -52,6 +52,9 @@
                 <button class="create-mundial-btn" onclick="goToCreateMundial()">
                     <i class="fas fa-plus"></i> Crear Nuevo Mundial
                 </button>
+                <button class="manage-categories-btn" onclick="openCategoryModal()">
+                    <i class="fas fa-tags"></i> Gestionar Categorías
+                </button>
             </div>
         </section>
 
@@ -94,6 +97,50 @@
             </div>
         </section>
     </main>
+
+    <!-- Modal de Gestión de Categorías -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-tags"></i> Gestionar Categorías
+                </h2>
+                <button class="close-modal" onclick="closeCategoryModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="categories-container">
+                <div class="categories-grid" id="categoriesGrid">
+                    <!-- Las categorías se cargarán dinámicamente aquí -->
+                </div>
+            </div>
+
+            <!-- Formulario para nueva categoría -->
+            <div class="category-form" id="categoryForm">
+                <div class="form-group">
+                    <label class="form-label" for="categoryName">
+                        <i class="fas fa-tag"></i> Nombre de la Categoría
+                    </label>
+                    <input 
+                        type="text" 
+                        id="categoryName" 
+                        class="form-input" 
+                        placeholder="Ingresa el nombre de la categoría..."
+                        maxlength="50"
+                    >
+                </div>
+                <div class="form-actions">
+                    <button class="btn-secondary" onclick="cancelCategoryForm()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button class="btn-primary" onclick="saveCategory()">
+                        <i class="fas fa-save"></i> Guardar Categoría
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <footer class="site-footer">
         <div class="footer-content">
