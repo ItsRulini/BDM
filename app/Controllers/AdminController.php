@@ -1,5 +1,14 @@
 <?php
+include_once '../Utils/AuthGuard.php';
 class AdminController {
+
+    public function __construct() {
+        /* 
+        Se asegura que el usuario sea admin en cada acción
+        de este controlador
+        */
+        AuthGuard::requireAdmin();
+    }
     public function index() {
         // Lógica para la vista del panel de administración
         require_once '../Views/Users/Admin/admin.html';

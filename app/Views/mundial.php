@@ -1,3 +1,5 @@
+<?php include_once '../Utils/Auth.php'; ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -21,8 +23,19 @@
         <ul class="nav-menu">
             <li><a href="index.php?controller=home&action=index">Inicio</a></li>
             <li><a href="index.php?controller=home&action=posts">Posts</a></li>
-            <li><a href="index.php?controller=home&action=registro">Regístrate</a></li>
-            <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
+
+            <?php if (Auth::check()): ?>
+
+                <?php if(!Auth::isAdmin()): ?> 
+                    <!-- Si no es administrador, mostrar el perfil-->
+                    <li><a href="index.php?controller=user&action=perfil">Perfil</a></li>
+                <?php endif;?>
+
+                <li><a href="index.php?controller=api&action=logout">Cerrar Sesión</a></li>
+            <?php else: ?> <!-- Si no está autenticado, mostrar opciones de registro e inicio de sesión -->
+                <li><a href="index.php?controller=home&action=registro">Regístrate</a></li>
+                <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
+            <?php endif; ?>
         </ul>
         <div class="hamburger" onclick="toggleMobileMenu()">
             <span></span>
@@ -34,8 +47,19 @@
         <ul>
             <li><a href="index.php?controller=home&action=index">Inicio</a></li>
             <li><a href="index.php?controller=home&action=posts">Posts</a></li>
-            <li><a href="index.php?controller=home&action=registro">Regístrate</a></li>
-            <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
+
+            <?php if (Auth::check()): ?>
+
+                <?php if(!Auth::isAdmin()): ?> 
+                    <!-- Si no es administrador, mostrar el perfil-->
+                    <li><a href="index.php?controller=user&action=perfil">Perfil</a></li>
+                <?php endif;?>
+
+                <li><a href="index.php?controller=api&action=logout">Cerrar Sesión</a></li>
+            <?php else: ?> <!-- Si no está autenticado, mostrar opciones de registro e inicio de sesión -->
+                <li><a href="index.php?controller=home&action=registro">Regístrate</a></li>
+                <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
+            <?php endif; ?>
         </ul>
     </div>
 
@@ -101,8 +125,19 @@
                 <ul>
                     <li><a href="index.php?controller=home&action=index">Inicio</a></li>
                     <li><a href="index.php?controller=home&action=posts">Posts</a></li>
-                    <li><a href="index.php?controller=home&action=registro">Regístrate</a></li>
-                    <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
+
+                    <?php if (Auth::check()): ?>
+
+                        <?php if(!Auth::isAdmin()): ?> 
+                            <!-- Si no es administrador, mostrar el perfil-->
+                            <li><a href="index.php?controller=user&action=perfil">Perfil</a></li>
+                        <?php endif;?>
+
+                        <li><a href="index.php?controller=api&action=logout">Cerrar Sesión</a></li>
+                    <?php else: ?> <!-- Si no está autenticado, mostrar opciones de registro e inicio de sesión -->
+                        <li><a href="index.php?controller=home&action=registro">Regístrate</a></li>
+                        <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
+                    <?php endif; ?>
                 </ul>
             </div>
             <div class="footer-social">

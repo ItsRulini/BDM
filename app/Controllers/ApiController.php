@@ -129,5 +129,12 @@ class ApiController {
         ]);
     }
 
+    // @POST /api/logout
+    public function logout() {
+        Auth::logout();
+
+        header("Location: index.php?controller=home&action=login");
+        exit();
+    }
 
 }

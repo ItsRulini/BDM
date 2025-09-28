@@ -245,12 +245,6 @@ function handleFormSubmit(event) {
     window.location.href = 'admin.html';
 }
 
-function logout() {
-    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-        window.location.href = 'index.php?controller=home&action=login';
-    }
-}
-
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
     generateYearOptions();
