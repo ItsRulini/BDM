@@ -8,7 +8,6 @@ class Usuario {
     private string $apellidoPaterno;
     private string $apellidoMaterno;
     private string $genero;
-    private string $generoEspecifico;
     private int $nacionalidad;
     private int $paisNacimiento;
     private string $tipo;
@@ -32,7 +31,6 @@ class Usuario {
     public function getApellidoPaterno(): string { return $this->apellidoPaterno; }
     public function getApellidoMaterno(): string { return $this->apellidoMaterno; }
     public function getGenero(): string { return $this->genero; }
-    public function getGeneroEspecifico(): string { return $this->generoEspecifico; }
     public function getNacionalidad(): int { return $this->nacionalidad; }
     public function getPaisNacimiento(): int { return $this->paisNacimiento; }
     public function getTipo(): string { return $this->tipo; }
@@ -48,7 +46,6 @@ class Usuario {
     public function setApellidoPaterno(string $apellidoPaterno): void { $this->apellidoPaterno = $apellidoPaterno; }
     public function setApellidoMaterno(string $apellidoMaterno): void { $this->apellidoMaterno = $apellidoMaterno; }
     public function setGenero(string $genero): void { $this->genero = $genero; }
-    public function setGeneroEspecifico(string $generoEspecifico): void { $this->generoEspecifico = $generoEspecifico; }
     public function setNacionalidad(int $nacionalidad): void { $this->nacionalidad = $nacionalidad; }
     public function setPaisNacimiento(int $paisNacimiento): void { $this->paisNacimiento = $paisNacimiento; }
     public function setTipo(string $tipo): void { $this->tipo = $tipo; }

@@ -1,8 +1,8 @@
 <?php
 
-require_once '../Connection/conn.php';
-require_once '../Models/Usuario.php';
-require_once '../DAO/UsuarioDAO.php';
+include_once '../Connection/conn.php';
+include_once '../Models/Usuario.php';
+include_once '../DAO/UsuarioDAO.php';
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -17,7 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $usuario->setApellidoPaterno($data['paterno'] ?? '');
     $usuario->setApellidoMaterno($data['materno'] ?? '');
     $usuario->setGenero($data['genero'] ?? '');
-    $usuario->setGeneroEspecifico($data['generoEspecifico'] ?? '');
     $usuario->setNacionalidad(isset($data['nacionalidad']) ? (int)$data['nacionalidad'] : null);
     $usuario->setPaisNacimiento(isset($data['paisNacimiento']) ? (int)$data['paisNacimiento'] : null);
     $usuario->setTipo($data['tipo'] ?? '');
