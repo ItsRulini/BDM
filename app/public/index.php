@@ -1,52 +1,48 @@
 <?php
 
-// Leer parámetros de la URL
+/**
+ * Función centralizada para manejar errores 404.
+ */
+function showError404() {
+    // Incluimos y usamos el ErrorController para mostrar la página 404.
+    require_once '../Controllers/ErrorController.php';
+    $errorController = new ErrorController();
+    $errorController->notFound();
+    exit(); // Detenemos la ejecución del script.
+}
 
+// --- Tu código existente ---
 $defaultController = 'home';
 $defaultAction = 'index';
 
 $controller = $_GET['controller'] ?? $defaultController;
 $action = $_GET['action'] ?? $defaultAction;
 
-// Cargar el controlador correspondiente
 $controllerName = ucfirst($controller) . 'Controller';
 $controllerFile = '../Controllers/' . $controllerName . '.php';
 
+// Si el archivo del controlador no existe, muestra el error 404.
 if (!file_exists($controllerFile)) {
-    // Archivo del controlador no encontrado
-    http_response_code(404);
-    echo "Error 404: Archivo del controlador no encontrado.";
-    exit;
+    showError404();
 }
 
 require_once $controllerFile;
 
+// Si la clase del controlador no se encuentra en el archivo, muestra el error 404.
 if (!class_exists($controllerName)) {
-    // Clase del controlador no encontrada
-    http_response_code(500);
-    echo "Clase $controllerName no definida en $controllerFile.";
-    exit;
+    showError404();
 }
 
-// Instanciar el controlador
-$controller = new $controllerName();
+$controllerInstance = new $controllerName();
 
-if (!method_exists($controller, $action)) {
-    // Acción no encontrada
-    http_response_code(404);
-    echo "Error 404: Acción no encontrada en $controllerName.";
-    exit;
+// Si el método (acción) no existe en el controlador, muestra el error 404.
+if (!method_exists($controllerInstance, $action)) {
+    showError404();
 }
 
-
-// Llamar a la acción del controlador
-// Pasar el parámetro id si existe en la URL
+// --- El resto de tu código para llamar a la acción ---
 if (isset($_GET['id'])) {
-    $controller->$action($_GET['id']);
+    $controllerInstance->$action($_GET['id']);
 } else {
-    $controller->$action();
+    $controllerInstance->$action();
 }
-
-// Llamar a la acción del controlador
-//$controller->$action();
-//call_user_func(array($controller, $action));
