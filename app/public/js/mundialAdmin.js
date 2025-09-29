@@ -1,30 +1,40 @@
-// Lista de países
-const countries = [
-    'Argentina', 'Brasil', 'Chile', 'Colombia', 'Ecuador', 'Paraguay', 'Perú', 'Uruguay', 'Venezuela', 'Bolivia',
-    'México', 'Estados Unidos', 'Canadá', 'Costa Rica', 'Guatemala', 'Honduras', 'Nicaragua', 'Panamá', 'El Salvador',
-    'España', 'Francia', 'Italia', 'Alemania', 'Inglaterra', 'Portugal', 'Holanda', 'Bélgica', 'Croacia', 'Polonia',
-    'Rusia', 'Ucrania', 'Suecia', 'Noruega', 'Dinamarca', 'Finlandia', 'Suiza', 'Austria', 'República Checa',
-    'Japón', 'Corea del Sur', 'China', 'India', 'Tailandia', 'Vietnam', 'Indonesia', 'Malasia', 'Singapur',
-    'Australia', 'Nueva Zelanda', 'Sudáfrica', 'Nigeria', 'Ghana', 'Marruecos', 'Egipto', 'Túnez', 'Argelia',
-    'Qatar', 'Arabia Saudita', 'Emiratos Árabes Unidos', 'Irán', 'Irak', 'Israel', 'Turquía'
-];
+// Array para almacenar los países cargados desde la API
+let countries = [];
 
+// Array para almacenar los países seleccionados con su ID
 let selectedCountries = [];
+
 let uploadedFiles = [];
 let currentYear = null;
 
-// Generar opciones de años (1900 hasta año actual + 50)
-function generateYearOptions() {
-    const yearSelect = document.getElementById('year');
-    const currentYear = new Date().getFullYear();
-    const startYear = 1900;
-    const endYear = currentYear + 50;
-
-    for (let year = endYear; year >= startYear; year--) {
-        const option = document.createElement('option');
-        option.value = year;
-        option.textContent = year;
-        yearSelect.appendChild(option);
+// Cargar países dinámicamente desde la API
+async function cargarPaises() {
+    try {
+        const response = await fetch('index.php?controller=api&action=getPaises', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Almacenar los países con su ID y nombre
+            countries = data.data.map(pais => ({
+                id: pais.id,
+                nombre: pais.nombre
+            }));
+            
+            renderCountryList();
+            console.log('Países cargados exitosamente:', countries.length);
+        } else {
+            console.error("Error desde el API:", data.message);
+            alert('Error al cargar los países: ' + data.message);
+        }
+    } catch (error) {
+        console.error("Error al cargar los países:", error);
+        alert('Error de conexión al cargar los países');
     }
 }
 
@@ -33,11 +43,20 @@ function renderCountryList(filteredCountries = countries) {
     const countryList = document.getElementById('countryList');
     countryList.innerHTML = '';
 
+    if (filteredCountries.length === 0) {
+        countryList.innerHTML = '<div class="country-item" style="text-align: center; color: #888;">No se encontraron países</div>';
+        return;
+    }
+
     filteredCountries.forEach(country => {
-        if (!selectedCountries.includes(country)) {
+        // Verificar si el país ya está seleccionado usando su ID
+        const isSelected = selectedCountries.some(c => c.id === country.id);
+        
+        if (!isSelected) {
             const countryItem = document.createElement('div');
             countryItem.className = 'country-item';
-            countryItem.textContent = country;
+            countryItem.textContent = country.nombre;
+            countryItem.setAttribute('data-country-id', country.id);
             countryItem.onclick = () => selectCountry(country);
             countryList.appendChild(countryItem);
         }
@@ -46,23 +65,33 @@ function renderCountryList(filteredCountries = countries) {
 
 // Seleccionar país
 function selectCountry(country) {
-    if (!selectedCountries.includes(country)) {
-        selectedCountries.push(country);
+    // Verificar que el país no esté ya seleccionado
+    const exists = selectedCountries.some(c => c.id === country.id);
+    
+    if (!exists) {
+        selectedCountries.push({
+            id: country.id,
+            nombre: country.nombre
+        });
+        
         updateSelectedCountries();
         updateMundialTitle();
         renderCountryList();
+        
+        // Limpiar el campo de búsqueda
+        document.getElementById('countrySearch').value = '';
     }
 }
 
 // Remover país seleccionado
-function removeCountry(country) {
-    selectedCountries = selectedCountries.filter(c => c !== country);
+function removeCountry(countryId) {
+    selectedCountries = selectedCountries.filter(c => c.id !== countryId);
     updateSelectedCountries();
     updateMundialTitle();
     renderCountryList();
 }
 
-// Actualizar países seleccionados
+// Actualizar países seleccionados en la UI
 function updateSelectedCountries() {
     const container = document.getElementById('selectedCountries');
     
@@ -70,8 +99,8 @@ function updateSelectedCountries() {
         container.innerHTML = '<span class="placeholder-text">Ningún país seleccionado</span>';
     } else {
         container.innerHTML = selectedCountries.map(country => 
-        `<div class="country-tag" onclick="removeCountry('${country}')">
-        ${country} <i class="fas fa-times"></i>
+            `<div class="country-tag" data-country-id="${country.id}" onclick="removeCountry(${country.id})">
+                ${country.nombre} <i class="fas fa-times"></i>
             </div>`
         ).join('');
     }
@@ -83,15 +112,25 @@ function updateMundialTitle() {
     const subtitleElement = document.getElementById('mundialSubtitle');
 
     if (currentYear && selectedCountries.length > 0) {
-        const countryText = selectedCountries.length === 1 
-            ? selectedCountries[0] 
-            : selectedCountries.join(' y ');
+        let countryText = '';
+        
+        if (selectedCountries.length === 1) {
+            countryText = selectedCountries[0].nombre;
+        } else if (selectedCountries.length === 2) {
+            countryText = `${selectedCountries[0].nombre} y ${selectedCountries[1].nombre}`;
+        } else {
+            // Más de 2 países: "pais1, pais2 y pais3"
+            const lastCountry = selectedCountries[selectedCountries.length - 1].nombre;
+            const otherCountries = selectedCountries.slice(0, -1).map(c => c.nombre).join(', ');
+            countryText = `${otherCountries} y ${lastCountry}`;
+        }
+        
         titleElement.textContent = `${countryText} ${currentYear}`;
         subtitleElement.textContent = 'Mundial de la FIFA';
-            } else if (currentYear) {
+    } else if (currentYear) {
         titleElement.textContent = `Mundial ${currentYear}`;
         subtitleElement.textContent = 'Selecciona las sedes para completar el título';
-            } else {
+    } else {
         titleElement.textContent = 'Mundial';
         subtitleElement.textContent = 'Selecciona el año y las sedes para ver el título';
     }
@@ -99,8 +138,8 @@ function updateMundialTitle() {
 
 // Manejar cambio de año
 function handleYearChange() {
-    const yearSelect = document.getElementById('year');
-    currentYear = yearSelect.value;
+    const yearInput = document.getElementById('year');
+    currentYear = yearInput.value;
     updateMundialTitle();
 }
 
@@ -108,7 +147,7 @@ function handleYearChange() {
 function handleCountrySearch() {
     const searchTerm = document.getElementById('countrySearch').value.toLowerCase();
     const filteredCountries = countries.filter(country => 
-country.toLowerCase().includes(searchTerm)
+        country.nombre.toLowerCase().includes(searchTerm)
     );
     renderCountryList(filteredCountries);
 }
@@ -123,7 +162,7 @@ function handleFileSelect(event) {
     const files = Array.from(event.target.files);
     
     files.forEach(file => {
-        if (uploadedFiles.length < 10) { // Límite de 10 archivos
+        if (uploadedFiles.length < 10) {
             uploadedFiles.push({
                 file: file,
                 id: Date.now() + Math.random(),
@@ -170,7 +209,7 @@ function renderMediaCarousel() {
         mediaItem.innerHTML = `
             ${content}
             <button class="remove-btn" onclick="removeFile(${fileObj.id})">
-            <i class="fas fa-times"></i>
+                <i class="fas fa-times"></i>
             </button>`;
 
         carousel.appendChild(mediaItem);
@@ -210,8 +249,9 @@ function handleFormSubmit(event) {
     const year = document.getElementById('year').value;
     const descripcion = document.getElementById('descripcion').value;
 
-    if (!year) {
-        alert('Por favor selecciona un año para el mundial.');
+    // Validaciones
+    if (!year || year < 1900 || year > 2100) {
+        alert('Por favor ingresa un año válido entre 1900 y 2100.');
         return;
     }
 
@@ -225,10 +265,14 @@ function handleFormSubmit(event) {
         return;
     }
 
+    // Preparar los datos para enviar
     const formData = {
-        year: year,
-        sedes: selectedCountries,
-        descripcion: descripcion,
+        year: parseInt(year),
+        sedes: selectedCountries.map(c => ({
+            id: c.id,
+            nombre: c.nombre
+        })),
+        descripcion: descripcion.trim(),
         multimedia: uploadedFiles.map(file => ({
             name: file.file.name,
             type: file.type,
@@ -238,21 +282,27 @@ function handleFormSubmit(event) {
 
     console.log('Datos del mundial a crear:', formData);
     
-    // Aquí iría la lógica para enviar al backend
-    alert(`¡Mundial "${selectedCountries.join(' y ')} ${year}" creado exitosamente!`);
+    // Aquí irá la lógica para enviar al backend
+    // Por ahora solo mostramos los datos en consola
+    alert(`¡Mundial "${selectedCountries.map(c => c.nombre).join(' y ')} ${year}" listo para crear!`);
     
-    // Redirigir de vuelta al dashboard
-    window.location.href = 'admin.html';
+    // Descomentar para redirigir después de crear
+    // window.location.href = 'admin.html';
 }
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
-    generateYearOptions();
-    renderCountryList();
+    // Cargar países desde la API
+    cargarPaises();
+    
+    // Inicializar UI
     updateSelectedCountries();
 
     // Event listeners
-    document.getElementById('year').addEventListener('change', handleYearChange);
+    const yearInput = document.getElementById('year');
+    yearInput.addEventListener('input', handleYearChange);
+    yearInput.addEventListener('change', handleYearChange);
+    
     document.getElementById('countrySearch').addEventListener('input', handleCountrySearch);
     document.getElementById('multimediaInput').addEventListener('change', handleFileSelect);
     document.getElementById('mundialForm').addEventListener('submit', handleFormSubmit);
@@ -264,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (editId) {
         document.getElementById('submitBtn').textContent = 'Actualizar Mundial';
         document.querySelector('.mundial-form h2').textContent = 'Editar Mundial';
-        // Aquí cargarías los datos del mundial a editar
         console.log('Modo edición para mundial ID:', editId);
+        // Aquí cargarías los datos del mundial a editar
     }
 });

@@ -56,9 +56,23 @@
             <!-- Año del Mundial -->
             <div class="input-group">
                 <label for="year">Año del Mundial:</label>
-                <select id="year" name="year" required>
-                    <option value="">Selecciona un año...</option>
-                </select>
+                <input 
+                    type="number" 
+                    id="year" 
+                    name="year" 
+                    min="1900" 
+                    max="2100" 
+                    placeholder="Ej: 2026"
+                    style="-moz-apperance: textfield"
+                    required>
+                
+                <style>
+                    #year::-webkit-outer-spin-button,
+                    #year::-webkit-inner-spin-button {
+                        -webkit-appearance: none;
+                        margin: 0;
+                    }
+                </style>
             </div>
 
             <!-- Sedes del Mundial -->
