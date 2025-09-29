@@ -1,3 +1,5 @@
+import '../js/login.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const registrationForm = document.getElementById('registrationForm');
 
@@ -33,38 +35,63 @@ document.addEventListener('DOMContentLoaded', () => {
             // Por ahora, solo mostraremos un mensaje de éxito
             console.log("Datos del usuario para enviar:", { nombres, paterno, materno, nacimiento, correo, contrasena });
             alert("¡Formulario validado! Ahora se enviaría al servidor.");
-            // En un proyecto real, aquí usarías `fetch()` o `XMLHttpRequest` para comunicarte con `procesar_registro.php`
-            fetch('../Controllers/insertUsuario.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    nombres,
-                    paterno,
-                    materno,
-                    nacimiento,
-                    correo,
-                    contrasena,
-                    genero,
-                    paisNacimiento,
-                    nacionalidad
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Registro exitoso. Bienvenido, " + nombres + "!");
-                    // Redirigir o limpiar el formulario si es necesario
-                    registrationForm.reset();
-                } else {
-                    alert("Error en el registro: " + data.message);
-                }
-            })
-            .catch(error => {
-                console.error("Error al enviar el formulario:", error);
-                alert("Ocurrió un error al procesar tu registro. Por favor, inténtalo de nuevo más tarde.");
-            });
+            // Llamando a la función para crear el usuario
+            createUser();
+            
         });
     }
 });
+
+function togglePasswordVisibility() {
+    const passwordInput = document.getElementById('contrasena');
+    const toggleIcon = document.getElementById('togglePassword');
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+    }
+}
+
+function validatePasswordStrength() {}
+
+async function createUser () {
+    fetch('index.php?controller=api&action=registrarUsuario', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            nombres,
+            paterno,
+            materno,
+            nacimiento,
+            correo,
+            contrasena,
+            genero,
+            paisNacimiento,
+            nacionalidad
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Registro exitoso. Bienvenido, " + correo + "!");
+            // Redirigir o limpiar el formulario si es necesario
+            registrationForm.reset();
+
+            // Iniciar sesión automáticamente después del registro
+            loginUser(correo, contrasena);
+        } else {
+            alert("Error en el registro: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Error al enviar el formulario:", error);
+        alert("Ocurrió un error al procesar tu registro. Por favor, inténtalo de nuevo más tarde.");
+    });
+}
+

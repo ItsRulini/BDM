@@ -50,12 +50,6 @@ function editMundial(id) {
     window.location.href = `index.php?controller=admin&action=editarMundial&id=${id}`;
 }
 
-function logout() {
-    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-        // Lógica para cerrar sesión
-        window.location.href = 'index.php?controller=home&action=login';
-    }
-}
 
 // ==========================================
 // FUNCIONES DE GESTIÓN DE CATEGORÍAS

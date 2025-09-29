@@ -3,11 +3,11 @@
 class HomeController {
     public function index() {
         // Aquí puedes cargar la vista principal o hacer cualquier otra lógica necesaria
-        require '../Views/main.html';
+        require '../Views/main.php';
     }
     public function posts() {
         // Aquí puedes cargar la vista de publicaciones o hacer cualquier otra lógica necesaria
-        require '../Views/posts.html';
+        require '../Views/posts.php';
     }
     
     public function registro() {
@@ -21,6 +21,6 @@ class HomeController {
 
     public function mundial($id) {
         
-        require '../Views/mundial.html';
+        require '../Views/mundial.php';
     }
 }

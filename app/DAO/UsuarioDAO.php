@@ -28,7 +28,6 @@ class UsuarioDAO {
                 $usuario->setApellidoPaterno($row['ApellidoPaterno']);
                 $usuario->setApellidoMaterno($row['ApellidoMaterno']);
                 $usuario->setGenero($row['Genero']);
-                $usuario->setGeneroEspecifico($row['GeneroEspecifico']);
                 $usuario->setNacionalidad($row['Nacionalidad']);
                 $usuario->setPaisNacimiento($row['PaisNacimiento']);
                 $usuario->setTipo($row['Tipo']);
@@ -44,7 +43,7 @@ class UsuarioDAO {
     }
     public function createUsuario(Usuario $usuario) {
         try {
-            $query = "CALL sp_crearUsuario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $query = "CALL sp_crearUsuario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $stmt = mysqli_prepare($this->conn, $query);
 
@@ -56,7 +55,6 @@ class UsuarioDAO {
             $apellidoPaterno = $usuario->getApellidoPaterno();
             $apellidoMaterno = $usuario->getApellidoMaterno();
             $genero = $usuario->getGenero();
-            $generoEspecifico = $usuario->getGeneroEspecifico();
             $nacionalidad = $usuario->getNacionalidad();
             $paisNacimiento = $usuario->getPaisNacimiento();
             $tipo = $usuario->getTipo();
@@ -66,14 +64,13 @@ class UsuarioDAO {
                 // Bind de parámetros
                 if (!mysqli_stmt_bind_param(
                     $stmt,
-                    'sssssssiissb', // Cambiado el orden: BLOB al final
+                    'ssssssiissb', // Cambiado el orden: BLOB al final
                     $correo,
                     $contraseña,
                     $nombre,
                     $apellidoPaterno,
                     $apellidoMaterno,
                     $genero,
-                    $generoEspecifico,
                     $nacionalidad,
                     $paisNacimiento,
                     $tipo,
@@ -85,7 +82,7 @@ class UsuarioDAO {
 
                 // Enviar datos BLOB si existe
                 if ($fotoPerfil !== null) {
-                    if (!mysqli_stmt_send_long_data($stmt, 11, $fotoPerfil)) { // 11 es el índice del BLOB (último parámetro)
+                    if (!mysqli_stmt_send_long_data($stmt, 10, $fotoPerfil)) { // 11 es el índice del BLOB (último parámetro)
                         error_log("Warning: Error al enviar datos BLOB: " . mysqli_stmt_error($stmt));
                     }
                 }

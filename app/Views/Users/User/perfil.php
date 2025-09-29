@@ -1,3 +1,5 @@
+<?php include_once '../Utils/Auth.php'; ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -23,8 +25,14 @@
         <ul class="nav-menu">
             <li><a href="index.php?controller=home&action=index">Inicio</a></li>
             <li><a href="index.php?controller=home&action=posts">Posts</a></li>
-            <li><a href="index.php?controller=user&action=perfil" class="active">Mi Perfil</a></li>
-            <li><a href="#" onclick="logout()">Cerrar Sesión</a></li>
+
+            <?php if (Auth::check()): ?>
+                <li><a href="index.php?controller=user&action=perfil" class="active">Perfil</a></li>
+                <li><a href="index.php?controller=api&action=logout">Cerrar Sesión</a></li>
+            <?php else: ?> <!-- Si no está autenticado, mostrar opciones de registro e inicio de sesión -->
+                <li><a href="index.php?controller=home&action=registro">Regístrate</a></li>
+                <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
+            <?php endif; ?>
         </ul>
         <div class="hamburger" onclick="toggleMobileMenu()">
             <span></span>
@@ -37,8 +45,14 @@
         <ul>
             <li><a href="index.php?controller=home&action=index">Inicio</a></li>
             <li><a href="index.php?controller=home&action=posts">Posts</a></li>
-            <li><a href="index.php?controller=user&action=perfil" class="active">Mi Perfil</a></li>
-            <li><a href="#" onclick="logout()">Cerrar Sesión</a></li>
+
+            <?php if (Auth::check()): ?>
+                <li><a href="index.php?controller=user&action=perfil" class="active">Perfil</a></li>
+                <li><a href="index.php?controller=api&action=logout">Cerrar Sesión</a></li>
+            <?php else: ?> <!-- Si no está autenticado, mostrar opciones de registro e inicio de sesión -->
+                <li><a href="index.php?controller=home&action=registro">Regístrate</a></li>
+                <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
+            <?php endif; ?>
         </ul>
     </div>
 
@@ -444,10 +458,16 @@
             <div class="footer-links">
                 <h4>Navegación</h4>
                 <ul>
-                    <li><a href="index.php?controller=home&action=index">Inicio</a></li>
+                    <li><a href="index.php?controller=home&action=index" class="active">Inicio</a></li>
                     <li><a href="index.php?controller=home&action=posts">Posts</a></li>
-                    <li><a href="index.php?controller=home&action=registro">Regístrate</a></li>
-                    <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
+
+                    <?php if (Auth::check()): ?>
+                        <li><a href="index.php?controller=user&action=perfil">Perfil</a></li>
+                        <li><a href="index.php?controller=api&action=logout">Cerrar Sesión</a></li>
+                    <?php else: ?> <!-- Si no está autenticado, mostrar opciones de registro e inicio de sesión -->
+                        <li><a href="index.php?controller=home&action=registro">Regístrate</a></li>
+                        <li><a href="index.php?controller=home&action=login">Ingresar</a></li>
+                    <?php endif; ?>
                 </ul>
             </div>
             <div class="footer-social">

@@ -96,7 +96,7 @@ export default class ProfileManager {
         window.openCreatePostModal = this.openCreatePostModal.bind(this);
         window.closeModal = this.closeModal.bind(this);
         window.showPosts = this.showPosts.bind(this);
-        window.logout = this.logout.bind(this);
+        //window.logout = this.logout.bind(this);
     }
 
     // ================================
@@ -963,12 +963,12 @@ export default class ProfileManager {
         }
     }
 
-    logout() {
-        if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
-            // Aquí redirigirias al logout del backend
-            window.location.href = 'index.php?controller=auth&action=logout';
-        }
-    }
+    // logout() {
+    //     if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+    //         // Aquí redirigirias al logout del backend
+    //         window.location.href = 'index.php?controller=auth&action=logout';
+    //     }
+    // }
 
     formatDate(dateString) {
         const date = new Date(dateString);
