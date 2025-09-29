@@ -1,8 +1,9 @@
 <?php
 include_once '../Connection/conn.php';
 include_once '../Models/Usuario.php';
-include_once '../DAO/UsuarioDAO.php';
 include_once '../Utils/Auth.php';
+include_once '../DAO/UsuarioDAO.php';
+include_once '../DAO/PaisDAO.php';
 
 header('Content-Type: application/json');
 
@@ -99,8 +100,7 @@ class ApiController {
 
         // Buscar usuario en DB
         $usuarioDAO = new UsuarioDAO($GLOBALS['conn']);
-        $usuario = $usuarioDAO->getUsuarioPorCorreo($correo); 
-        // ⚠️ Necesitas implementar findByCorreo($correo) en tu DAO
+        $usuario = $usuarioDAO->getUsuarioPorCorreo($correo);
 
         if (!$usuario) {
             echo json_encode([
@@ -135,6 +135,49 @@ class ApiController {
 
         header("Location: index.php?controller=home&action=login");
         exit();
+    }
+
+    // @GET /api/getPaises
+    public function getPaises() {
+        // Solo permitir obetener por GET
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+            $paisDAO = new PaisDAO($GLOBALS['conn']);
+            $paises = $paisDAO->getPaises(); // Esto devuelve un array de objetos Pais
+
+            if ($paises === null) {
+                throw new Exception("No se pudieron obtener los países desde la base de datos.");
+            }
+
+            // Convertir el array de objetos a un array asociativo para el JSON
+            $paisesArray = array_map(function($pais) {
+                return [
+                    'id' => $pais->getIdPais(),
+                    'nombre' => $pais->getPais(),
+                    'nacionalidad' => $pais->getNacionalidad()
+                ];
+            }, $paises);
+
+            echo json_encode([
+                'success' => true,
+                'data' => $paisesArray
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+
     }
 
 }

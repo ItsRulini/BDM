@@ -2,7 +2,7 @@ USE BDM;
 
 
 DELIMITER **
-DROP PROCEDURE IF EXISTS sp_crearUsuario;
+DROP PROCEDURE IF EXISTS sp_crearUsuario**
 CREATE PROCEDURE sp_crearUsuario (
     IN p_correo VARCHAR(255),
     IN p_pass VARCHAR(255),
@@ -44,8 +44,10 @@ BEGIN
     );
 END**
 
+DELIMITER;
+
 DELIMITER **
-DROP PROCEDURE IF EXISTS sp_obtenerUsuarioPorCorreo;
+DROP PROCEDURE IF EXISTS sp_obtenerUsuarioPorCorreo**
 CREATE PROCEDURE sp_obtenerUsuarioPorCorreo(
 	IN p_correo VARCHAR(255)
 )
@@ -58,7 +60,6 @@ BEGIN
         ApellidoPaterno,
         ApellidoMaterno,
         Genero,
-        GeneroEspecifico,
         Nacionalidad,
         PaisNacimiento,
         Tipo,
@@ -68,15 +69,12 @@ BEGIN
     WHERE Correo = p_correo;
 END**
 
-
+DELIMITER ;
 
 DELIMITER **
-CREATE PROCEDURE sp_login (
-	IN correo VARCHAR(255),
-    IN pass VARCHAR(255)
-)
+DROP PROCEDURE IF EXISTS sp_obtenerPaises**
+CREATE PROCEDURE sp_obtenerPaises ()
 BEGIN
-	
-    
-    
+	SELECT IdPais, Pais, Nacionalidad FROM Pais
+    ORDER BY Pais;
 END**
