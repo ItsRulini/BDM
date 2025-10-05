@@ -177,7 +177,32 @@ class ApiController {
                 'message' => 'Error del servidor: ' . $e->getMessage()
             ]);
         }
+    }
+
+    // @GET /api/getEstadisticasAdmin
+    public function getEstadisticasAdmin () {
+        // Solo permitir obetener por GET
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+
+            
+
+        } catch(Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
 
     }
+
 
 }

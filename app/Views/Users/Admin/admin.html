@@ -55,6 +55,12 @@
                 <button class="manage-categories-btn" onclick="openCategoryModal()">
                     <i class="fas fa-tags"></i> Gestionar Categorías
                 </button>
+                <button class="create-player-btn" onclick="openPlayerModal()">
+                    <i class="fas fa-user"></i> Dar de alta un jugador
+                </button>
+                <button class="add-country-btn" onclick="openCountryModal()">
+                    <i class="fas fa-globe-americas"></i> Agregar país
+                </button>
             </div>
         </section>
 
@@ -138,6 +144,144 @@
                         <i class="fas fa-save"></i> Guardar Categoría
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Registro de Jugador -->
+    <div class="modal-overlay" id="playerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-user"></i> Registrar Jugador
+                </h2>
+                <button class="close-modal" onclick="closePlayerModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="player-form-container">
+                <form id="playerForm" class="category-form active">
+                    <div class="form-group">
+                        <label class="form-label" for="playerName">
+                            <i class="fas fa-user"></i> Nombre Completo
+                        </label>
+                        <input 
+                            type="text" 
+                            id="playerName" 
+                            class="form-input" 
+                            placeholder="Ej: Lionel Messi"
+                            maxlength="255"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="playerNationality">
+                            <i class="fas fa-flag"></i> Nacionalidad
+                        </label>
+                        <select id="playerNationality" class="form-input" required>
+                            <option value="">Selecciona una nacionalidad...</option>
+                            <!-- Las opciones se cargarán dinámicamente -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="playerBirthdate">
+                            <i class="fas fa-calendar"></i> Fecha de Nacimiento
+                        </label>
+                        <input 
+                            type="date" 
+                            id="playerBirthdate" 
+                            class="form-input"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="playerPhoto">
+                            <i class="fas fa-camera"></i> Fotografía
+                        </label>
+                        <div class="photo-upload-container">
+                            <input 
+                                type="file" 
+                                id="playerPhoto" 
+                                accept="image/*"
+                                style="display: none;"
+                                onchange="previewPlayerPhoto(event)"
+                            >
+                            <div class="photo-preview" id="playerPhotoPreview" onclick="document.getElementById('playerPhoto').click()">
+                                <i class="fas fa-camera"></i>
+                                <p>Haz clic para seleccionar foto</p>
+                                <span>JPG, PNG o WEBP (máx. 5MB)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closePlayerModal()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary" onclick="savePlayer(event)">
+                            <i class="fas fa-save"></i> Registrar Jugador
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Registro de País -->
+    <div class="modal-overlay" id="countryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-globe-americas"></i> Agregar País
+                </h2>
+                <button class="close-modal" onclick="closeCountryModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="country-form-container">
+                <form id="countryForm" class="category-form active">
+                    <div class="form-group">
+                        <label class="form-label" for="countryName">
+                            <i class="fas fa-flag"></i> Nombre del País
+                        </label>
+                        <input 
+                            type="text" 
+                            id="countryName" 
+                            class="form-input" 
+                            placeholder="Ej: Brasil"
+                            maxlength="255"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="countryNationality">
+                            <i class="fas fa-id-card"></i> Nacionalidad
+                        </label>
+                        <input 
+                            type="text" 
+                            id="countryNationality" 
+                            class="form-input" 
+                            placeholder="Ej: Brasileña"
+                            maxlength="255"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeCountryModal()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary" onclick="saveCountry(event)">
+                            <i class="fas fa-save"></i> Guardar País
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

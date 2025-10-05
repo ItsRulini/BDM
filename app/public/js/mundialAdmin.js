@@ -1,11 +1,13 @@
-// Array para almacenar los países cargados desde la API
+// Arrays para almacenar datos
 let countries = [];
-
-// Array para almacenar los países seleccionados con su ID
+let players = [];
 let selectedCountries = [];
-
 let uploadedFiles = [];
 let currentYear = null;
+
+// ==========================================
+// CARGA INICIAL DE DATOS
+// ==========================================
 
 // Cargar países dinámicamente desde la API
 async function cargarPaises() {
@@ -20,13 +22,13 @@ async function cargarPaises() {
         const data = await response.json();
         
         if (data.success) {
-            // Almacenar los países con su ID y nombre
             countries = data.data.map(pais => ({
                 id: pais.id,
                 nombre: pais.nombre
             }));
             
             renderCountryList();
+            loadCountrySelects();
             console.log('Países cargados exitosamente:', countries.length);
         } else {
             console.error("Error desde el API:", data.message);
@@ -38,9 +40,46 @@ async function cargarPaises() {
     }
 }
 
-// Renderizar lista de países
+// Cargar jugadores desde la API
+async function cargarJugadores() {
+    try {
+        const response = await fetch('index.php?controller=api&action=getJugadores', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            players = data.data.map(jugador => ({
+                id: jugador.id,
+                nombre: jugador.nombre,
+                nacionalidad: jugador.nacionalidad
+            }));
+            
+            loadPlayerSelects();
+            console.log('Jugadores cargados exitosamente:', players.length);
+        } else {
+            console.error("Error desde el API:", data.message);
+            alert('Error al cargar los jugadores: ' + data.message);
+        }
+    } catch (error) {
+        console.error("Error al cargar los jugadores:", error);
+        alert('Error de conexión al cargar los jugadores');
+    }
+}
+
+// ==========================================
+// FUNCIONES DE PAÍSES
+// ==========================================
+
+// Renderizar lista de países en el dropdown
 function renderCountryList(filteredCountries = countries) {
     const countryList = document.getElementById('countryList');
+    if (!countryList) return;
+    
     countryList.innerHTML = '';
 
     if (filteredCountries.length === 0) {
@@ -49,7 +88,6 @@ function renderCountryList(filteredCountries = countries) {
     }
 
     filteredCountries.forEach(country => {
-        // Verificar si el país ya está seleccionado usando su ID
         const isSelected = selectedCountries.some(c => c.id === country.id);
         
         if (!isSelected) {
@@ -63,9 +101,8 @@ function renderCountryList(filteredCountries = countries) {
     });
 }
 
-// Seleccionar país
+// Seleccionar país para sedes
 function selectCountry(country) {
-    // Verificar que el país no esté ya seleccionado
     const exists = selectedCountries.some(c => c.id === country.id);
     
     if (!exists) {
@@ -78,7 +115,6 @@ function selectCountry(country) {
         updateMundialTitle();
         renderCountryList();
         
-        // Limpiar el campo de búsqueda
         document.getElementById('countrySearch').value = '';
     }
 }
@@ -106,6 +142,74 @@ function updateSelectedCountries() {
     }
 }
 
+// Cargar países en los selects de posiciones
+function loadCountrySelects() {
+    const selects = [
+        'campeon',
+        'subcampeon',
+        'tercerPuesto',
+        'cuartoPuesto'
+    ];
+
+    selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        select.innerHTML = '<option value="">Seleccionar país...</option>';
+        
+        countries.forEach(country => {
+            const option = document.createElement('option');
+            option.value = country.id;
+            option.textContent = country.nombre;
+            select.appendChild(option);
+        });
+    });
+}
+
+// Buscar países
+function handleCountrySearch() {
+    const searchTerm = document.getElementById('countrySearch').value.toLowerCase();
+    const filteredCountries = countries.filter(country => 
+        country.nombre.toLowerCase().includes(searchTerm)
+    );
+    renderCountryList(filteredCountries);
+}
+
+// ==========================================
+// FUNCIONES DE JUGADORES
+// ==========================================
+
+// Cargar jugadores en los selects de premios
+function loadPlayerSelects() {
+    const selects = [
+        'balonOro',
+        'balonPlata',
+        'balonBronce',
+        'botinOro',
+        'botinPlata',
+        'botinBronce',
+        'guanteOro'
+    ];
+
+    selects.forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        select.innerHTML = '<option value="">Seleccionar jugador...</option>';
+        
+        players.forEach(player => {
+            const option = document.createElement('option');
+            option.value = player.id;
+            option.textContent = `${player.nombre} (${player.nacionalidad || 'N/A'})`;
+            select.appendChild(option);
+        });
+    });
+}
+
+// ==========================================
+// FUNCIONES DE TÍTULO
+// ==========================================
+
 // Actualizar título del mundial
 function updateMundialTitle() {
     const titleElement = document.getElementById('mundialTitle');
@@ -119,7 +223,6 @@ function updateMundialTitle() {
         } else if (selectedCountries.length === 2) {
             countryText = `${selectedCountries[0].nombre} y ${selectedCountries[1].nombre}`;
         } else {
-            // Más de 2 países: "pais1, pais2 y pais3"
             const lastCountry = selectedCountries[selectedCountries.length - 1].nombre;
             const otherCountries = selectedCountries.slice(0, -1).map(c => c.nombre).join(', ');
             countryText = `${otherCountries} y ${lastCountry}`;
@@ -143,14 +246,40 @@ function handleYearChange() {
     updateMundialTitle();
 }
 
-// Buscar países
-function handleCountrySearch() {
-    const searchTerm = document.getElementById('countrySearch').value.toLowerCase();
-    const filteredCountries = countries.filter(country => 
-        country.nombre.toLowerCase().includes(searchTerm)
-    );
-    renderCountryList(filteredCountries);
+// ==========================================
+// FUNCIONES DE IMÁGENES
+// ==========================================
+
+// Previsualizar imagen
+function previewImage(event, previewId) {
+    const file = event.target.files[0];
+    const preview = document.getElementById(previewId);
+    
+    if (!file) return;
+
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona un archivo de imagen válido');
+        return;
+    }
+
+    // Validar tamaño (5MB máximo)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen no puede superar los 5MB');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.innerHTML = `<img src="${e.target.result}" alt="Vista previa">`;
+        preview.classList.add('has-image');
+    };
+    reader.readAsDataURL(file);
 }
+
+// ==========================================
+// FUNCIONES DE MULTIMEDIA
+// ==========================================
 
 // Activar input de archivos
 function triggerFileInput() {
@@ -238,18 +367,63 @@ function updateCarouselControls() {
     const prevBtn = document.querySelector('.carousel-btn.prev');
     const nextBtn = document.querySelector('.carousel-btn.next');
 
-    prevBtn.disabled = carousel.scrollLeft <= 0;
-    nextBtn.disabled = carousel.scrollLeft >= (carousel.scrollWidth - carousel.clientWidth);
+    if (prevBtn && nextBtn) {
+        prevBtn.disabled = carousel.scrollLeft <= 0;
+        nextBtn.disabled = carousel.scrollLeft >= (carousel.scrollWidth - carousel.clientWidth);
+    }
+}
+
+// ==========================================
+// FUNCIONES DE RESULTADOS
+// ==========================================
+
+// Toggle tiempo extra
+function toggleTiempoExtra() {
+    const checkbox = document.getElementById('tiempoExtra');
+    const group = document.getElementById('marcadorTiempoExtraGroup');
+    
+    if (checkbox.checked) {
+        group.style.display = 'block';
+    } else {
+        group.style.display = 'none';
+        document.getElementById('marcadorTiempoExtra').value = '';
+    }
+}
+
+// Toggle penales
+function togglePenalties() {
+    const checkbox = document.getElementById('penalties');
+    const group = document.getElementById('marcadorFinalGroup');
+    
+    if (checkbox.checked) {
+        group.style.display = 'block';
+    } else {
+        group.style.display = 'none';
+        document.getElementById('marcadorFinal').value = '';
+    }
+}
+
+// ==========================================
+// ENVÍO DE FORMULARIO
+// ==========================================
+
+// Validar marcador
+function validarMarcador(marcador) {
+    if (!marcador) return true; // Opcional
+    const regex = /^\d+-\d+$/;
+    return regex.test(marcador);
 }
 
 // Manejar envío del formulario
 function handleFormSubmit(event) {
     event.preventDefault();
 
+    // Recopilar datos básicos
     const year = document.getElementById('year').value;
     const descripcion = document.getElementById('descripcion').value;
+    const nombreMascota = document.getElementById('nombreMascota').value;
 
-    // Validaciones
+    // Validaciones básicas
     if (!year || year < 1900 || year > 2100) {
         alert('Por favor ingresa un año válido entre 1900 y 2100.');
         return;
@@ -265,47 +439,159 @@ function handleFormSubmit(event) {
         return;
     }
 
-    // Preparar los datos para enviar
-    const formData = {
-        year: parseInt(year),
-        sedes: selectedCountries.map(c => ({
-            id: c.id,
-            nombre: c.nombre
-        })),
-        descripcion: descripcion.trim(),
-        multimedia: uploadedFiles.map(file => ({
-            name: file.file.name,
-            type: file.type,
-            size: file.file.size
-        }))
+    // Validar marcadores
+    const marcador = document.getElementById('marcador').value;
+    const marcadorTiempoExtra = document.getElementById('marcadorTiempoExtra').value;
+    
+    if (marcador && !validarMarcador(marcador)) {
+        alert('El marcador debe tener el formato: goles-goles (Ej: 3-3)');
+        return;
+    }
+
+    if (marcadorTiempoExtra && !validarMarcador(marcadorTiempoExtra)) {
+        alert('El marcador de tiempo extra debe tener el formato: goles-goles (Ej: 3-3)');
+        return;
+    }
+
+    // Recopilar posiciones
+    const posiciones = {
+        campeon: document.getElementById('campeon').value,
+        subcampeon: document.getElementById('subcampeon').value,
+        tercerPuesto: document.getElementById('tercerPuesto').value,
+        cuartoPuesto: document.getElementById('cuartoPuesto').value
     };
 
-    console.log('Datos del mundial a crear:', formData);
+    // Recopilar resultados
+    const resultados = {
+        marcador: marcador,
+        tiempoExtra: document.getElementById('tiempoExtra').checked,
+        marcadorTiempoExtra: marcadorTiempoExtra,
+        penalties: document.getElementById('penalties').checked,
+        muerteSubita: document.getElementById('muerteSubita').checked,
+        marcadorFinal: document.getElementById('marcadorFinal').value
+    };
+
+    // Recopilar premios
+    const premios = {
+        balonOro: document.getElementById('balonOro').value,
+        balonPlata: document.getElementById('balonPlata').value,
+        balonBronce: document.getElementById('balonBronce').value,
+        botinOro: document.getElementById('botinOro').value,
+        botinPlata: document.getElementById('botinPlata').value,
+        botinBronce: document.getElementById('botinBronce').value,
+        guanteOro: document.getElementById('guanteOro').value
+    };
+
+    // Preparar FormData para envío
+    const formData = new FormData();
+    formData.append('year', parseInt(year));
+    formData.append('descripcion', descripcion.trim());
+    formData.append('sedes', JSON.stringify(selectedCountries.map(c => c.id)));
     
-    // Aquí irá la lógica para enviar al backend
-    // Por ahora solo mostramos los datos en consola
+    // Mascota
+    formData.append('nombreMascota', nombreMascota);
+    const imgMascota = document.getElementById('imgMascota').files[0];
+    if (imgMascota) {
+        formData.append('imgMascota', imgMascota);
+    }
+
+    // Logo
+    const logo = document.getElementById('logo').files[0];
+    if (logo) {
+        formData.append('logo', logo);
+    }
+
+    // Posiciones
+    Object.keys(posiciones).forEach(key => {
+        if (posiciones[key]) {
+            formData.append(key, posiciones[key]);
+        }
+    });
+
+    // Resultados
+    Object.keys(resultados).forEach(key => {
+        if (resultados[key] !== '' && resultados[key] !== false) {
+            formData.append(key, resultados[key]);
+        }
+    });
+
+    // Premios
+    Object.keys(premios).forEach(key => {
+        if (premios[key]) {
+            formData.append(key, premios[key]);
+        }
+    });
+
+    // Multimedia adicional
+    uploadedFiles.forEach((fileObj, index) => {
+        formData.append(`multimedia_${index}`, fileObj.file);
+    });
+
+    console.log('Datos del mundial a crear:');
+    console.log('Año:', year);
+    console.log('Sedes:', selectedCountries);
+    console.log('Posiciones:', posiciones);
+    console.log('Resultados:', resultados);
+    console.log('Premios:', premios);
+    
+    // TODO: Enviar al backend
+    /*
+    fetch('index.php?controller=admin&action=crearMundial', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Mundial creado exitosamente');
+            window.location.href = 'index.php?controller=admin&action=index';
+        } else {
+            alert('Error al crear mundial: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al conectar con el servidor');
+    });
+    */
+
+    // Simulación de éxito
     alert(`¡Mundial "${selectedCountries.map(c => c.nombre).join(' y ')} ${year}" listo para crear!`);
-    
-    // Descomentar para redirigir después de crear
-    // window.location.href = 'admin.html';
 }
 
-// Event listeners
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Cargar países desde la API
+    // Cargar datos desde la API
     cargarPaises();
+    cargarJugadores();
     
     // Inicializar UI
     updateSelectedCountries();
 
     // Event listeners
     const yearInput = document.getElementById('year');
-    yearInput.addEventListener('input', handleYearChange);
-    yearInput.addEventListener('change', handleYearChange);
+    if (yearInput) {
+        yearInput.addEventListener('input', handleYearChange);
+        yearInput.addEventListener('change', handleYearChange);
+    }
     
-    document.getElementById('countrySearch').addEventListener('input', handleCountrySearch);
-    document.getElementById('multimediaInput').addEventListener('change', handleFileSelect);
-    document.getElementById('mundialForm').addEventListener('submit', handleFormSubmit);
+    const countrySearch = document.getElementById('countrySearch');
+    if (countrySearch) {
+        countrySearch.addEventListener('input', handleCountrySearch);
+    }
+    
+    const multimediaInput = document.getElementById('multimediaInput');
+    if (multimediaInput) {
+        multimediaInput.addEventListener('change', handleFileSelect);
+    }
+    
+    const mundialForm = document.getElementById('mundialForm');
+    if (mundialForm) {
+        mundialForm.addEventListener('submit', handleFormSubmit);
+    }
 
     // Verificar si es edición
     const urlParams = new URLSearchParams(window.location.search);
@@ -313,8 +599,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (editId) {
         document.getElementById('submitBtn').textContent = 'Actualizar Mundial';
-        document.querySelector('.mundial-form h2').textContent = 'Editar Mundial';
         console.log('Modo edición para mundial ID:', editId);
-        // Aquí cargarías los datos del mundial a editar
+        // TODO: Cargar datos del mundial a editar
     }
 });

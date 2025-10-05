@@ -6,46 +6,22 @@
     padding: 2rem;
 }
 
-/* --- HEADER ---
-.mundial-header {
-    height: 350px;
-    border-radius: 16px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-    display: flex;
-    align-items: flex-end;
-    padding: 2.5rem;
-    margin-bottom: 2.5rem;
-    overflow: hidden;
-}
-
-.header-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
-    z-index: 1;
-} */
-
+/* --- TÍTULO --- */
 #mundial-name {
     font-family: 'Montserrat', sans-serif;
     font-size: 3rem;
     font-weight: 700;
     color: #fff;
-    position: relative;
-    z-index: 2;
     text-shadow: 2px 2px 12px rgba(0,0,0,0.6);
     margin-bottom: 3rem;
+    text-align: center;
 }
 
 /* --- CONTENIDO PRINCIPAL --- */
 .mundial-content {
     display: flex;
     flex-direction: column;
-    gap: 2.5rem; /* Espacio entre las tarjetas */
+    gap: 2.5rem;
 }
 
 /* --- ESTILO GENERAL DE LAS TARJETAS --- */
@@ -55,6 +31,12 @@
     border-radius: 16px;
     border: 1px solid rgba(0, 255, 136, 0.2);
     overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.mundial-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(0, 255, 136, 0.4);
 }
 
 .card-header {
@@ -64,21 +46,23 @@
 }
 
 .card-header h2 {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     color: #00ff88;
     margin: 0;
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
 }
 
 .card-body {
-    padding: 1.75rem;
+    padding: 2rem;
 }
 
 /* --- TARJETA DE DESCRIPCIÓN --- */
 .description-card .card-body p {
-    line-height: 1.7;
+    line-height: 1.8;
     font-size: 1.1rem;
     color: rgba(255, 255, 255, 0.9);
     margin-bottom: 1rem;
@@ -90,13 +74,14 @@
 
 /* --- TARJETA DE GALERÍA --- */
 .gallery-card .card-body {
-    padding: 1rem; /* Menos padding para que el carrusel se ajuste mejor */
+    padding: 1.5rem;
 }
 
 .media-swiper {
     width: 100%;
-    height: 400px;
+    height: 450px;
     border-radius: 12px;
+    overflow: hidden;
 }
 
 .media-swiper .swiper-slide img {
@@ -108,14 +93,391 @@
 .media-swiper .swiper-button-next,
 .media-swiper .swiper-button-prev {
     color: #fff;
-    background-color: rgba(0,0,0,0.3);
+    background-color: rgba(0, 255, 136, 0.3);
     border-radius: 50%;
     width: 50px;
     height: 50px;
+    transition: all 0.3s ease;
 }
+
+.media-swiper .swiper-button-next:hover,
+.media-swiper .swiper-button-prev:hover {
+    background-color: rgba(0, 255, 136, 0.6);
+}
+
 .media-swiper .swiper-button-next:after,
 .media-swiper .swiper-button-prev:after {
     font-size: 1.5rem;
+}
+
+/* --- TARJETA DE MASCOTA --- */
+.mascot-container {
+    display: flex;
+    gap: 2.5rem;
+    align-items: center;
+}
+
+.mascot-image {
+    flex-shrink: 0;
+}
+
+.mascot-image img {
+    width: 250px;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 16px;
+    border: 3px solid rgba(0, 255, 136, 0.3);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.mascot-image img:hover {
+    transform: scale(1.05);
+    border-color: #00ff88;
+}
+
+.mascot-info h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2rem;
+    color: #00ff88;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.mascot-info p {
+    line-height: 1.8;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* --- TARJETA DE POSICIONES --- */
+.positions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.position-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.position-item:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.position-item.champion {
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.position-item.champion:hover {
+    border-color: gold;
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+}
+
+.position-item.runner-up {
+    border-color: rgba(192, 192, 192, 0.5);
+}
+
+.position-item.runner-up:hover {
+    border-color: silver;
+    box-shadow: 0 8px 25px rgba(192, 192, 192, 0.3);
+}
+
+.position-item.third-place {
+    border-color: rgba(205, 127, 50, 0.5);
+}
+
+.position-item.third-place:hover {
+    border-color: #cd7f32;
+    box-shadow: 0 8px 25px rgba(205, 127, 50, 0.3);
+}
+
+.position-item.fourth-place {
+    border-color: rgba(0, 255, 136, 0.3);
+}
+
+.position-item.fourth-place:hover {
+    border-color: #00ff88;
+    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.2);
+}
+
+.position-medal {
+    font-size: 3rem;
+    flex-shrink: 0;
+}
+
+.champion .position-medal {
+    color: gold;
+}
+
+.runner-up .position-medal {
+    color: silver;
+}
+
+.third-place .position-medal {
+    color: #cd7f32;
+}
+
+.fourth-place .position-medal {
+    color: #00ff88;
+}
+
+.position-info {
+    flex-grow: 1;
+}
+
+.position-label {
+    display: block;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.position-info h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem;
+    color: #fff;
+    margin: 0;
+    font-weight: 700;
+}
+
+/* --- TARJETA DE LA FINAL --- */
+.final-result {
+    background: rgba(0, 255, 136, 0.05);
+    border-radius: 12px;
+    padding: 2rem;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.final-teams {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    gap: 2rem;
+}
+
+.team-info h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 2rem;
+    color: #fff;
+    margin: 0;
+    font-weight: 700;
+}
+
+.score-container {
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.score-box {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 1.5rem 2.5rem;
+    border-radius: 12px;
+    border: 2px solid #00ff88;
+    margin-bottom: 0.75rem;
+}
+
+.score {
+    font-size: 3rem;
+    color: #00ff88;
+    font-weight: 700;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.score-separator {
+    font-size: 2.5rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 1rem;
+}
+
+.score-label {
+    display: block;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.final-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+}
+
+.detail-item i {
+    color: #00ff88;
+    font-size: 1.25rem;
+}
+
+.detail-item.highlight {
+    color: #00ff88;
+    font-weight: 600;
+}
+
+.detail-item.final-score {
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.detail-item.final-score .winner {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #00ff88;
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* --- TARJETA DE PREMIOS --- */
+.awards-grid-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.award-category h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem;
+    color: #00ff88;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 700;
+}
+
+.players-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.players-row.single-award {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.player-award {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.player-award:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.player-award.gold {
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.player-award.gold:hover {
+    border-color: gold;
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+}
+
+.player-award.silver {
+    border-color: rgba(192, 192, 192, 0.5);
+}
+
+.player-award.silver:hover {
+    border-color: silver;
+    box-shadow: 0 8px 25px rgba(192, 192, 192, 0.3);
+}
+
+.player-award.bronze {
+    border-color: rgba(205, 127, 50, 0.5);
+}
+
+.player-award.bronze:hover {
+    border-color: #cd7f32;
+    box-shadow: 0 8px 25px rgba(205, 127, 50, 0.3);
+}
+
+.player-award.large {
+    padding: 2rem;
+}
+
+.player-photo {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid rgba(0, 255, 136, 0.3);
+    transition: all 0.3s ease;
+}
+
+.player-award.large .player-photo {
+    width: 200px;
+    height: 200px;
+}
+
+.player-award:hover .player-photo {
+    border-color: #00ff88;
+    transform: scale(1.05);
+}
+
+.player-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.award-name {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.player-info h4 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.3rem;
+    color: #fff;
+    margin: 0;
+    font-weight: 700;
+}
+
+.player-award.large .player-info h4 {
+    font-size: 1.6rem;
+}
+
+.player-info p {
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    font-size: 1rem;
 }
 
 /* --- SECCIÓN DEL BOTÓN A POSTS --- */
@@ -125,6 +487,12 @@
     border-radius: 16px;
     text-align: center;
     padding: 2.5rem;
+    transition: all 0.3s ease;
+}
+
+.posts-link-section:hover {
+    background: rgba(0, 255, 136, 0.15);
+    border-color: #00ff88;
 }
 
 .posts-link-section h3 {
@@ -132,6 +500,7 @@
     font-size: 1.8rem;
     color: #fff;
     margin: 0 0 0.75rem 0;
+    font-weight: 700;
 }
 
 .posts-link-section p {
@@ -151,6 +520,7 @@
     border-radius: 50px;
     font-weight: 700;
     font-size: 1.1rem;
+    font-family: 'Montserrat', sans-serif;
     transition: all 0.3s ease;
     display: inline-block;
 }
@@ -158,7 +528,7 @@
 .btn-ver-posts:hover {
     background: #00cc6a;
     transform: scale(1.05);
-    box-shadow: 0 8px 20px rgba(0, 255, 136, 0.25);
+    box-shadow: 0 8px 20px rgba(0, 255, 136, 0.35);
 }
 
 /* --- RESPONSIVE DESIGN --- */
@@ -166,29 +536,162 @@
     .main-content {
         padding: 1rem;
     }
-    
-    .mundial-header {
-        height: 250px;
-        padding: 1.5rem;
-    }
 
     #mundial-name {
-        font-size: 2.2rem;
+        font-size: 2rem;
+        margin-bottom: 2rem;
     }
 
     .card-header h2 {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
     }
 
     .card-body {
-        padding: 1.25rem;
+        padding: 1.5rem;
     }
 
     .media-swiper {
-        height: 250px;
+        height: 280px;
+    }
+
+    .mascot-container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .mascot-image img {
+        width: 200px;
+        height: 200px;
+    }
+
+    .mascot-info h3 {
+        font-size: 1.5rem;
+    }
+
+    .positions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .position-medal {
+        font-size: 2.5rem;
+    }
+
+    .position-info h3 {
+        font-size: 1.25rem;
+    }
+
+    .final-teams {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .team-info h3 {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    .score-box {
+        padding: 1rem 2rem;
+    }
+
+    .score {
+        font-size: 2.5rem;
+    }
+
+    .final-details {
+        padding: 1rem;
+    }
+
+    .detail-item {
+        font-size: 1rem;
+    }
+
+    .detail-item.final-score .winner {
+        font-size: 1.1rem;
+    }
+
+    .award-category h3 {
+        font-size: 1.25rem;
+    }
+
+    .players-row {
+        grid-template-columns: 1fr;
+    }
+
+    .player-photo {
+        width: 120px;
+        height: 120px;
+    }
+
+    .player-award.large .player-photo {
+        width: 150px;
+        height: 150px;
+    }
+
+    .player-info h4 {
+        font-size: 1.1rem;
+    }
+
+    .player-award.large .player-info h4 {
+        font-size: 1.3rem;
+    }
+
+    .posts-link-section {
+        padding: 2rem 1.5rem;
     }
 
     .posts-link-section h3 {
         font-size: 1.5rem;
+    }
+
+    .posts-link-section p {
+        font-size: 1rem;
+    }
+
+    .btn-ver-posts {
+        padding: 0.875rem 2rem;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #mundial-name {
+        font-size: 1.75rem;
+    }
+
+    .card-header h2 {
+        font-size: 1.1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .mascot-image img {
+        width: 180px;
+        height: 180px;
+    }
+
+    .position-item {
+        padding: 1rem;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .score-box {
+        padding: 0.75rem 1.5rem;
+    }
+
+    .score {
+        font-size: 2rem;
+    }
+
+    .score-separator {
+        font-size: 1.75rem;
+    }
+
+    .detail-item {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
     }
 }
