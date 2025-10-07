@@ -1,5 +1,5 @@
 .mundial-form {
-    max-width: 800px;
+    max-width: 900px;
     margin: 2rem auto;
 }
 
@@ -25,6 +25,30 @@
     font-size: 1.1rem;
 }
 
+/* Encabezados de sección */
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 2.5rem 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid rgba(0, 255, 136, 0.3);
+}
+
+.section-header i {
+    color: #00ff88;
+    font-size: 1.5rem;
+}
+
+.section-header h3 {
+    color: #00ff88;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Selector de países */
 .country-selector {
     position: relative;
 }
@@ -118,6 +142,143 @@
     border-bottom: none;
 }
 
+/* Previsualizaciones de imágenes */
+.image-upload-container {
+    margin-top: 0.5rem;
+}
+
+.image-preview {
+    width: 100%;
+    min-height: 200px;
+    max-height: 300px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(0, 255, 136, 0.5);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.image-preview:hover {
+    background: rgba(0, 255, 136, 0.1);
+    border-color: #00ff88;
+}
+
+.image-preview i {
+    font-size: 3rem;
+    color: #00ff88;
+    margin-bottom: 1rem;
+}
+
+.image-preview p {
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.image-preview span {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.image-preview.has-image i,
+.image-preview.has-image p,
+.image-preview.has-image span {
+    display: none;
+}
+
+/* Grids para posiciones y premios */
+.positions-grid,
+.awards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Selects personalizados */
+.country-select,
+.player-select {
+    width: 100%;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(0, 255, 136, 0.3);
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Roboto', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300ff88' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 12px;
+    transition: border-color 0.3s ease;
+}
+
+.country-select:focus,
+.player-select:focus {
+    outline: none;
+    border-color: #00ff88;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+}
+
+.country-select option,
+.player-select option {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 0.5rem;
+}
+
+/* Checkboxes */
+.checkbox-group {
+    margin: 1.5rem 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    color: #fff;
+    font-size: 1rem;
+    user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #00ff88;
+}
+
+.checkbox-label span {
+    font-weight: 500;
+}
+
+/* Inputs pequeños de ayuda */
+small {
+    display: block;
+    margin-top: 0.5rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+}
+
+/* Multimedia */
 .multimedia-container {
     position: relative;
     background: rgba(0, 0, 0, 0.3);
@@ -279,6 +440,7 @@
     cursor: not-allowed;
 }
 
+/* Textarea */
 textarea {
     width: 100%;
     padding: 1rem;
@@ -300,6 +462,7 @@ textarea::placeholder {
     color: rgba(255, 255, 255, 0.6);
 }
 
+/* Responsive */
 @media (max-width: 768px) {
     .mundial-form {
         margin: 1rem;
@@ -308,6 +471,19 @@ textarea::placeholder {
 
     #mundialTitle {
         font-size: 2rem;
+    }
+
+    .section-header {
+        margin: 2rem 0 1rem 0;
+    }
+
+    .section-header h3 {
+        font-size: 1.25rem;
+    }
+
+    .positions-grid,
+    .awards-grid {
+        grid-template-columns: 1fr;
     }
 
     .multimedia-carousel {
@@ -322,5 +498,9 @@ textarea::placeholder {
     .upload-placeholder {
         min-width: 150px;
         height: 120px;
+    }
+
+    .image-preview {
+        min-height: 180px;
     }
 }

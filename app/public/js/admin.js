@@ -380,3 +380,345 @@ function refreshCategoriesFromServer() {
         });
     */
 }
+
+// ==========================================
+// FUNCIONES DE GESTIÓN DE JUGADORES
+// ==========================================
+
+// Datos de países (esto vendrá de la base de datos)
+let countries = [
+    { id: 1, name: 'Argentina', nationality: 'Argentina' },
+    { id: 2, name: 'Brasil', nationality: 'Brasileña' },
+    { id: 3, name: 'Francia', nationality: 'Francesa' },
+    { id: 4, name: 'España', nationality: 'Española' },
+    { id: 5, name: 'Alemania', nationality: 'Alemana' }
+];
+
+// Función para abrir el modal de jugador
+function openPlayerModal() {
+    const modal = document.getElementById('playerModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        loadNationalities();
+    }
+}
+
+// Función para cerrar el modal de jugador
+function closePlayerModal() {
+    const modal = document.getElementById('playerModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        resetPlayerForm();
+    }
+}
+
+// Función para cargar nacionalidades en el select
+function loadNationalities() {
+    const select = document.getElementById('playerNationality');
+    if (!select) return;
+
+    // Limpiar opciones existentes excepto la primera
+    select.innerHTML = '<option value="">Selecciona una nacionalidad...</option>';
+
+    // Agregar opciones de países
+    countries.forEach(country => {
+        const option = document.createElement('option');
+        option.value = country.id;
+        option.textContent = `${country.name} (${country.nationality})`;
+        select.appendChild(option);
+    });
+
+    // TODO: Cargar desde el servidor
+    /*
+    fetch('index.php?controller=admin&action=getCountries')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                countries = data.countries;
+                countries.forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country.id;
+                    option.textContent = `${country.name} (${country.nationality})`;
+                    select.appendChild(option);
+                });
+            }
+        })
+        .catch(error => console.error('Error al cargar países:', error));
+    */
+}
+
+// Función para previsualizar la foto del jugador
+function previewPlayerPhoto(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('playerPhotoPreview');
+    
+    if (!file) return;
+
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona un archivo de imagen válido');
+        return;
+    }
+
+    // Validar tamaño (5MB máximo)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen no puede superar los 5MB');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.innerHTML = `<img src="${e.target.result}" alt="Vista previa">`;
+        preview.classList.add('has-image');
+    };
+    reader.readAsDataURL(file);
+}
+
+// Función para guardar jugador
+function savePlayer(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('playerName').value.trim();
+    const nationality = document.getElementById('playerNationality').value;
+    const birthdate = document.getElementById('playerBirthdate').value;
+    const photoInput = document.getElementById('playerPhoto');
+
+    // Validaciones
+    if (!name) {
+        alert('Por favor, ingresa el nombre del jugador');
+        return;
+    }
+
+    if (!nationality) {
+        alert('Por favor, selecciona una nacionalidad');
+        return;
+    }
+
+    if (!birthdate) {
+        alert('Por favor, selecciona la fecha de nacimiento');
+        return;
+    }
+
+    // Validar que la fecha no sea futura
+    const today = new Date();
+    const selectedDate = new Date(birthdate);
+    if (selectedDate > today) {
+        alert('La fecha de nacimiento no puede ser futura');
+        return;
+    }
+
+    // Preparar datos para envío
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('nationality', nationality);
+    formData.append('birthdate', birthdate);
+    
+    if (photoInput.files[0]) {
+        formData.append('photo', photoInput.files[0]);
+    }
+
+    console.log('Datos del jugador a guardar:', {
+        name,
+        nationality,
+        birthdate,
+        hasPhoto: !!photoInput.files[0]
+    });
+
+    // TODO: Enviar al servidor
+    /*
+    fetch('index.php?controller=admin&action=createPlayer', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Jugador registrado exitosamente');
+            closePlayerModal();
+        } else {
+            alert('Error al registrar jugador: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al conectar con el servidor');
+    });
+    */
+
+    // Simulación de éxito
+    alert('Jugador registrado exitosamente (modo demo)');
+    closePlayerModal();
+}
+
+// Función para resetear el formulario de jugador
+function resetPlayerForm() {
+    const form = document.getElementById('playerForm');
+    if (form) {
+        form.reset();
+    }
+
+    const preview = document.getElementById('playerPhotoPreview');
+    if (preview) {
+        preview.innerHTML = `
+            <i class="fas fa-camera"></i>
+            <p>Haz clic para seleccionar foto</p>
+            <span>JPG, PNG o WEBP (máx. 5MB)</span>
+        `;
+        preview.classList.remove('has-image');
+    }
+}
+
+// ==========================================
+// FUNCIONES DE GESTIÓN DE PAÍSES
+// ==========================================
+
+// Función para abrir el modal de país
+function openCountryModal() {
+    const modal = document.getElementById('countryModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// Función para cerrar el modal de país
+function closeCountryModal() {
+    const modal = document.getElementById('countryModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+        resetCountryForm();
+    }
+}
+
+// Función para guardar país
+function saveCountry(event) {
+    event.preventDefault();
+    
+    const countryName = document.getElementById('countryName').value.trim();
+    const nationality = document.getElementById('countryNationality').value.trim();
+
+    // Validaciones
+    if (!countryName) {
+        alert('Por favor, ingresa el nombre del país');
+        return;
+    }
+
+    if (!nationality) {
+        alert('Por favor, ingresa el gentilicio');
+        return;
+    }
+
+    if (countryName.length < 2) {
+        alert('El nombre del país debe tener al menos 2 caracteres');
+        return;
+    }
+
+    if (nationality.length < 2) {
+        alert('El gentilicio debe tener al menos 2 caracteres');
+        return;
+    }
+
+    // Verificar si el país ya existe
+    const exists = countries.some(country => 
+        country.name.toLowerCase() === countryName.toLowerCase()
+    );
+
+    if (exists) {
+        alert('Este país ya está registrado');
+        return;
+    }
+
+    // Crear nuevo país
+    const newCountry = {
+        id: Date.now(),
+        name: countryName,
+        nationality: nationality
+    };
+
+    countries.push(newCountry);
+    
+    console.log('País registrado:', newCountry);
+
+    // TODO: Guardar en base de datos
+    /*
+    fetch('index.php?controller=admin&action=createCountry', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            name: countryName,
+            nationality: nationality
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            newCountry.id = data.countryId;
+            alert('País registrado exitosamente');
+            closeCountryModal();
+            loadNationalities(); // Actualizar select de jugadores
+        } else {
+            alert('Error al registrar país: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al conectar con el servidor');
+    });
+    */
+
+    // Simulación de éxito
+    alert('País registrado exitosamente (modo demo)');
+    closeCountryModal();
+    loadNationalities(); // Actualizar select si el modal de jugador está abierto
+}
+
+// Función para resetear el formulario de país
+function resetCountryForm() {
+    const form = document.getElementById('countryForm');
+    if (form) {
+        form.reset();
+    }
+}
+
+// ==========================================
+// EVENT LISTENERS ADICIONALES
+// ==========================================
+
+// Agregar a la función setupModalEventListeners existente
+const originalSetup = setupModalEventListeners;
+setupModalEventListeners = function() {
+    originalSetup();
+    
+    // Event listeners para modales de jugador y país
+    const playerModal = document.getElementById('playerModal');
+    const countryModal = document.getElementById('countryModal');
+    
+    if (playerModal) {
+        playerModal.addEventListener('click', function(e) {
+            if (e.target === this) closePlayerModal();
+        });
+    }
+    
+    if (countryModal) {
+        countryModal.addEventListener('click', function(e) {
+            if (e.target === this) closeCountryModal();
+        });
+    }
+    
+    // Escape para cerrar modales
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (playerModal && playerModal.classList.contains('active')) {
+                closePlayerModal();
+            }
+            if (countryModal && countryModal.classList.contains('active')) {
+                closeCountryModal();
+            }
+        }
+    });
+};

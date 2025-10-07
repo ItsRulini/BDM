@@ -53,6 +53,12 @@
         </div>
 
         <form id="mundialForm" enctype="multipart/form-data">
+            <!-- INFORMACIÓN BÁSICA -->
+            <div class="section-header">
+                <i class="fas fa-info-circle"></i>
+                <h3>Información Básica</h3>
+            </div>
+
             <!-- Año del Mundial -->
             <div class="input-group">
                 <label for="year">Año del Mundial:</label>
@@ -63,7 +69,7 @@
                     min="1900" 
                     max="2100" 
                     placeholder="Ej: 2026"
-                    style="-moz-apperance: textfield"
+                    style="-moz-appearance: textfield"
                     required>
                 
                 <style>
@@ -94,9 +100,246 @@
                 </div>
             </div>
 
-            <!-- Multimedia del Mundial -->
+            <!-- Logo del Mundial -->
             <div class="input-group">
-                <label for="multimedia">Multimedia:</label>
+                <label for="logo">Logo del Mundial:</label>
+                <div class="image-upload-container">
+                    <input 
+                        type="file" 
+                        id="logo" 
+                        accept="image/*"
+                        style="display: none;"
+                        onchange="previewImage(event, 'logoPreview')">
+                    <div class="image-preview" id="logoPreview" onclick="document.getElementById('logo').click()">
+                        <i class="fas fa-image"></i>
+                        <p>Haz clic para seleccionar logo</p>
+                        <span>JPG, PNG o WEBP (máx. 5MB)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Descripción del Mundial -->
+            <div class="input-group">
+                <label for="descripcion">Descripción:</label>
+                <textarea id="descripcion" name="descripcion" rows="5" placeholder="Escribe una breve descripción del mundial..." required></textarea>
+            </div>
+
+            <!-- MASCOTA -->
+            <div class="section-header">
+                <i class="fas fa-paw"></i>
+                <h3>Mascota del Mundial</h3>
+            </div>
+
+            <div class="input-group">
+                <label for="nombreMascota">Nombre de la Mascota:</label>
+                <input 
+                    type="text" 
+                    id="nombreMascota" 
+                    name="nombreMascota" 
+                    placeholder="Ej: Fuleco"
+                    maxlength="100">
+            </div>
+
+            <div class="input-group">
+                <label for="imgMascota">Imagen de la Mascota:</label>
+                <div class="image-upload-container">
+                    <input 
+                        type="file" 
+                        id="imgMascota" 
+                        accept="image/*"
+                        style="display: none;"
+                        onchange="previewImage(event, 'mascotaPreview')">
+                    <div class="image-preview" id="mascotaPreview" onclick="document.getElementById('imgMascota').click()">
+                        <i class="fas fa-image"></i>
+                        <p>Haz clic para seleccionar imagen de la mascota</p>
+                        <span>JPG, PNG o WEBP (máx. 5MB)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POSICIONES FINALES -->
+            <div class="section-header">
+                <i class="fas fa-trophy"></i>
+                <h3>Posiciones Finales</h3>
+            </div>
+
+            <div class="positions-grid">
+                <div class="input-group">
+                    <label for="campeon">
+                        <i class="fas fa-medal" style="color: gold;"></i> Campeón:
+                    </label>
+                    <select id="campeon" class="country-select">
+                        <option value="">Seleccionar país...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="subcampeon">
+                        <i class="fas fa-medal" style="color: silver;"></i> Subcampeón:
+                    </label>
+                    <select id="subcampeon" class="country-select">
+                        <option value="">Seleccionar país...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="tercerPuesto">
+                        <i class="fas fa-medal" style="color: #cd7f32;"></i> Tercer Puesto:
+                    </label>
+                    <select id="tercerPuesto" class="country-select">
+                        <option value="">Seleccionar país...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="cuartoPuesto">
+                        <i class="fas fa-award"></i> Cuarto Puesto:
+                    </label>
+                    <select id="cuartoPuesto" class="country-select">
+                        <option value="">Seleccionar país...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- RESULTADOS DE LA FINAL -->
+            <div class="section-header">
+                <i class="fas fa-futbol"></i>
+                <h3>Resultado de la Final</h3>
+            </div>
+
+            <div class="input-group">
+                <label for="marcador">Marcador (Tiempo Reglamentario):</label>
+                <input 
+                    type="text" 
+                    id="marcador" 
+                    name="marcador" 
+                    placeholder="Ej: 3-3"
+                    maxlength="10"
+                    pattern="[0-9]+-[0-9]+">
+                <small>Formato: goles-goles (Ej: 3-3)</small>
+            </div>
+
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="tiempoExtra" onchange="toggleTiempoExtra()">
+                    <span>¿Hubo tiempo extra?</span>
+                </label>
+            </div>
+
+            <div class="input-group" id="marcadorTiempoExtraGroup" style="display: none;">
+                <label for="marcadorTiempoExtra">Marcador (Tiempo Extra):</label>
+                <input 
+                    type="text" 
+                    id="marcadorTiempoExtra" 
+                    name="marcadorTiempoExtra" 
+                    placeholder="Ej: 3-3"
+                    maxlength="10"
+                    pattern="[0-9]+-[0-9]+">
+            </div>
+
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="penalties" onchange="togglePenalties()">
+                    <span>¿Se definió por penales?</span>
+                </label>
+            </div>
+
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="muerteSubita">
+                    <span>¿Hubo muerte súbita?</span>
+                </label>
+            </div>
+
+            <div class="input-group" id="marcadorFinalGroup" style="display: none;">
+                <label for="marcadorFinal">Marcador Final (incluyendo penales):</label>
+                <input 
+                    type="text" 
+                    id="marcadorFinal" 
+                    name="marcadorFinal" 
+                    placeholder="Ej: 4-2 (penales)"
+                    maxlength="20">
+            </div>
+
+            <!-- PREMIOS INDIVIDUALES -->
+            <div class="section-header">
+                <i class="fas fa-star"></i>
+                <h3>Premios Individuales</h3>
+            </div>
+
+            <div class="awards-grid">
+                <div class="input-group">
+                    <label for="balonOro">
+                        <i class="fas fa-futbol" style="color: gold;"></i> Balón de Oro:
+                    </label>
+                    <select id="balonOro" class="player-select">
+                        <option value="">Seleccionar jugador...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="balonPlata">
+                        <i class="fas fa-futbol" style="color: silver;"></i> Balón de Plata:
+                    </label>
+                    <select id="balonPlata" class="player-select">
+                        <option value="">Seleccionar jugador...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="balonBronce">
+                        <i class="fas fa-futbol" style="color: #cd7f32;"></i> Balón de Bronce:
+                    </label>
+                    <select id="balonBronce" class="player-select">
+                        <option value="">Seleccionar jugador...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="botinOro">
+                        <i class="fas fa-shoe-prints" style="color: gold;"></i> Botín de Oro:
+                    </label>
+                    <select id="botinOro" class="player-select">
+                        <option value="">Seleccionar jugador...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="botinPlata">
+                        <i class="fas fa-shoe-prints" style="color: silver;"></i> Botín de Plata:
+                    </label>
+                    <select id="botinPlata" class="player-select">
+                        <option value="">Seleccionar jugador...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="botinBronce">
+                        <i class="fas fa-shoe-prints" style="color: #cd7f32;"></i> Botín de Bronce:
+                    </label>
+                    <select id="botinBronce" class="player-select">
+                        <option value="">Seleccionar jugador...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="guanteOro">
+                        <i class="fas fa-hands" style="color: gold;"></i> Guante de Oro:
+                    </label>
+                    <select id="guanteOro" class="player-select">
+                        <option value="">Seleccionar jugador...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- MULTIMEDIA -->
+            <div class="section-header">
+                <i class="fas fa-photo-video"></i>
+                <h3>Multimedia Adicional</h3>
+            </div>
+
+            <div class="input-group">
+                <label for="multimedia">Imágenes y Videos:</label>
                 <div class="multimedia-container" id="multimediaContainer">
                     <div class="multimedia-carousel" id="multimediaCarousel">
                         <div class="upload-placeholder" onclick="triggerFileInput()">
@@ -115,12 +358,6 @@
                         </button>
                     </div>
                 </div>
-            </div>
-
-            <!-- Descripción del Mundial -->
-            <div class="input-group">
-                <label for="descripcion">Descripción:</label>
-                <textarea id="descripcion" name="descripcion" rows="5" placeholder="Escribe una breve descripción del mundial..." required></textarea>
             </div>
 
             <button type="submit" class="submit-btn" id="submitBtn">Crear Mundial</button>

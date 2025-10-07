@@ -78,3 +78,38 @@ BEGIN
 	SELECT IdPais, Pais, Nacionalidad FROM Pais
     ORDER BY Pais;
 END**
+
+DELIMITER ;
+
+DELIMITER **
+DROP PROCEDURE IF EXISTS sp_MundialesCreados**
+CREATE PROCEDURE sp_MundialesCreados()
+BEGIN
+	SELECT COUNT(IdMundial) FROM Mundial;
+END**
+
+DELIMITER ;
+
+DELIMITER **
+DROP PROCEDURE IF EXISTS sp_PostsPendientes**
+CREATE PROCEDURE sp_PostsPendientes()
+BEGIN
+	SELECT COUNT(IdPublicacion) FROM Publicacion
+    WHERE EstatusAprobacion = 'Pendiente';
+END**
+
+DELIMITER ;
+
+DELIMITER **
+DROP PROCEDURE IF EXISTS sp_UsuariosRegistrados**
+CREATE PROCEDURE sp_UsuariosRegistrados()
+BEGIN
+	SELECT COUNT(IdUsuario) FROM Usuario;
+END**
+
+
+
+
+
+
+
