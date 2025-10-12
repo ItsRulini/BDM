@@ -9,17 +9,21 @@ class UsuarioDAO {
         $this->conn = $conn;
     }
 
-
-    public function getUsuarioPorCorreo($correo) {
+    public function getUsuarioPorCorreo($correo): ?array {
         try {
             $query = "CALL sp_obtenerUsuarioPorCorreo(?)";
             $stmt = mysqli_prepare($this->conn, $query);
             mysqli_stmt_bind_param($stmt, 's', $correo);
             mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
 
-            if ($result && mysqli_num_rows($result) > 0) {
-                $row = mysqli_fetch_assoc($result);
+            $result = mysqli_stmt_get_result($stmt);
+            if (!$result) {
+                mysqli_stmt_close($stmt);
+                mysqli_next_result($this->conn);
+                return null;
+            }
+
+            if ($row = mysqli_fetch_assoc($result)) {
                 $usuario = new Usuario();
                 $usuario->setIdUsuario($row['IdUsuario']);
                 $usuario->setCorreo($row['Correo']);
@@ -28,19 +32,35 @@ class UsuarioDAO {
                 $usuario->setApellidoPaterno($row['ApellidoPaterno']);
                 $usuario->setApellidoMaterno($row['ApellidoMaterno']);
                 $usuario->setGenero($row['Genero']);
-                $usuario->setNacionalidad($row['Nacionalidad']);
-                $usuario->setPaisNacimiento($row['PaisNacimiento']);
                 $usuario->setTipo($row['Tipo']);
                 $usuario->setFotoPerfil($row['FotoPerfil']);
                 $usuario->setFechaNacimiento($row['FechaNacimiento']);
-                return $usuario;
+                $usuario->setPaisNacimiento($row['IdPaisNacimiento']);
+                $usuario->setNacionalidad($row['IdNacionalidad']);
+                
+                $userData = [
+                    'usuario' => $usuario,
+                    'nacionalidad' => $row['Nacionalidad'],
+                    'paisNacimiento' => $row['PaisNacimiento']
+                ];
+
+                mysqli_free_result($result);
+                mysqli_stmt_close($stmt);
+                mysqli_next_result($this->conn);
+                return $userData;
             }
+
+            mysqli_free_result($result);
+            mysqli_stmt_close($stmt);
+            mysqli_next_result($this->conn);
+            return null;
+
         } catch (mysqli_sql_exception $e) {
-            echo "Error: " . $e->getMessage();
+            error_log("Error en getUsuarioPorCorreo: " . $e->getMessage());
             return null;
         }
-        return null;
     }
+
     public function createUsuario(Usuario $usuario) {
         try {
             $query = "CALL sp_crearUsuario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
