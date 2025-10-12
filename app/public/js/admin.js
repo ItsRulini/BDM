@@ -504,19 +504,40 @@ function refreshCategoriesFromServer() {
 // FUNCIONES DE GESTIÓN DE JUGADORES
 // ==========================================
 
-let countries = [
-    { id: 1, name: 'Argentina', nationality: 'Argentina' },
-    { id: 2, name: 'Brasil', nationality: 'Brasileña' },
-    { id: 3, name: 'Francia', nationality: 'Francesa' },
-    { id: 4, name: 'España', nationality: 'Española' },
-    { id: 5, name: 'Alemania', nationality: 'Alemana' }
-];
+let countries = [];
 
-function openPlayerModal() {
+async function loadCountries () {
+    try {
+        const response = await fetch('index.php?controller=api&action=getPaises', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            countries = data.data.map(pais => ({
+                id: pais.id,
+                name: pais.nombre,
+                nationality: pais.nacionalidad
+            }));
+        } else {
+            console.error("Error desde el API:", data.message);
+        }
+
+    } catch (error) {
+        console.error("Error al cargar los países:", error);
+    }
+}
+
+
+async function openPlayerModal() {
     const modal = document.getElementById('playerModal');
     if (modal) {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
+
+        await loadCountries();
         loadNationalities();
     }
 }
