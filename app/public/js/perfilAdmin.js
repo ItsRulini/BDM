@@ -27,22 +27,22 @@ class AdminProfile extends ProfileManager {
         window.cancelDeleteComment = this.cancelDeleteComment.bind(this);
     }
 
-    loadUserData() {
-        // Datos específicos del administrador
-        const adminData = {
-            nombre: "Admin",
-            apellidoPaterno: "FootGG",
-            apellidoMaterno: "",
-            correo: "admin@footgg.com",
-            genero: "Masculino",
-            fechaNacimiento: "1990-01-01",
-            nacionalidad: "Mexicana",
-            paisNacimiento: "México",
-            fotoPerfil: "assets/default-avatar.png"
-        };
+    // loadUserData() {
+    //     // datos específicos del administrador
+    //     const admindata = {
+    //         nombre: "admin",
+    //         apellidopaterno: "footgg",
+    //         apellidomaterno: "",
+    //         correo: "admin@footgg.com",
+    //         genero: "masculino",
+    //         fechanacimiento: "1990-01-01",
+    //         nacionalidad: "mexicana",
+    //         paisnacimiento: "méxico",
+    //         fotoperfil: "assets/default-avatar.png"
+    //     };
 
-        this.displayUserInfo(adminData);
-    }
+    //     this.displayUserInfo(admindata);
+    // }
 
     async loadUserPosts() {
         try {
