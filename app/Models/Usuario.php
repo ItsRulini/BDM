@@ -23,6 +23,22 @@ class Usuario {
         // Empty destructor
     }
 
+    public function toArray() {
+        return [
+            'idUsuario' => $this->idUsuario,
+            'correo' => $this->correo,
+            'nombre' => $this->nombre,
+            'apellidoPaterno' => $this->apellidoPaterno,
+            'apellidoMaterno' => $this->apellidoMaterno,
+            'genero' => $this->genero,
+            'tipo' => $this->tipo,
+            'fotoPerfil' => $this->fotoPerfil,
+            'fechaNacimiento' => $this->fechaNacimiento,
+            'paisNacimiento' => $this->paisNacimiento,
+            'nacionalidad' => $this->nacionalidad,
+        ];
+    }
+
     // Getters
     public function getIdUsuario(): int { return $this->idUsuario; }
     public function getCorreo(): string { return $this->correo; }

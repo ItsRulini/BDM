@@ -482,6 +482,9 @@ function handleFormSubmit(event) {
         guanteOro: document.getElementById('guanteOro').value
     };
 
+    // Recopilar máxima cantidad de goles anotados
+    const maxGoles = document.getElementById('golesMaximoGoleador').value;
+
     // Preparar FormData para envío
     const formData = new FormData();
     formData.append('year', parseInt(year));
@@ -521,6 +524,9 @@ function handleFormSubmit(event) {
             formData.append(key, premios[key]);
         }
     });
+
+    // Máxima cantidad de goles
+    formData.append('golesMaximoGoleador', maxGoles);
 
     // Multimedia adicional
     uploadedFiles.forEach((fileObj, index) => {

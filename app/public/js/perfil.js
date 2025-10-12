@@ -12,6 +12,8 @@ export default class ProfileManager {
         this.mundiales = [];
         this.selectedFiles = [];
         this.selectedCategories = [];
+
+        this.userInfo = null;
         
         this.initializeElements();
         this.bindEvents();
@@ -104,23 +106,35 @@ export default class ProfileManager {
     // ================================
 
     loadUserData() {
-        // Simulación de datos del usuario - aquí conectarías con tu backend
-        const userData = {
-            nombre: "Villa",
-            apellidoPaterno: "González",
-            apellidoMaterno: "Mendez",
-            correo: "villa.vi@example.com",
-            genero: "Masculino",
-            fechaNacimiento: "1998-05-15",
-            nacionalidad: "Mexicana",
-            paisNacimiento: "México",
-            fotoPerfil: "assets/default-avatar.png"
-        };
-
-        this.displayUserInfo(userData);
+        fetch('index.php?controller=api&action=getCurrentUser')
+            .then(response => {
+                if (!response.ok) throw new Error('Error al obtener los datos del usuario');
+                return response.json();
+            })
+            .then(data => {
+                this.userInfo = data.data;
+                this.displayUserInfo(this.userInfo);
+            })
+            .catch(error => {
+                console.error('Error cargando datos del usuario:', error);
+                // Fallback a datos simulados si ocurre un error
+                const userData = {
+                    nombre: "None",
+                    apellidoPaterno: "None",
+                    apellidoMaterno: "None",
+                    correo: "None",
+                    genero: "None",
+                    fechaNacimiento: "None",
+                    nacionalidad: "None",
+                    paisNacimiento: "None",
+                    fotoPerfil: "assets/default-avatar.png"
+                };
+                this.displayUserInfo(userData);
+            });
     }
 
     displayUserInfo(userData) {
+        const usuario = userData.usuario;
         // Update display elements
         const displayName = document.getElementById('displayName');
         const displayUsername = document.getElementById('displayUsername');
@@ -131,40 +145,49 @@ export default class ProfileManager {
         const email = document.getElementById('email');
         const profileImage = document.getElementById('profileImage');
 
-        if (displayName) displayName.textContent = `${userData.nombre} ${userData.apellidoPaterno}`;
-        if (displayUsername) displayUsername.textContent = `@${userData.nombre}`;
-        if (birthDate) birthDate.textContent = this.formatDate(userData.fechaNacimiento);
-        if (gender) gender.textContent = userData.genero;
+        if (displayName) displayName.textContent = `${usuario.nombre} ${usuario.apellidoPaterno}`;
+        if (displayUsername) displayUsername.textContent = `${usuario.correo}`;
+        if (birthDate) birthDate.textContent = this.formatDate(usuario.fechaNacimiento);
+        if (gender) gender.textContent = usuario.genero;
         if (birthCountry) birthCountry.textContent = userData.paisNacimiento;
         if (nationality) nationality.textContent = userData.nacionalidad;
-        if (email) email.textContent = userData.correo;
-        if (profileImage) profileImage.src = userData.fotoPerfil;
+        if (email) email.textContent = usuario.correo;
+        if (profileImage) profileImage.src = usuario.fotoPerfil;
     }
 
     async loadDropdownData() {
         try {
             // Simulación de carga de datos - aquí conectarías con tu backend
-            this.countries = [
-                { id: 1, name: 'México' },
-                { id: 2, name: 'Argentina' },
-                { id: 3, name: 'Brasil' },
-                { id: 4, name: 'España' },
-                { id: 5, name: 'Francia' },
-                { id: 6, name: 'Alemania' },
-                { id: 7, name: 'Inglaterra' },
-                { id: 8, name: 'Italia' }
-            ];
 
-            this.categories = [
-                { id: 1, name: 'Análisis' },
-                { id: 2, name: 'Historia' },
-                { id: 3, name: 'Estadísticas' },
-                { id: 4, name: 'Curiosidades' },
-                { id: 5, name: 'Predicciones' },
-                { id: 6, name: 'Opinión' },
-                { id: 7, name: 'Jugadores' },
-                { id: 8, name: 'Equipos' }
-            ];
+            // Obtener países desde la base de datos usando fetch
+            const response = await fetch('index.php?controller=api&action=getPaises', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+            this.countries = Array.isArray(data.data)
+                ? data.data.map(pais => ({
+                    id: pais.id,
+                    name: pais.nombre
+                }))
+                : [];
+
+            // Obtener categorías desde la base de datos usando fetch
+            const catResponse = await fetch('index.php?controller=api&action=getCategorias', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const catData = await catResponse.json();
+            this.categories = Array.isArray(catData.data)
+                ? catData.data.map(cat => ({
+                    id: cat.id,
+                    name: cat.nombre
+                }))
+                : [];
 
             this.mundiales = [
                 { id: 1, name: 'Qatar 2022', year: 2022, country: 'Qatar' },
@@ -603,17 +626,8 @@ export default class ProfileManager {
     }
 
     populateInfoForm() {
-        // Simular datos actuales del usuario
-        const currentData = {
-            nombre: "Villa",
-            apellidoPaterno: "González", 
-            apellidoMaterno: "Mendez",
-            correo: "villa.vi@example.com",
-            genero: "Masculino",
-            fechaNacimiento: "1998-05-15",
-            nacionalidad: 1,
-            paisNacimiento: 1
-        };
+        // Llenar los datos del formulario con la información actual del usuario
+        const currentData = this.userInfo ? { ...this.userInfo.usuario } : {};
 
         Object.keys(currentData).forEach(key => {
             const field = document.getElementById(key);
@@ -971,7 +985,12 @@ export default class ProfileManager {
     // }
 
     formatDate(dateString) {
-        const date = new Date(dateString);
+        if (!dateString) return "Sin fecha";
+
+        // Crear fecha "manual" dividiendo año, mes, día
+        const [year, month, day] = dateString.split('-').map(Number);
+        const date = new Date(year, month - 1, day); // <-- aquí NO se usa UTC
+
         return date.toLocaleDateString('es-ES', {
             year: 'numeric',
             month: 'long',

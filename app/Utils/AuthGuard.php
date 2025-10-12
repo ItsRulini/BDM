@@ -24,6 +24,7 @@ class AuthGuard {
 
     public static function requireUser() {
         if (!Auth::check() || Auth::user()['role'] !== 'Usuario') {
+            Auth::logout();
             header("Location: index.php?controller=home&action=login");
             exit();
         }

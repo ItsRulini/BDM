@@ -85,6 +85,8 @@ CREATE TABLE Mundial (
   botin_bronce INT,
   guante_oro INT,
 
+  -- Goles del botín de oro
+  max_goles INT,
   -- Claves foráneas
   FOREIGN KEY (campeon) REFERENCES Pais(IdPais),
   FOREIGN KEY (subcampeon) REFERENCES Pais(IdPais),
@@ -105,6 +107,9 @@ MODIFY COLUMN Año YEAR;
 
 alter table mundial
 modify column descripcion text;
+
+ALTER TABLE Mundial
+ADD max_goles INT AFTER guante_oro;
 
 ALTER TABLE Mundial
 -- Campos relacionados al resultado final

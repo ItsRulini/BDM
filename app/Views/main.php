@@ -110,122 +110,28 @@
             </div>
         </section>
 
-        <section class="rankings-section">
-            <div class="rankings-container">
-                <div class="ranking-column">
-                    <div class="ranking-header">
-                        <h2>Clasificación Mundial</h2>
-                        <span>Última actualización: 10 sep 2025</span>
-                    </div>
-                    <div class="ranking-table">
-                        <div class="table-header">
-                            <span class="col-rank">Clasif.</span>
-                            <span class="col-team">Equipo</span>
-                            <span class="col-points">Total de pun.</span>
-                            <span class="col-change">+/- puntos</span>
-                        </div>
-                        <div class="table-body" id="fifaRankingBody"></div>
-                    </div>
-                    <a href="#" class="btn-view-full">CLASIFICACIÓN MASCULINA <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="ranking-column">
-                    <div class="swiper qualifiersSwiper">
-                        <div class="swiper-slide">
-                            <div class="ranking-header header-with-selector">
-                                <div>
-                                    <h2>Eliminatorias Europa (UEFA)</h2>
-                                    <span>Fase de Grupos</span>
-                                </div>
-                                <select id="uefa-group-selector" class="group-selector"></select>
-                            </div>
-                            <div class="ranking-table uefa-table"> 
-                                <div class="table-header">
-                                    <span class="col-pos"></span>
-                                    <span class="col-team-uefa">Club</span>
-                                    <span class="col-pj">PJ</span>
-                                    <span class="col-g">G</span>
-                                    <span class="col-e">E</span>
-                                    <span class="col-p">P</span>
-                                    <span class="col-gf">GF</span>
-                                    <span class="col-gc">GC</span>
-                                    <span class="col-dg">DG</span>
-                                    <span class="col-pts">Pts</span>
-                                </div>
-                                <div class="table-body" id="uefaQualifiersBody"></div>
-                            </div>
-                        </div>
-
-                        <div class="swiper-slide">
-                            <div class="ranking-header">
-                                <h2>Eliminatorias Sudamérica (CONMEBOL)</h2>
-                                <span>Jornada 18 de 18</span>
-                            </div>
-                            <div class="ranking-table">
-                                <div class="table-header">
-                                    <span class="col-rank">Pos.</span>
-                                    <span class="col-team">Equipo</span>
-                                    <span class="col-points">Pts</span>
-                                    <span class="col-played">PJ</span>
-                                </div>
-                                <div class="table-body" id="conmebolQualifiersBody">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        
-        </section>
-
-        <section class="news-section">
-            <h2 class="section-title">
-                <i class="fas fa-newspaper"></i> Noticias Relevantes
-            </h2>
-            <div class="news-grid">
-                <a href="#" class="news-card" style="background-image: url('https://www.excelsior.com.mx/media/pictures/2022/12/19/2876152.jpg');">
-                    <div class="news-card-content">
-                        <span class="news-card-category">Final Histórica</span>
-                        <h3>A pesar de la final historica de Mbappe no se logro coronar como campeon mundial</h3>
-                    </div>
-                </a>
-
-                <a href="#" class="news-card" style="background-image: url('https://assets.goal.com/images/v3/blte4e603a2f6066a26/goal---image-w-crest--97f4a9be-5555-4939-b362-024218fef256.png');">
-                    <div class="news-card-content">
-                        <span class="news-card-category">Análisis</span>
-                        <h3>El gol de Richarlison: ¿El mejor de la historia de los mundiales?</h3>
-                    </div>
-                </a>
-
-                <a href="#" class="news-card" style="background-image: url('https://record.com.do/media/uploads/2022/12/2022-12-10-morocco_1e9ioilcxg3yo1pegmu5zo4pm3-728x410.webp');">
-                    <div class="news-card-content">
-                        <span class="news-card-category">Revelación</span>
-                        <h3>Marruecos y la hazaña africana que inspiró a un continente</h3>
-                    </div>
-                </a>
-            </div>
-        </section>
-
-        <section class="top-scorers-section">
-            <h2 class="section-title">
-                <i class="fas fa-bullseye"></i> Máximos Goleadores Históricos en Mundiales
-            </h2>
-            <div class="table-container">
-                <div class="table-header">
-                    <span>#</span>
-                    <span>Jugador</span>
-                    <span>Goles</span>
-                </div>
-                <div class="table-body" id="top-scorers-table">
-                    </div>
-            </div>
-        </section>
-
+        <!-- BALÓN DE ORO -->
         <section class="golden-ball-section">
             <h2 class="section-title">
-                <i class="fas fa-medal"></i> Balón de Oro del Mundial
+                <i class="fas fa-medal" style="color: gold;"></i> Balón de Oro del Mundial
             </h2>
             <div class="winners-grid" id="golden-ball-grid"></div>
+        </section>
+
+        <!-- BOTÍN DE ORO -->
+        <section class="golden-boot-section">
+            <h2 class="section-title">
+                <i class="fas fa-shoe-prints" style="color: gold;"></i> Botín de Oro del Mundial
+            </h2>
+            <div class="winners-grid" id="golden-boot-grid"></div>
+        </section>
+
+        <!-- GUANTE DE ORO -->
+        <section class="golden-glove-section">
+            <h2 class="section-title">
+                <i class="fas fa-hands" style="color: gold;"></i> Guante de Oro del Mundial
+            </h2>
+            <div class="winners-grid" id="golden-glove-grid"></div>
         </section>
         
     </main>

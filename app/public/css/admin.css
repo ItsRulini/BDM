@@ -280,11 +280,11 @@
     font-size: 0.9rem;
 }
 
-.delete-category {
+.update-category {
     position: absolute;
     top: 5px;
     right: 5px;
-    background: rgba(255, 68, 68, 0.8);
+    background: rgba(2, 158, 64, 0.8);
     color: #fff;
     border: none;
     border-radius: 50%;
@@ -299,7 +299,7 @@
     font-size: 0.8rem;
 }
 
-.category-card:hover .delete-category {
+.category-card:hover .update-category {
     opacity: 1;
 }
 
@@ -912,4 +912,12 @@ select.form-input option {
     .photo-preview i {
         font-size: 2.5rem;
     }
+}
+
+.no-worldcups {
+    text-align: center;
+    font-size: 1.2em;
+    color: #666;
+    margin: 40px 0;
+    font-style: italic;
 }
