@@ -1,17 +1,46 @@
-// Datos de ejemplo para los mundiales (esto vendrá de la base de datos)
-const adminWorldCups = [
-    { id: 1, year: 2022, name: "Qatar 2022", image: "https://cdn-3.expansion.mx/dims4/default/68cb107/2147483647/strip/true/crop/1371x876+0+0/resize/1800x1150!/format/webp/quality/80/?url=https%3A%2F%2Fcdn-3.expansion.mx%2F6f%2Fc4%2F8766f2ff44a9b37bcd371593de2f%2Fqatar-2022.JPG", description: "El primer mundial en el Medio Oriente, lleno de sorpresas y con la épica final entre Argentina y Francia." },
-    { id: 2, year: 2018, name: "Rusia 2018", image: "https://i.pinimg.com/736x/51/96/44/519644869b0fe4d59baa467249594234.jpg", description: "La sorprendente victoria de Francia y la memorable actuación de Croacia." },
-    { id: 3, year: 2014, name: "Brasil 2014", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQq06obpmRyvsfrJT8CZCMvgdKK4fON5LNe8A&s", description: "El mundial en la cuna del fútbol, recordado por el 7-1 de Alemania a Brasil." }
-];
+// Variable para almacenar el ID de la categoría en edición
+let editingCategoryId = null;
 
-// Datos de ejemplo para las categorías (esto vendrá de la base de datos)
-let categories = [
-    { id: 1, name: 'Noticias', postCount: 15 },
-    { id: 2, name: 'Análisis', postCount: 8 },
-    { id: 3, name: 'Historias', postCount: 23 },
-    { id: 4, name: 'Estadísticas', postCount: 12 }
-];
+async function loadAdminWorldCups () {
+    try {
+        const response = await fetch('index.php?controller=api&action=getMundiales', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.data.length > 0) {
+            displayAdminWorldCups(data.data);
+        } else {
+            displayNoWorldCupsMessage();
+        }
+
+    } catch (error) {
+        console.error("Error al obtener los mundiales", error);
+        displayNoWorldCupsMessage();
+    }
+}
+
+async function displayAdminWorldCups(worldCups) {
+    const container = document.getElementById('worldCupsGrid');
+    if (!container) return;
+
+    container.innerHTML = worldCups.map(worldCup => createAdminWorldCupCard(worldCup)).join('');
+}
+
+function displayNoWorldCupsMessage() {
+    const container = document.getElementById('worldCupsGrid');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="no-worldcups">
+            <p>No hay mundiales registrados todavía</p>
+        </div>
+    `;
+}
 
 // ==========================================
 // FUNCIONES DE MUNDIALES
@@ -34,75 +63,114 @@ function createAdminWorldCupCard(worldCup) {
     `;
 }
 
-function displayAdminWorldCups(worldCups) {
-    const container = document.getElementById('worldCupsGrid');
-    if (container) {
-        container.innerHTML = worldCups.map(worldCup => createAdminWorldCupCard(worldCup)).join('');
-    }
-}
-
 function goToCreateMundial() {
     window.location.href = 'index.php?controller=admin&action=crearMundial';
 }
 
 function editMundial(id) {
-    // Redirigir a la acción editMundial del controlador admin con el ID
     window.location.href = `index.php?controller=admin&action=editarMundial&id=${id}`;
 }
 
+async function uploadStatistics() {
+    const mundiales = document.getElementById('totalMundiales');
+    const posts = document.getElementById('totalPosts');
+    const users = document.getElementById('totalUsers');
+
+    fetch('index.php?controller=api&action=getEstadisticasAdmin', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success){
+            const statistics = data.data;
+
+            mundiales.textContent = statistics.mundiales;
+            posts.textContent = statistics.posts;   
+            users.textContent = statistics.usuarios;
+        } else {
+            console.error("Error desde el API:", data.message);
+        }
+
+    })
+    .catch(error => {
+        console.error("Error al cargar estadisticas", error);
+    })
+}
 
 // ==========================================
 // FUNCIONES DE GESTIÓN DE CATEGORÍAS
 // ==========================================
 
-// Función para abrir el modal de categorías
-function openCategoryModal() {
+async function openCategoryModal() {
     const modal = document.getElementById('categoryModal');
     if (modal) {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
-        renderCategories(); // Actualizar la vista de categorías
+        await loadCategories();
+        await renderCategories();
     }
 }
 
-// Función para cerrar el modal de categorías
 function closeCategoryModal() {
     const modal = document.getElementById('categoryModal');
     if (modal) {
         modal.classList.remove('active');
         document.body.style.overflow = 'auto';
         
-        // Ocultar formulario si está activo
         const form = document.getElementById('categoryForm');
         if (form) {
             form.classList.remove('active');
         }
         
-        // Limpiar el campo
         const input = document.getElementById('categoryName');
         if (input) {
             input.value = '';
         }
+
+        editingCategoryId = null;
+
+        const saveButton = document.querySelector('#categoryForm .btn-primary');
+        if (saveButton) {
+            saveButton.textContent = 'Guardar Categoría';
+        }
+
+        const formTitle = document.querySelector('#categoryForm .form-title');
+        if (formTitle) {
+            formTitle.textContent = 'Nueva Categoría';
+        }
     }
 }
 
-// Función para mostrar el formulario de nueva categoría
 function showCategoryForm() {
+    editingCategoryId = null;
+
     const form = document.getElementById('categoryForm');
     if (form) {
         form.classList.add('active');
         
-        // Hacer focus en el input después de la animación
+        const saveButton = document.querySelector('#categoryForm .btn-primary');
+        if (saveButton) {
+            saveButton.textContent = 'Guardar Categoría';
+        }
+
+        const formTitle = document.querySelector('#categoryForm .form-title');
+        if (formTitle) {
+            formTitle.textContent = 'Nueva Categoría';
+        }
+        
         setTimeout(() => {
             const input = document.getElementById('categoryName');
             if (input) {
+                input.value = '';
                 input.focus();
             }
         }, 300);
     }
 }
 
-// Función para cancelar el formulario de categoría
 function cancelCategoryForm() {
     const form = document.getElementById('categoryForm');
     const input = document.getElementById('categoryName');
@@ -113,16 +181,59 @@ function cancelCategoryForm() {
     if (input) {
         input.value = '';
     }
+
+    editingCategoryId = null;
+
+    const saveButton = document.querySelector('#categoryForm .btn-primary');
+    if (saveButton) {
+        saveButton.textContent = 'Guardar Categoría';
+    }
+
+    const formTitle = document.querySelector('#categoryForm .form-title');
+    if (formTitle) {
+        formTitle.textContent = 'Nueva Categoría';
+    }
 }
 
-// Función para guardar nueva categoría
+function updateCategory(categoryId) {
+    const category = categories.find(cat => cat.id === categoryId);
+    
+    if (!category) {
+        console.error('Categoría no encontrada');
+        return;
+    }
+
+    editingCategoryId = categoryId;
+
+    const form = document.getElementById('categoryForm');
+    if (form) {
+        form.classList.add('active');
+    }
+
+    const input = document.getElementById('categoryName');
+    if (input) {
+        input.value = category.nombre;
+        input.focus();
+        input.select();
+    }
+
+    const saveButton = document.querySelector('#categoryForm .btn-primary');
+    if (saveButton) {
+        saveButton.textContent = 'Actualizar Categoría';
+    }
+
+    const formTitle = document.querySelector('#categoryForm .form-title');
+    if (formTitle) {
+        formTitle.textContent = 'Editar Categoría';
+    }
+}
+
 function saveCategory() {
     const categoryNameInput = document.getElementById('categoryName');
     if (!categoryNameInput) return;
     
     const categoryName = categoryNameInput.value.trim();
     
-    // Validaciones
     if (!categoryName) {
         alert('Por favor, ingresa un nombre para la categoría.');
         categoryNameInput.focus();
@@ -135,127 +246,136 @@ function saveCategory() {
         return;
     }
 
-    // Verificar si ya existe una categoría con ese nombre
-    const exists = categories.some(cat => 
-        cat.name.toLowerCase() === categoryName.toLowerCase()
-    );
+    if (editingCategoryId !== null) {
+        const exists = categories.some(cat => 
+            cat.nombre.toLowerCase() === categoryName.toLowerCase() && 
+            cat.id !== editingCategoryId
+        );
 
-    if (exists) {
-        alert('Ya existe una categoría con ese nombre.');
-        categoryNameInput.focus();
-        return;
-    }
-
-    // Crear nueva categoría
-    const newCategory = {
-        id: Date.now(), // ID temporal (en producción vendría de la BD)
-        name: categoryName,
-        postCount: 0
-    };
-
-    // Agregar la categoría al array
-    categories.push(newCategory);
-    
-    // Actualizar la vista
-    renderCategories();
-    
-    // Limpiar y ocultar el formulario
-    cancelCategoryForm();
-
-    // Mostrar mensaje de éxito
-    console.log('Categoría creada:', newCategory);
-    
-    // TODO: Aquí iría la llamada AJAX para guardar en la base de datos
-    /*
-    fetch('index.php?controller=admin&action=createCategory', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            name: categoryName
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Actualizar el ID real desde la base de datos
-            newCategory.id = data.categoryId;
-            console.log('Categoría guardada en BD:', data);
-        } else {
-            alert('Error al guardar la categoría: ' + data.message);
+        if (exists) {
+            alert('Ya existe una categoría con ese nombre.');
+            categoryNameInput.focus();
+            return;
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al conectar con el servidor');
-    });
-    */
-}
 
-// Función para eliminar categoría
-function deleteCategory(categoryId) {
-    const category = categories.find(cat => cat.id === categoryId);
-    
-    if (!category) {
-        console.error('Categoría no encontrada');
-        return;
-    }
+        const categoryIndex = categories.findIndex(cat => cat.id === editingCategoryId);
+        if (categoryIndex !== -1) {
+            categories[categoryIndex].nombre = categoryName;
+            
+            console.log('Categoría actualizada:', categories[categoryIndex]);
 
-    // Confirmar eliminación
-    if (confirm(`¿Estás seguro de que deseas eliminar la categoría "${category.name}"?\n\nEsta acción no se puede deshacer.`)) {
-        // Eliminar del array local
-        categories = categories.filter(cat => cat.id !== categoryId);
+            fetch('index.php?controller=api&action=updateCategoria', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: editingCategoryId,
+                    name: categoryName
+                })
+            })
+            .then(response => response.json())
+            .then(async data => {
+                if (data.success) {
+                    console.log('Categoría actualizada en BD:', data);
+                    await renderCategories();
+                    await cancelCategoryForm();
+                } else {
+                    alert('Error al actualizar la categoría: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al conectar con el servidor');
+            });
+        }
+    } else {
+        const exists = categories.some(cat => 
+            cat.nombre.toLowerCase() === categoryName.toLowerCase()
+        );
+
+        if (exists) {
+            alert('Ya existe una categoría con ese nombre.');
+            categoryNameInput.focus();
+            return;
+        }
+
+        const newCategory = {
+            name: categoryName
+        };
+
+        categories.push(newCategory);
         
-        // Actualizar la vista
-        renderCategories();
+        console.log('Categoría creada:', newCategory);
         
-        console.log('Categoría eliminada:', categoryId);
-        
-        // TODO: Aquí iría la llamada AJAX para eliminar de la base de datos
-        /*
-        fetch(`index.php?controller=admin&action=deleteCategory&id=${categoryId}`, {
-            method: 'DELETE'
+        fetch('index.php?controller=api&action=crearCategoria', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: categoryName
+            })
         })
         .then(response => response.json())
-        .then(data => {
+        .then(async data => {
             if (data.success) {
-                console.log('Categoría eliminada de BD:', data);
+                newCategory.id = data.categoryId;
+                console.log('Categoría guardada en BD:', data);
+                await loadCategories();
+                await renderCategories();
+                await cancelCategoryForm();
             } else {
-                alert('Error al eliminar la categoría: ' + data.message);
-                // Revertir el cambio local
-                categories.push(category);
-                renderCategories();
+                categories = categories.filter(cat => cat.id !== newCategory.id);
+                alert('Error al guardar la categoría: ' + data.message);
             }
         })
         .catch(error => {
             console.error('Error:', error);
+            categories = categories.filter(cat => cat.id !== newCategory.id);
             alert('Error al conectar con el servidor');
-            // Revertir el cambio local
-            categories.push(category);
-            renderCategories();
         });
-        */
     }
 }
 
-// Función para renderizar las categorías en el modal
-function renderCategories() {
+let categories = [];
+
+async function loadCategories() {
+    try {
+        const response = await fetch('index.php?controller=api&action=getCategorias', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        if (data.success && Array.isArray(data.data)) {
+            categories = data.data;
+        } else {
+            categories = [];
+            console.error('No se pudieron cargar las categorías:', data.message);
+        }
+    } catch (error) {
+        categories = [];
+        console.error('Error al cargar las categorías:', error);
+    }
+}
+
+async function renderCategories() {
+
     const grid = document.getElementById('categoriesGrid');
     if (!grid) return;
     
-    // Generar HTML para las categorías existentes
     const categoriesHTML = categories.map(category => `
         <div class="category-card">
-            <button class="delete-category" onclick="deleteCategory(${category.id})" title="Eliminar categoría">
-                <i class="fas fa-times"></i>
+            <button class="update-category" onclick="updateCategory(${category.id})" title="Editar categoría">
+                <i class="fas fa-pencil-alt"></i>
             </button>
-            <div class="category-name">${escapeHtml(category.name)}</div>
-            <div class="category-count">${category.postCount} posts</div>
+            <div class="category-name">${escapeHtml(category.nombre)}</div>
+            <div class="category-count">${category.num_posts} posts</div>
         </div>
     `).join('');
 
-    // HTML para el botón de agregar nueva categoría
     const addButtonHTML = `
         <div class="add-category-card" onclick="showCategoryForm()" title="Crear nueva categoría">
             <div class="add-category-icon">
@@ -265,11 +385,9 @@ function renderCategories() {
         </div>
     `;
 
-    // Actualizar el contenido del grid
     grid.innerHTML = categoriesHTML + addButtonHTML;
 }
 
-// Función auxiliar para escapar HTML y prevenir XSS
 function escapeHtml(unsafe) {
     return unsafe
         .replace(/&/g, "&amp;")
@@ -283,18 +401,13 @@ function escapeHtml(unsafe) {
 // EVENT LISTENERS Y INICIALIZACIÓN
 // ==========================================
 
-// Inicialización cuando se carga el DOM
 document.addEventListener('DOMContentLoaded', function() {
-    // Cargar mundiales
-    displayAdminWorldCups(adminWorldCups);
-    
-    // Configurar event listeners para el modal
+    uploadStatistics();
+    loadAdminWorldCups();
     setupModalEventListeners();
 });
 
-// Configurar event listeners para el modal de categorías
 function setupModalEventListeners() {
-    // Cerrar modal al hacer clic fuera del contenido
     const modal = document.getElementById('categoryModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
@@ -304,7 +417,6 @@ function setupModalEventListeners() {
         });
     }
 
-    // Manejar tecla Enter en el input de categoría
     const categoryInput = document.getElementById('categoryName');
     if (categoryInput) {
         categoryInput.addEventListener('keypress', function(e) {
@@ -315,12 +427,37 @@ function setupModalEventListeners() {
         });
     }
 
-    // Manejar tecla Escape para cerrar modal
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             const modal = document.getElementById('categoryModal');
             if (modal && modal.classList.contains('active')) {
                 closeCategoryModal();
+            }
+        }
+    });
+
+    const playerModal = document.getElementById('playerModal');
+    const countryModal = document.getElementById('countryModal');
+    
+    if (playerModal) {
+        playerModal.addEventListener('click', function(e) {
+            if (e.target === this) closePlayerModal();
+        });
+    }
+    
+    if (countryModal) {
+        countryModal.addEventListener('click', function(e) {
+            if (e.target === this) closeCountryModal();
+        });
+    }
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (playerModal && playerModal.classList.contains('active')) {
+                closePlayerModal();
+            }
+            if (countryModal && countryModal.classList.contains('active')) {
+                closeCountryModal();
             }
         }
     });
@@ -330,13 +467,10 @@ function setupModalEventListeners() {
 // FUNCIONES UTILITARIAS
 // ==========================================
 
-// Función para mostrar notificaciones (opcional)
 function showNotification(message, type = 'success') {
-    // Implementar sistema de notificaciones si se desea
     console.log(`${type.toUpperCase()}: ${message}`);
 }
 
-// Función para validar nombres de categorías
 function validateCategoryName(name) {
     const errors = [];
     
@@ -352,7 +486,6 @@ function validateCategoryName(name) {
         errors.push('El nombre no puede exceder 50 caracteres');
     }
     
-    // Verificar caracteres especiales peligrosos
     if (/<|>|&/.test(name)) {
         errors.push('El nombre contiene caracteres no permitidos');
     }
@@ -363,29 +496,14 @@ function validateCategoryName(name) {
     };
 }
 
-// Función para refrescar datos desde el servidor (para uso futuro)
 function refreshCategoriesFromServer() {
     // TODO: Implementar cuando se conecte con el backend
-    /*
-    fetch('index.php?controller=admin&action=getCategories')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                categories = data.categories;
-                renderCategories();
-            }
-        })
-        .catch(error => {
-            console.error('Error al cargar categorías:', error);
-        });
-    */
 }
 
 // ==========================================
 // FUNCIONES DE GESTIÓN DE JUGADORES
 // ==========================================
 
-// Datos de países (esto vendrá de la base de datos)
 let countries = [
     { id: 1, name: 'Argentina', nationality: 'Argentina' },
     { id: 2, name: 'Brasil', nationality: 'Brasileña' },
@@ -394,7 +512,6 @@ let countries = [
     { id: 5, name: 'Alemania', nationality: 'Alemana' }
 ];
 
-// Función para abrir el modal de jugador
 function openPlayerModal() {
     const modal = document.getElementById('playerModal');
     if (modal) {
@@ -404,7 +521,6 @@ function openPlayerModal() {
     }
 }
 
-// Función para cerrar el modal de jugador
 function closePlayerModal() {
     const modal = document.getElementById('playerModal');
     if (modal) {
@@ -414,55 +530,31 @@ function closePlayerModal() {
     }
 }
 
-// Función para cargar nacionalidades en el select
 function loadNationalities() {
     const select = document.getElementById('playerNationality');
     if (!select) return;
 
-    // Limpiar opciones existentes excepto la primera
     select.innerHTML = '<option value="">Selecciona una nacionalidad...</option>';
 
-    // Agregar opciones de países
     countries.forEach(country => {
         const option = document.createElement('option');
         option.value = country.id;
         option.textContent = `${country.name} (${country.nationality})`;
         select.appendChild(option);
     });
-
-    // TODO: Cargar desde el servidor
-    /*
-    fetch('index.php?controller=admin&action=getCountries')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                countries = data.countries;
-                countries.forEach(country => {
-                    const option = document.createElement('option');
-                    option.value = country.id;
-                    option.textContent = `${country.name} (${country.nationality})`;
-                    select.appendChild(option);
-                });
-            }
-        })
-        .catch(error => console.error('Error al cargar países:', error));
-    */
 }
 
-// Función para previsualizar la foto del jugador
 function previewPlayerPhoto(event) {
     const file = event.target.files[0];
     const preview = document.getElementById('playerPhotoPreview');
     
     if (!file) return;
 
-    // Validar tipo de archivo
     if (!file.type.startsWith('image/')) {
         alert('Por favor selecciona un archivo de imagen válido');
         return;
     }
 
-    // Validar tamaño (5MB máximo)
     if (file.size > 5 * 1024 * 1024) {
         alert('La imagen no puede superar los 5MB');
         return;
@@ -476,7 +568,6 @@ function previewPlayerPhoto(event) {
     reader.readAsDataURL(file);
 }
 
-// Función para guardar jugador
 function savePlayer(event) {
     event.preventDefault();
     
@@ -485,7 +576,6 @@ function savePlayer(event) {
     const birthdate = document.getElementById('playerBirthdate').value;
     const photoInput = document.getElementById('playerPhoto');
 
-    // Validaciones
     if (!name) {
         alert('Por favor, ingresa el nombre del jugador');
         return;
@@ -501,7 +591,6 @@ function savePlayer(event) {
         return;
     }
 
-    // Validar que la fecha no sea futura
     const today = new Date();
     const selectedDate = new Date(birthdate);
     if (selectedDate > today) {
@@ -509,7 +598,6 @@ function savePlayer(event) {
         return;
     }
 
-    // Preparar datos para envío
     const formData = new FormData();
     formData.append('name', name);
     formData.append('nationality', nationality);
@@ -526,33 +614,10 @@ function savePlayer(event) {
         hasPhoto: !!photoInput.files[0]
     });
 
-    // TODO: Enviar al servidor
-    /*
-    fetch('index.php?controller=admin&action=createPlayer', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Jugador registrado exitosamente');
-            closePlayerModal();
-        } else {
-            alert('Error al registrar jugador: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al conectar con el servidor');
-    });
-    */
-
-    // Simulación de éxito
     alert('Jugador registrado exitosamente (modo demo)');
     closePlayerModal();
 }
 
-// Función para resetear el formulario de jugador
 function resetPlayerForm() {
     const form = document.getElementById('playerForm');
     if (form) {
@@ -574,7 +639,6 @@ function resetPlayerForm() {
 // FUNCIONES DE GESTIÓN DE PAÍSES
 // ==========================================
 
-// Función para abrir el modal de país
 function openCountryModal() {
     const modal = document.getElementById('countryModal');
     if (modal) {
@@ -583,7 +647,6 @@ function openCountryModal() {
     }
 }
 
-// Función para cerrar el modal de país
 function closeCountryModal() {
     const modal = document.getElementById('countryModal');
     if (modal) {
@@ -593,21 +656,19 @@ function closeCountryModal() {
     }
 }
 
-// Función para guardar país
 function saveCountry(event) {
     event.preventDefault();
     
     const countryName = document.getElementById('countryName').value.trim();
     const nationality = document.getElementById('countryNationality').value.trim();
 
-    // Validaciones
     if (!countryName) {
         alert('Por favor, ingresa el nombre del país');
         return;
     }
 
     if (!nationality) {
-        alert('Por favor, ingresa el gentilicio');
+        alert('Por favor, ingresa la nacionalidad');
         return;
     }
 
@@ -617,11 +678,10 @@ function saveCountry(event) {
     }
 
     if (nationality.length < 2) {
-        alert('El gentilicio debe tener al menos 2 caracteres');
+        alert('La nacionalidad debe tener al menos 2 caracteres');
         return;
     }
 
-    // Verificar si el país ya existe
     const exists = countries.some(country => 
         country.name.toLowerCase() === countryName.toLowerCase()
     );
@@ -631,7 +691,6 @@ function saveCountry(event) {
         return;
     }
 
-    // Crear nuevo país
     const newCountry = {
         id: Date.now(),
         name: countryName,
@@ -642,9 +701,7 @@ function saveCountry(event) {
     
     console.log('País registrado:', newCountry);
 
-    // TODO: Guardar en base de datos
-    /*
-    fetch('index.php?controller=admin&action=createCountry', {
+    fetch('index.php?controller=api&action=crearPais', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -659,8 +716,9 @@ function saveCountry(event) {
         if (data.success) {
             newCountry.id = data.countryId;
             alert('País registrado exitosamente');
+            console.log(data.message);
             closeCountryModal();
-            loadNationalities(); // Actualizar select de jugadores
+            loadNationalities();
         } else {
             alert('Error al registrar país: ' + data.message);
         }
@@ -669,56 +727,11 @@ function saveCountry(event) {
         console.error('Error:', error);
         alert('Error al conectar con el servidor');
     });
-    */
-
-    // Simulación de éxito
-    alert('País registrado exitosamente (modo demo)');
-    closeCountryModal();
-    loadNationalities(); // Actualizar select si el modal de jugador está abierto
 }
 
-// Función para resetear el formulario de país
 function resetCountryForm() {
     const form = document.getElementById('countryForm');
     if (form) {
         form.reset();
     }
 }
-
-// ==========================================
-// EVENT LISTENERS ADICIONALES
-// ==========================================
-
-// Agregar a la función setupModalEventListeners existente
-const originalSetup = setupModalEventListeners;
-setupModalEventListeners = function() {
-    originalSetup();
-    
-    // Event listeners para modales de jugador y país
-    const playerModal = document.getElementById('playerModal');
-    const countryModal = document.getElementById('countryModal');
-    
-    if (playerModal) {
-        playerModal.addEventListener('click', function(e) {
-            if (e.target === this) closePlayerModal();
-        });
-    }
-    
-    if (countryModal) {
-        countryModal.addEventListener('click', function(e) {
-            if (e.target === this) closeCountryModal();
-        });
-    }
-    
-    // Escape para cerrar modales
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            if (playerModal && playerModal.classList.contains('active')) {
-                closePlayerModal();
-            }
-            if (countryModal && countryModal.classList.contains('active')) {
-                closeCountryModal();
-            }
-        }
-    });
-};
