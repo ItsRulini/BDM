@@ -1,8 +1,9 @@
 USE BDM;
 
-SELECT * FROM Usuario;
+SELECT * FROM Usuario ORDER BY Tipo DESC;
 
 SELECT * FROM Categoria;
+-- UPDATE Categoria SET Nombre = 'Jugadas polémicas' WHERE IdCategoria = 2;
 
 SELECT * FROM Mundial;
 
@@ -133,7 +134,40 @@ INSERT INTO Pais (Pais, Nacionalidad) VALUES
 -- OFC (Oceanía)
 ('Nueva Zelanda', 'Neozelandesa');
 
+SELECT 
+m.IdMundial, 
+m.Año, 
+m.logo, 
+m.Descripcion,
+GROUP_CONCAT(p.Pais ORDER BY p.Pais SEPARATOR ', ') AS Sedes
+FROM Sedes s
+INNER JOIN Mundial m ON m.idMundial = s.idMundial
+INNER JOIN Pais p ON p.idPais = s.sede
+WHERE m.IdMundial = 1
+GROUP BY m.IdMundial, m.año, m.descripcion, m.logo;
+
+SELECT 
+	u.IdUsuario,
+	u.Correo,
+	u.Contraseña,
+	u.Nombre,
+	u.ApellidoPaterno,
+	u.ApellidoMaterno,
+	u.Genero,
+	n.Nacionalidad,
+	p.Pais AS PaisNacimiento,
+	u.Tipo,
+	u.FotoPerfil,
+	u.FechaNacimiento
+FROM Usuario u
+INNER JOIN Pais p
+ON p.IdPais = u.PaisNacimiento
+INNER JOIN Pais n
+ON n.IdPais = u.Nacionalidad
+WHERE Correo = 'admin@email.com';
+
 call sp_obtenerPaises();
 call sp_MundialesCreados();
 call sp_PostsPendientes();
 call sp_UsuariosRegistrados();
+call sp_getCategorias();
