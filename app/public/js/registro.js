@@ -2,12 +2,51 @@ import { loginUser } from './login.js';
 
 document.addEventListener ('DOMContentLoaded', () => {
     const registrationForm = document.getElementById('registrationForm');
+    const fotoPerfilInput = document.getElementById('fotoPerfil');
+    const profilePicPreview = document.getElementById('profilePicPreview');
+    const nacimientoInput = document.getElementById('nacimiento');
 
     cargarPaises();
 
+    const profilePicWrapper = document.querySelector('.profile-pic-wrapper');
+
+    // Al hacer clic en el contenedor, simulamos un clic en el input de archivo oculto
+    profilePicWrapper?.addEventListener('click', () => {
+        fotoPerfilInput.click();
+    });
+
+    // Evento para la vista previa de la imagen
+    fotoPerfilInput?.addEventListener('change', () => {
+        const file = fotoPerfilInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                profilePicPreview.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
     if (registrationForm) {
-        registrationForm.addEventListener('submit', (event) => {
+        registrationForm.addEventListener('submit', async (event) => {
             event.preventDefault(); // Evita que el formulario se envíe por defecto
+
+            const file = fotoPerfilInput.files[0];
+            let fotoPerfilBase64 = null;
+            
+            if (!file) {
+                alert("Por favor, selecciona una foto de perfil.");
+                return;
+            }
+
+            if (file) {
+                if (file.size > 5 * 1024 * 1024) { // 5MB
+                    alert("La imagen no puede superar los 5MB.");
+                    return;
+                }
+                // Ahora "await" funciona porque la función es "async"
+                fotoPerfilBase64 = await toBase64(file);
+            }
 
             const formData = {
                 nombres: document.getElementById('nombres').value,
@@ -19,9 +58,11 @@ document.addEventListener ('DOMContentLoaded', () => {
                 genero: document.getElementById('genero').value,
                 paisNacimiento: document.getElementById('pais').value,
                 nacionalidad: document.getElementById('nacionalidad').value,
+                fotoPerfil: fotoPerfilBase64
             }
+            
             // Validación de la edad
-            const birthDate = new Date(nacimiento);
+            const birthDate = new Date(formData.nacimiento);
             const today = new Date();
             let age = today.getFullYear() - birthDate.getFullYear();
             const m = today.getMonth() - birthDate.getMonth();
@@ -43,6 +84,14 @@ document.addEventListener ('DOMContentLoaded', () => {
             
         });
     }
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            resolve(reader.result.split(',')[1]);
+        };
+        reader.onerror = error => reject(error);
+    });
 });
 
 function togglePasswordVisibility() {

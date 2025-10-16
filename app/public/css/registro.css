@@ -90,3 +90,70 @@ select option {
         left: 1rem;
     }
 }
+
+
+
+/* --- Estilos para la Foto de Perfil --- */
+
+.profile-pic-container {
+    margin-bottom: 2rem; /* Aumenta el espacio debajo de la foto */
+    text-align: center;
+}
+
+.profile-pic-container label {
+    display: block;
+    color: #fff;
+    margin-bottom: 1rem; /* Espacio entre el texto y el círculo */
+    text-align: center;
+    font-weight: 500;
+}
+
+.profile-pic-wrapper {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto; /* Centra el círculo */
+    border-radius: 50%;
+    border: 2px dashed rgba(0, 255, 136, 0.4);
+    cursor: pointer;
+    transition: border-color 0.3s ease, transform 0.3s ease;
+    overflow: hidden; /* Asegura que la imagen no se salga del círculo */
+}
+
+.profile-pic-wrapper:hover {
+    border-color: #00ff88;
+    transform: scale(1.05); /* Efecto de zoom sutil */
+}
+
+#profilePicPreview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Evita que la imagen se estire o deforme */
+    border-radius: 50%;
+}
+
+.profile-pic-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.profile-pic-wrapper:hover .profile-pic-overlay {
+    opacity: 1; /* Muestra el ícono de la cámara al pasar el mouse */
+}
+
+/* Oculta el input de archivo original, ya que usamos el wrapper como botón */
+#fotoPerfil {
+    display: none;
+}
