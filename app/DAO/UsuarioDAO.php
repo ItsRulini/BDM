@@ -61,14 +61,15 @@ class UsuarioDAO {
         }
     }
 
-    public function createUsuario(Usuario $usuario) {
+    public function createUsuario(Usuario $usuario): ?Usuario
+    {
         try {
+            // 1. Llamamos a tu Stored Procedure original (sin OUT)
             $query = "CALL sp_crearUsuario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
             $stmt = mysqli_prepare($this->conn, $query);
 
-            $null = NULL; // Placeholder para datos BLOB nulos
-
+            if (!$stmt) throw new Exception("Error al preparar la consulta: " . mysqli_error($this->conn));
+            
             $correo = $usuario->getCorreo();
             $contraseña = $usuario->getContraseña();
             $nombre = $usuario->getNombre();
@@ -78,56 +79,107 @@ class UsuarioDAO {
             $nacionalidad = $usuario->getNacionalidad();
             $paisNacimiento = $usuario->getPaisNacimiento();
             $tipo = $usuario->getTipo();
+            $fotoPerfil = $usuario->getFotoPerfil();
             $fechaNacimiento = $usuario->getFechaNacimiento();
+            $null = NULL;
 
-            if ($stmt) {
-                // Bind de parámetros
-                if (!mysqli_stmt_bind_param(
-                    $stmt,
-                    'ssssssiissb', // Cambiado el orden: BLOB al final
-                    $correo,
-                    $contraseña,
-                    $nombre,
-                    $apellidoPaterno,
-                    $apellidoMaterno,
-                    $genero,
-                    $nacionalidad,
-                    $paisNacimiento,
-                    $tipo,
-                    $fechaNacimiento,
-                    $fotoPerfil
-                )) {
-                    throw new Exception("Error al vincular parámetros: " . mysqli_stmt_error($stmt));
-                }
+            // 2. Vinculamos los parámetros en el orden correcto
+            mysqli_stmt_bind_param(
+                $stmt, 'ssssssiisbs',
+                $correo, $contraseña, $nombre, $apellidoPaterno, $apellidoMaterno,
+                $genero, $nacionalidad, $paisNacimiento, $tipo,
+                $null, $fechaNacimiento
+            );
 
-                // Enviar datos BLOB si existe
-                if ($fotoPerfil !== null) {
-                    if (!mysqli_stmt_send_long_data($stmt, 10, $fotoPerfil)) { // 11 es el índice del BLOB (último parámetro)
-                        error_log("Warning: Error al enviar datos BLOB: " . mysqli_stmt_error($stmt));
-                    }
-                }
-
-                // Ejecutar
-                if (!mysqli_stmt_execute($stmt)) {
-                    $error = mysqli_stmt_error($stmt);
-                    $errno = mysqli_stmt_errno($stmt);
-                    throw new Exception("Error al ejecutar el procedimiento almacenado: $error (Código: $errno)");
-                }
-
-                // Obtener el ID del usuario recién insertado
-                $lastInsertId = mysqli_insert_id($this->conn);
-            
-                // Cerrar statement
-                mysqli_stmt_close($stmt);
-                $usuario->setIdUsuario($lastInsertId);
-                return $usuario;
+            if ($fotoPerfil !== null) {
+                mysqli_stmt_send_long_data($stmt, 9, $fotoPerfil);
             }
-        } catch (mysqli_sql_exception $e) {
-            echo "Error: " . $e->getMessage();
+
+            // 3. Ejecutamos el SP para crear el usuario
+            if (!mysqli_stmt_execute($stmt)) {
+                throw new Exception("Error al ejecutar sp_crearUsuario: " . mysqli_stmt_error($stmt));
+            }
+            mysqli_stmt_close($stmt);
+
+            // 4. EL CAMBIO CLAVE: Obtenemos el ID de forma confiable con un SELECT
+            $queryId = "SELECT IdUsuario FROM Usuario WHERE Correo = ?";
+            $stmtId = mysqli_prepare($this->conn, $queryId);
+            mysqli_stmt_bind_param($stmtId, 's', $correo);
+            mysqli_stmt_execute($stmtId);
+            $resultId = mysqli_stmt_get_result($stmtId);
+            
+            if ($row = mysqli_fetch_assoc($resultId)) {
+                $newId = $row['IdUsuario'];
+                $usuario->setIdUsuario($newId);
+                mysqli_stmt_close($stmtId);
+                return $usuario; // ¡Éxito! Devolvemos el objeto con el ID
+            }
+
+            mysqli_stmt_close($stmtId);
+            return null; // Si no se encontró el ID, algo salió mal
+            
+        } catch (Exception $e) {
+            error_log("Error en UsuarioDAO::createUsuario: " . $e->getMessage());
             return null;
         }
-
-        return null;
     }
+
+    //actualizar perfil de usuario
+
+    public function updateUsuario(Usuario $usuario): bool
+    {
+    try {
+        $query = "CALL sp_updateUsuario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = mysqli_prepare($this->conn, $query);
+
+        if (!$stmt) {
+            throw new Exception("Error al preparar la consulta de actualización: " . mysqli_error($this->conn));
+        }
+
+        $idUsuario = $usuario->getIdUsuario();
+        $nombre = $usuario->getNombre();
+        $apellidoPaterno = $usuario->getApellidoPaterno();
+        $apellidoMaterno = $usuario->getApellidoMaterno();
+        $correo = $usuario->getCorreo();
+        $genero = $usuario->getGenero();
+        $fechaNacimiento = $usuario->getFechaNacimiento();
+        $nacionalidad = $usuario->getNacionalidad();
+        $paisNacimiento = $usuario->getPaisNacimiento();
+        $fotoPerfil = $usuario->getFotoPerfil();
+        
+        $null = NULL;
+
+        mysqli_stmt_bind_param(
+            $stmt,
+            'issssssiib', // 10 parámetros
+            $idUsuario,
+            $nombre,
+            $apellidoPaterno,
+            $apellidoMaterno,
+            $correo,
+            $genero,
+            $fechaNacimiento,
+            $nacionalidad,
+            $paisNacimiento,
+            $null // Placeholder para el BLOB
+        );
+
+        if ($fotoPerfil !== null) {
+            mysqli_stmt_send_long_data($stmt, 9, $fotoPerfil);
+        }
+
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            return true;
+        } else {
+            throw new Exception("Error al ejecutar la actualización: " . mysqli_stmt_error($stmt));
+        }
+
+    } catch (Exception $e) {
+        error_log("Error en UsuarioDAO::updateUsuario: " . $e->getMessage());
+        return false;
+    }
+}
+
 
 }

@@ -589,54 +589,61 @@ function previewPlayerPhoto(event) {
     reader.readAsDataURL(file);
 }
 
-function savePlayer(event) {
+async function savePlayer(event) {
     event.preventDefault();
-    
+
     const name = document.getElementById('playerName').value.trim();
     const nationality = document.getElementById('playerNationality').value;
     const birthdate = document.getElementById('playerBirthdate').value;
     const photoInput = document.getElementById('playerPhoto');
 
-    if (!name) {
-        alert('Por favor, ingresa el nombre del jugador');
-        return;
-    }
+    // ... (tus validaciones de que los campos no estén vacíos van aquí) ...
 
-    if (!nationality) {
-        alert('Por favor, selecciona una nacionalidad');
-        return;
-    }
+    const playerData = {
+        nombre: name,
+        nacionalidad: nationality,
+        fechaNacimiento: birthdate,
+        foto: null
+    };
 
-    if (!birthdate) {
-        alert('Por favor, selecciona la fecha de nacimiento');
-        return;
-    }
-
-    const today = new Date();
-    const selectedDate = new Date(birthdate);
-    if (selectedDate > today) {
-        alert('La fecha de nacimiento no puede ser futura');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('nationality', nationality);
-    formData.append('birthdate', birthdate);
-    
+    // Si el usuario seleccionó una foto, la leemos y la convertimos a Base64
     if (photoInput.files[0]) {
-        formData.append('photo', photoInput.files[0]);
+        try {
+            // Creamos una Promesa para esperar a que el archivo se lea
+            playerData.foto = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result); // reader.result es la cadena Base64
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(photoInput.files[0]);
+            });
+        } catch (error) {
+            console.error("Error al leer la imagen:", error);
+            alert("No se pudo procesar la imagen seleccionada.");
+            return;
+        }
     }
 
-    console.log('Datos del jugador a guardar:', {
-        name,
-        nationality,
-        birthdate,
-        hasPhoto: !!photoInput.files[0]
+    // Ahora enviamos todo como un solo objeto JSON
+    fetch('index.php?controller=api&action=crearJugador', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(playerData) // Convertimos el objeto a texto JSON
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            closePlayerModal();
+        } else {
+            alert('Error al registrar jugador: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error en la conexión con la API:', error);
+        alert('Hubo un problema de conexión. Inténtalo de nuevo.');
     });
-
-    alert('Jugador registrado exitosamente (modo demo)');
-    closePlayerModal();
 }
 
 function resetPlayerForm() {

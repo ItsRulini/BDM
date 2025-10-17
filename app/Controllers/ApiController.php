@@ -7,12 +7,15 @@ include_once '../Utils/Auth.php';
 
 // models
 include_once '../Models/Usuario.php';
+include_once '../Models/Jugador.php'; //nuevo
 
 // dao
 include_once '../DAO/UsuarioDAO.php';
 include_once '../DAO/PaisDAO.php';
 include_once '../DAO/MundialDAO.php';
 include_once '../DAO/CategoriaDAO.php';
+include_once '../DAO/JugadorDAO.php'; //nuevo
+
 
 header('Content-Type: application/json');
 
@@ -175,15 +178,17 @@ class ApiController {
                 throw new Exception("No se pudo obtener la información del usuario desde la base de datos.");
             }
 
-            $fotoPerfil = $fullUser['usuario']->getFotoPerfil();
-            if ($fotoPerfil !== null) {
-                $fotoPerfilBase64 = base64_encode($fotoPerfil);
-                $user['fotoPerfil'] = $fotoPerfilBase64;
-            } else {
-                $user['fotoPerfil'] = null;
+            // 1. Guardamos la foto binaria en una variable ANTES de llamar a toArray()
+            $fotoPerfilBinaria = $fullUser['usuario']->getFotoPerfil();
+
+            // 2. Dejamos que tu código convierta el objeto a array como ya lo hacía
+            $fullUser['usuario'] = $fullUser['usuario']->toArray();
+
+            // 3. Si había una foto, SOBREESCRIBIMOS el dato binario con su versión en texto (Base64)
+            if ($fotoPerfilBinaria !== null) {
+            $fullUser['usuario']['fotoPerfil'] = 'data:image/jpeg;base64,' . base64_encode($fotoPerfilBinaria);
             }
 
-            $fullUser['usuario'] = $fullUser['usuario']->toArray();
 
             echo json_encode([
                 'success' => true,
@@ -197,6 +202,61 @@ class ApiController {
             ]);
         }
     }
+
+
+
+
+        // @POST /api/updateUser
+    public function updateUser() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+    
+        // Asegurarse de que el usuario está logueado
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Acceso no autorizado']);
+            return;
+        }
+
+        $data = json_decode(file_get_contents("php://input"), true);
+    
+        // Obtenemos el ID del usuario de la sesión para seguridad
+        $sessionUser = Auth::user();
+        $idUsuario = $sessionUser['id'];
+
+        $usuario = new Usuario();
+        $usuario->setIdUsuario($idUsuario);
+        $usuario->setNombre($data['nombre'] ?? '');
+        $usuario->setApellidoPaterno($data['apellidoPaterno'] ?? '');
+        $usuario->setApellidoMaterno($data['apellidoMaterno'] ?? '');
+        $usuario->setCorreo($data['correo'] ?? '');
+        $usuario->setGenero($data['genero'] ?? '');
+        $usuario->setFechaNacimiento($data['fechaNacimiento'] ?? null);
+        $usuario->setNacionalidad((int)($data['nacionalidad'] ?? 0));
+        $usuario->setPaisNacimiento((int)($data['paisNacimiento'] ?? 0));
+
+        if (!empty($data['fotoPerfil'])) {
+            $fotoBinaria = base64_decode($data['fotoPerfil']);
+            $usuario->setFotoPerfil($fotoBinaria);
+        } else {
+            $usuario->setFotoPerfil(null); // No se envía nueva foto
+        }
+
+        $usuarioDAO = new UsuarioDAO($GLOBALS['conn']);
+        $result = $usuarioDAO->updateUsuario($usuario);
+
+        if ($result) {
+            echo json_encode(['success' => true, 'message' => 'Perfil actualizado con éxito']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar el perfil']);
+        }
+    }
+
+
+
+
+    
 
     // @GET /api/getPaises
     public function getPaises() {
@@ -497,5 +557,113 @@ class ApiController {
         }
 
     }
+
+
+
+    // @POST /api/crearJugador
+    public function crearJugador() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        try {
+            // Leemos el JSON que nos enviará el nuevo JavaScript
+            $data = json_decode(file_get_contents("php://input"), true);
+
+            // --- Lógica para formatear la fecha ---
+            $fechaNacimientoInput = $data['fechaNacimiento'] ?? null;
+            $fechaNacimiento = null;
+            if ($fechaNacimientoInput) {
+                $date = DateTime::createFromFormat('Y-m-d', $fechaNacimientoInput);
+                if ($date === false) { $date = DateTime::createFromFormat('d/m/Y', $fechaNacimientoInput); }
+                if ($date !== false) { $fechaNacimiento = $date->format('Y-m-d'); }
+            }
+            // --- Fin de la lógica de fecha ---
+
+            if (empty($data['nombre']) || empty($data['nacionalidad']) || empty($fechaNacimiento)) {
+                throw new Exception("Nombre, nacionalidad y fecha son obligatorios y válidos.");
+            }
+
+            $jugador = new Jugador();
+            $jugador->setNombre($data['nombre']);
+            $jugador->setNacionalidad((int)$data['nacionalidad']);
+            $jugador->setFechaNacimiento($fechaNacimiento);
+
+            // Decodificamos la imagen que viene en Base64 desde el JavaScript
+            if (!empty($data['foto'])) {
+                // Quitamos el prefijo 'data:image/...;base64,'
+                $base64Image = explode(',', $data['foto'])[1];
+                $fotoBinaria = base64_decode($base64Image);
+                $jugador->setFoto($fotoBinaria);
+            } else {
+                $jugador->setFoto(null);
+            }
+
+            $jugadorDAO = new JugadorDAO($GLOBALS['conn']);
+            $result = $jugadorDAO->crearJugador($jugador);
+
+            if ($result === null) {
+                throw new Exception("No se pudo crear el jugador.");
+            }
+
+            echo json_encode([
+                'success' => true,
+                'id' => $result,
+                'message' => 'Jugador creado correctamente'
+            ]);
+        
+        } catch(Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+
+    // @GET /api/getJugadores
+    public function getJugadores() {
+        // Solo permitir obetener por GET
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+            $jugadorDAO = new JugadorDAO($GLOBALS['conn']);
+            $jugadores = $jugadorDAO->getJugadores(); // Esto devuelve un array de objetos Jugador
+
+            if ($jugadores === null) {
+                throw new Exception("No se pudieron obtener los jugadores desde la base de datos.");
+            }
+
+            // Convertir el array de objetos a un array asociativo para el JSON
+            $jugadoresArray = array_map(function($jugador) {
+                return [
+                    'id' => $jugador->getIdJugador(),
+                    'nombre' => $jugador->getNombre(),
+                    'foto' => $jugador->getFoto() ? 'data:image/jpeg;base64,' . base64_encode($jugador->getFoto()) : null,
+                    'nacionalidad' => $jugador->getNacionalidad(),
+                    'fechaNacimiento' => $jugador->getFechaNacimiento()
+                ];
+            }, $jugadores);
+
+            echo json_encode([
+                'success' => true,
+                'data' => $jugadoresArray
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+
+    
 
 }

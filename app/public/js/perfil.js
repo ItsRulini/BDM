@@ -147,7 +147,13 @@ export default class ProfileManager {
 
         if (displayName) displayName.textContent = `${usuario.nombre} ${usuario.apellidoPaterno}`;
         if (displayUsername) displayUsername.textContent = `${usuario.correo}`;
-        if (birthDate) birthDate.textContent = this.formatDate(usuario.fechaNacimiento);
+        if (birthDate) {
+            if (usuario.fechaNacimiento && usuario.fechaNacimiento !== '0000-00-00') {
+                birthDate.textContent = this.formatDate(usuario.fechaNacimiento);
+            } else {
+                birthDate.textContent = "Sin fecha"; // Muestra esto si no hay fecha
+            }
+        }
         if (gender) gender.textContent = usuario.genero;
         if (birthCountry) birthCountry.textContent = userData.paisNacimiento;
         if (nationality) nationality.textContent = userData.nacionalidad;
@@ -625,7 +631,40 @@ export default class ProfileManager {
         }
     }
 
+    
     populateInfoForm() {
+        if (!this.userInfo) {
+            console.error("No hay información de usuario para llenar el formulario.");
+            return;
+        }
+
+        const usuario = this.userInfo.usuario;
+
+        // Llenar campos de texto
+        document.getElementById('nombre').value = usuario.nombre || '';
+        document.getElementById('apellidoPaterno').value = usuario.apellidoPaterno || '';
+        document.getElementById('apellidoMaterno').value = usuario.apellidoMaterno || '';
+        document.getElementById('correo').value = usuario.correo || '';
+        document.getElementById('genero').value = usuario.genero || '';
+    
+        // Llenar fecha de nacimiento
+        const fechaValida = (usuario.fechaNacimiento && usuario.fechaNacimiento !== '0000-00-00') ? usuario.fechaNacimiento : '';
+        document.getElementById('fechaNacimiento').value = fechaValida;
+
+        // Llenar selects de país y nacionalidad
+        // Usamos los IDs que vienen guardados en el objeto 'usuario' de la base de datos
+        document.getElementById('paisNacimiento').value = usuario.paisNacimiento || '';
+        document.getElementById('nacionalidad').value = usuario.nacionalidad || '';
+    
+        // Limpiar la vista previa de la foto para que no muestre una anterior
+        document.getElementById('imagePreview').innerHTML = '';
+        // Limpiar el campo de archivo para que no se envíe una foto vieja por error
+        document.getElementById('fotoPerfil').value = '';
+    }
+
+
+    
+    /*populateInfoForm() {
         // Llenar los datos del formulario con la información actual del usuario
         const currentData = this.userInfo ? { ...this.userInfo.usuario } : {};
 
@@ -635,7 +674,7 @@ export default class ProfileManager {
                 field.value = currentData[key];
             }
         });
-    }
+    }*/
 
     resetCreatePostForm() {
         if (this.createPostForm) {
@@ -673,7 +712,66 @@ export default class ProfileManager {
         });
     }
 
-    handleInfoUpdate(e) {
+
+
+    // nueva versión de handleInfoUpdate que maneja la foto de perfil
+
+    async handleInfoUpdate(e) {
+        e.preventDefault();
+    
+        const fotoPerfilInput = document.getElementById('fotoPerfil');
+        const file = fotoPerfilInput.files[0];
+        let fotoPerfilBase64 = null;
+
+        // Si el usuario seleccionó una nueva foto, la procesamos
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) { // 5MB
+                this.showError("La imagen no puede superar los 5MB.");
+                return;
+            }
+            // Convertimos la nueva foto a Base64 para enviarla
+            fotoPerfilBase64 = await this.toBase64(file);
+        }
+
+        // Recolectamos todos los datos del formulario
+        const userData = {
+            nombre: document.getElementById('nombre').value,
+            apellidoPaterno: document.getElementById('apellidoPaterno').value,
+            apellidoMaterno: document.getElementById('apellidoMaterno').value,
+            correo: document.getElementById('correo').value,
+            genero: document.getElementById('genero').value,
+            fechaNacimiento: document.getElementById('fechaNacimiento').value || null,
+            nacionalidad: document.getElementById('nacionalidad').value,
+            paisNacimiento: document.getElementById('paisNacimiento').value,
+            // Enviamos la nueva foto (o null si no se seleccionó una)
+            fotoPerfil: fotoPerfilBase64 
+        };
+
+        // Enviamos los datos al nuevo endpoint del API
+        try {
+            const response = await fetch('index.php?controller=api&action=updateUser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                this.showSuccess('¡Perfil actualizado con éxito!');
+                this.closeModal('infoModal');
+                // Recargamos los datos del usuario en la página para mostrar los cambios
+                await this.loadUserData(); 
+            } else {
+                this.showError(data.message || 'Error al actualizar el perfil.');
+            }
+        } catch (error) {
+            console.error('Error al guardar:', error);
+            this.showError('Error de conexión al guardar los cambios.');
+        }
+    }
+
+
+    /*handleInfoUpdate(e) {
         e.preventDefault();
         
         const formData = new FormData(this.infoForm);
@@ -692,7 +790,7 @@ export default class ProfileManager {
             // Actualizar la visualización con los nuevos datos
             this.loadUserData();
         });
-    }
+    }*/
 
     handleCreatePost(e) {
         e.preventDefault();
@@ -1272,6 +1370,16 @@ export default class ProfileManager {
             }, 300);
         });
     }
+
+    // Convertir archivo a Base64 (nueva)
+    toBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = error => reject(error);
+    });
+}
 }
 
 // Funciones utilitarias globales
