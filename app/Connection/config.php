@@ -12,7 +12,7 @@ return [
         'DB_SERVER' => 'tramway.proxy.rlwy.net', // host público para tu máquina
         'DB_USER'   => 'root',
         'DB_PASS'   => 'wPdwuvnDPMxoVcdFHfMFnfWHRRWKyIgX',
-        'DB_NAME'   => 'railway',
+        'DB_NAME'   => 'BDM',
         'DB_PORT'   => 24351 // puerto de la URL pública
     ]
 ];
