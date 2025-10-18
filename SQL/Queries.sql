@@ -1,6 +1,8 @@
 USE BDM;
 
-SELECT * FROM Usuario ORDER BY Tipo DESC;
+SELECT * FROM Usuario ORDER BY Tipo DESC;-- LIMIT 1 OFFSET 0;
+
+
 
 SELECT * FROM Categoria;
 -- UPDATE Categoria SET Nombre = 'Jugadas polémicas' WHERE IdCategoria = 2;

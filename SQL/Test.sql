@@ -1,5 +1,6 @@
 USE BDM;
 
+
 DELIMITER ;
 DELIMITER **
 DROP PROCEDURE IF EXISTS sp_getInfoMundiales**
