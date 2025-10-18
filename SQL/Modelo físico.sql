@@ -1,6 +1,9 @@
+-- DROP DATABASE IF EXISTS railway;
 CREATE DATABASE BDM;
 
 USE BDM;
+
+DESCRIBE Mundial;
 
 CREATE TABLE Pais(
   IdPais INT PRIMARY KEY AUTO_INCREMENT,
@@ -179,7 +182,7 @@ CREATE TABLE Publicacion (
   IdPublicacion INT PRIMARY KEY AUTO_INCREMENT,
   Contenido TEXT,
   FechaCreacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FechaAprobacion TIMESTAMP,
+  FechaAprobacion DATETIME,
   EstatusAprobacion ENUM('Aprobado', 'Rechazado', 'Pendiente') DEFAULT 'Pendiente',
   IdCreador INT,
   IdMundial INT,
@@ -187,7 +190,8 @@ CREATE TABLE Publicacion (
   FOREIGN KEY (IdMundial) REFERENCES Mundial(IdMundial)
 );
 
-
+ALTER TABLE Publicacion
+MODIFY COLUMN FechaAprobacion DATETIME;
 -- drop table Comentario;
 -- drop table Reaccion;
 -- drop table Vista;
