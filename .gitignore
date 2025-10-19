@@ -1,0 +1,5 @@
+app/Connection/*
+
+SQL/*.sql
+!SQL/Modelo físico.sql
+!SQL/Stored procedures.sql
