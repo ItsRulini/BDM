@@ -2,7 +2,6 @@ USE BDM;
 
 
 -- USUARIOS
-
 DELIMITER **
 DROP PROCEDURE IF EXISTS sp_crearUsuario**
 CREATE PROCEDURE sp_crearUsuario (
@@ -15,7 +14,7 @@ CREATE PROCEDURE sp_crearUsuario (
     IN p_nacionalidad INT,
     IN p_paisNacimiento INT,
     IN p_tipo VARCHAR(50),
-    IN p_fotoPerfil BLOB,
+    IN p_fotoPerfil LONGBLOB,
     IN p_fechaNacimiento DATE
 )
 BEGIN
@@ -45,7 +44,6 @@ BEGIN
         p_fechaNacimiento
     );
 END**
-
 DELIMITER;
 
 DELIMITER **
@@ -184,5 +182,95 @@ END**
 
 DELIMITER ;
 	
+-- actualizar perfil
 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_updateUsuario; -- Borra el anterior si existe
+CREATE PROCEDURE sp_updateUsuario(
+    IN p_idUsuario INT,
+    IN p_nombre VARCHAR(255),
+    IN p_apellidoPaterno VARCHAR(255),
+    IN p_apellidoMaterno VARCHAR(255),
+    IN p_correo VARCHAR(255),
+    IN p_genero ENUM('Masculino', 'Femenino', 'Otro'),
+    IN p_fechaNacimiento DATE,
+    IN p_nacionalidad INT,
+    IN p_paisNacimiento INT,
+    IN p_fotoPerfil LONGBLOB
+)
+BEGIN
+    UPDATE Usuario
+    SET
+        Nombre = IF(p_nombre IS NULL OR p_nombre = '', Nombre, p_nombre),
+        ApellidoPaterno = IF(p_apellidoPaterno IS NULL OR p_apellidoPaterno = '', ApellidoPaterno, p_apellidoPaterno),
+        ApellidoMaterno = IF(p_apellidoMaterno IS NULL OR p_apellidoMaterno = '', ApellidoMaterno, p_apellidoMaterno),
+        Correo = IF(p_correo IS NULL OR p_correo = '', Correo, p_correo),
+        Genero = IF(p_genero IS NULL OR p_genero = '', Genero, p_genero),
+        
+        -- =================================================================
+        -- ===== ESTA ES LA LÍNEA MÁS IMPORTANTE QUE FALTABA =====
+        -- Si la fecha nueva es nula, deja la que ya estaba. Si no, actualiza.
+        -- =================================================================
+        FechaNacimiento = IF(p_fechaNacimiento IS NULL, FechaNacimiento, p_fechaNacimiento),
+
+        Nacionalidad = IF(p_nacionalidad IS NULL OR p_nacionalidad = '', Nacionalidad, p_nacionalidad),
+        PaisNacimiento = IF(p_paisNacimiento IS NULL OR p_paisNacimiento = '', PaisNacimiento, p_paisNacimiento),
+        FotoPerfil = IF(p_fotoPerfil IS NULL OR LENGTH(p_fotoPerfil) = 0, FotoPerfil, p_fotoPerfil)
+    WHERE IdUsuario = p_idUsuario;
+END$$
+DELIMITER ;
+
+
+
+-- jugador
+
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_crearJugador$$
+CREATE PROCEDURE sp_crearJugador(
+    IN p_nombre VARCHAR(255),
+    IN p_nacionalidad INT,
+    IN p_fechaNacimiento DATE,
+    IN p_foto LONGBLOB,
+    OUT p_idJugador INT
+)
+BEGIN
+    INSERT INTO Jugador (
+        Nombre, 
+        Nacionalidad, 
+        FechaNacimiento, 
+        Foto
+    ) VALUES (
+        p_nombre, 
+        p_nacionalidad, 
+        p_fechaNacimiento, 
+        p_foto
+    );
+    
+    -- Obtenemos el ID del registro que acabamos de insertar
+    -- y lo asignamos al parámetro de salida.
+    SET p_idJugador = LAST_INSERT_ID();
+END$$
+DELIMITER ;
+
+
+-- get Jugadores
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_getJugadores$$
+CREATE PROCEDURE sp_getJugadores()
+BEGIN
+    SELECT 
+        j.IdJugador, 
+        j.Nombre, 
+        j.Foto,
+        j.Nacionalidad AS IdNacionalidad, -- Devolvemos el ID
+        p.Pais AS NombrePais,             -- y también el nombre del país
+        p.Nacionalidad AS NombreNacionalidad, -- y el nombre de la nacionalidad
+        j.FechaNacimiento
+    FROM Jugador j
+    INNER JOIN Pais p ON j.Nacionalidad = p.IdPais
+    ORDER BY j.Nombre ASC;
+END$$
+DELIMITER ;
 

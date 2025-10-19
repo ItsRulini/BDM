@@ -1,4 +1,4 @@
-app/Connection/*
+app/Connection/*.php
 
 SQL/*.sql
 !SQL/Modelo físico.sql
