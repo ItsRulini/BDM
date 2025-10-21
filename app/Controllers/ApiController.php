@@ -208,20 +208,18 @@ class ApiController {
 
         // @POST /api/updateUser
     public function updateUser() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-            return;
-        }
-    
-        // Asegurarse de que el usuario está logueado
-        if (!Auth::check()) {
-            echo json_encode(['success' => false, 'message' => 'Acceso no autorizado']);
-            return;
-        }
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+        return;
+    }
 
+    if (!Auth::check()) {
+        echo json_encode(['success' => false, 'message' => 'Acceso no autorizado']);
+        return;
+    }
+
+    try {
         $data = json_decode(file_get_contents("php://input"), true);
-    
-        // Obtenemos el ID del usuario de la sesión para seguridad
         $sessionUser = Auth::user();
         $idUsuario = $sessionUser['id'];
 
@@ -236,21 +234,82 @@ class ApiController {
         $usuario->setNacionalidad((int)($data['nacionalidad'] ?? 0));
         $usuario->setPaisNacimiento((int)($data['paisNacimiento'] ?? 0));
 
+        // Manejar la foto de perfil
         if (!empty($data['fotoPerfil'])) {
             $fotoBinaria = base64_decode($data['fotoPerfil']);
             $usuario->setFotoPerfil($fotoBinaria);
         } else {
-            $usuario->setFotoPerfil(null); // No se envía nueva foto
+            $usuario->setFotoPerfil(null);
         }
 
         $usuarioDAO = new UsuarioDAO($GLOBALS['conn']);
         $result = $usuarioDAO->updateUsuario($usuario);
 
         if ($result) {
+            // Actualizar datos de sesión si cambió el correo
+            if ($data['correo'] !== $sessionUser['correo']) {
+                $updatedUser = $usuarioDAO->getUsuarioPorCorreo($data['correo']);
+                if ($updatedUser) {
+                    Auth::login($updatedUser['usuario']);
+                }
+            }
+            
             echo json_encode(['success' => true, 'message' => 'Perfil actualizado con éxito']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar el perfil']);
         }
+        
+    } catch (Exception $e) {
+        error_log("Error en updateUser: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
+    }
+    }
+
+    // @POST /api/updatePassword
+    public function updatePassword() {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+        return;
+    }
+
+    if (!Auth::check()) {
+        echo json_encode(['success' => false, 'message' => 'Acceso no autorizado']);
+        return;
+    }
+
+    try {
+        $data = json_decode(file_get_contents("php://input"), true);
+        $sessionUser = Auth::user();
+        $idUsuario = $sessionUser['id'];
+
+        // Validaciones
+        if (empty($data['currentPassword']) || empty($data['newPassword'])) {
+            echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios']);
+            return;
+        }
+
+        // Verificar contraseña actual
+        $usuarioDAO = new UsuarioDAO($GLOBALS['conn']);
+        $userData = $usuarioDAO->getUsuarioPorCorreo($sessionUser['correo']);
+        
+        if (!$userData || $userData['usuario']->getContraseña() !== $data['currentPassword']) {
+            echo json_encode(['success' => false, 'message' => 'La contraseña actual es incorrecta']);
+            return;
+        }
+
+        // Actualizar contraseña
+        $result = $usuarioDAO->updateContrasena($idUsuario, $data['newPassword']);
+
+        if ($result) {
+            echo json_encode(['success' => true, 'message' => 'Contraseña actualizada exitosamente']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar la contraseña']);
+        }
+        
+    } catch (Exception $e) {
+        error_log("Error en updatePassword: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
+    }
     }
 
 

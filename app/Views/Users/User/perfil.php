@@ -171,33 +171,63 @@
 
     <!-- Modal para cambiar contraseña -->
     <div id="passwordModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-lock"></i> Cambiar Contraseña</h2>
-                <button class="close-btn" onclick="closeModal('passwordModal')">&times;</button>
-            </div>
-            <form id="passwordForm" class="modal-body">
-                <div class="form-group">
-                    <label for="newPassword">
-                        <i class="fas fa-key"></i> Nueva Contraseña
-                    </label>
-                    <input type="password" id="newPassword" name="newPassword" required minlength="8">
-                    <div class="password-strength" id="passwordStrength"></div>
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">
-                        <i class="fas fa-check"></i> Confirmar Contraseña
-                    </label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
-                    <div class="password-match" id="passwordMatch"></div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModal('passwordModal')">Cancelar</button>
-                    <button type="submit" class="btn-primary">Cambiar Contraseña</button>
-                </div>
-            </form>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-lock"></i> Cambiar Contraseña</h2>
+            <button class="close-btn" onclick="closeModal('passwordModal')">&times;</button>
         </div>
+        <form id="passwordForm" class="modal-body">
+            <!-- CAMPO NUEVO: Contraseña Actual -->
+            <div class="form-group">
+                <label for="currentPassword">
+                    <i class="fas fa-key"></i> Contraseña Actual
+                </label>
+                <input type="password" id="currentPassword" name="currentPassword" required 
+                       placeholder="Ingresa tu contraseña actual">
+                <small class="form-hint">Por seguridad, necesitamos verificar tu contraseña actual</small>
+            </div>
+
+            <div class="form-group">
+                <label for="newPassword">
+                    <i class="fas fa-lock"></i> Nueva Contraseña
+                </label>
+                <input type="password" id="newPassword" name="newPassword" required minlength="8"
+                       placeholder="Mínimo 8 caracteres">
+                <div class="password-strength" id="passwordStrength" style="display: none;"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">
+                    <i class="fas fa-check-circle"></i> Confirmar Nueva Contraseña
+                </label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required
+                       placeholder="Repite la nueva contraseña">
+                <div class="password-match" id="passwordMatch" style="display: none;"></div>
+            </div>
+
+            <!-- Requisitos de la contraseña -->
+            <div class="password-requirements">
+                <p><strong><i class="fas fa-info-circle"></i> Requisitos de la contraseña:</strong></p>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> Mínimo 8 caracteres</li>
+                    <li><i class="fas fa-check-circle"></i> Al menos una letra mayúscula (A-Z)</li>
+                    <li><i class="fas fa-check-circle"></i> Al menos una letra minúscula (a-z)</li>
+                    <li><i class="fas fa-check-circle"></i> Al menos un número (0-9)</li>
+                    <li><i class="fas fa-check-circle"></i> Al menos un caracter especial (@$!%*?&)</li>
+                </ul>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('passwordModal')">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Cambiar Contraseña
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 
     <!-- Modal para editar información -->
     <div id="infoModal" class="modal">

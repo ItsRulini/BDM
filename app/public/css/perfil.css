@@ -1628,3 +1628,153 @@
         right: 5px;
     }
 }
+
+
+
+
+
+/* ============================================
+   ESTILOS PARA VALIDACIÓN DE CONTRASEÑA
+   ============================================ */
+
+/* Hint de ayuda en formularios */
+.form-hint {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+}
+
+/* Indicadores de fortaleza y coincidencia */
+.password-strength,
+.password-match {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fortaleza de contraseña */
+.password-strength.weak {
+    background: rgba(255, 71, 87, 0.15);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    color: #ff4757;
+}
+
+.password-strength.medium {
+    background: rgba(255, 165, 2, 0.15);
+    border: 1px solid rgba(255, 165, 2, 0.3);
+    color: #ffa502;
+}
+
+.password-strength.strong {
+    background: rgba(0, 255, 136, 0.15);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    color: #00ff88;
+}
+
+/* Coincidencia de contraseñas */
+.password-match.match {
+    background: rgba(0, 255, 136, 0.15);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    color: #00ff88;
+}
+
+.password-match.no-match {
+    background: rgba(255, 71, 87, 0.15);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    color: #ff4757;
+}
+
+/* Requisitos de la contraseña */
+.password-requirements {
+    background: rgba(0, 255, 136, 0.05);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    margin: 1.5rem 0;
+}
+
+.password-requirements p {
+    margin: 0 0 0.75rem 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.password-requirements ul {
+    margin: 0;
+    padding-left: 1.5rem;
+    list-style: none;
+}
+
+.password-requirements li {
+    margin: 0.5rem 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.password-requirements li i {
+    color: rgba(0, 255, 136, 0.6);
+    font-size: 0.75rem;
+}
+
+/* Animación de iconos en los indicadores */
+.password-strength i,
+.password-match i {
+    font-size: 1rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Mejoras para los campos de contraseña */
+input[type="password"]:focus {
+    border-color: #00ff88;
+    box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .password-requirements {
+        padding: 0.875rem 1rem;
+    }
+    
+    .password-requirements ul {
+        padding-left: 1rem;
+    }
+    
+    .password-requirements li {
+        font-size: 0.8125rem;
+    }
+}
