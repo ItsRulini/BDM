@@ -1,0 +1,5 @@
+app/Connection/*.php
+
+SQL/*.sql
+!SQL/Modelo físico.sql
+!SQL/Stored procedures.sql

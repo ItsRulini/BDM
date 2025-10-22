@@ -2,7 +2,6 @@ USE BDM;
 
 
 -- USUARIOS
-
 DELIMITER **
 DROP PROCEDURE IF EXISTS sp_crearUsuario**
 CREATE PROCEDURE sp_crearUsuario (
@@ -15,7 +14,7 @@ CREATE PROCEDURE sp_crearUsuario (
     IN p_nacionalidad INT,
     IN p_paisNacimiento INT,
     IN p_tipo VARCHAR(50),
-    IN p_fotoPerfil BLOB,
+    IN p_fotoPerfil LONGBLOB,
     IN p_fechaNacimiento DATE
 )
 BEGIN
@@ -45,7 +44,6 @@ BEGIN
         p_fechaNacimiento
     );
 END**
-
 DELIMITER;
 
 DELIMITER **
@@ -184,5 +182,104 @@ END**
 
 DELIMITER ;
 	
+-- actualizar perfil
 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_updateUsuario;
+CREATE PROCEDURE sp_updateUsuario(
+    IN p_idUsuario INT,
+    IN p_nombre VARCHAR(255),
+    IN p_apellidoPaterno VARCHAR(255),
+    IN p_apellidoMaterno VARCHAR(255),
+    IN p_correo VARCHAR(255),
+    IN p_genero ENUM('Masculino', 'Femenino', 'Otro'),
+    IN p_fechaNacimiento DATE,
+    IN p_nacionalidad INT,
+    IN p_paisNacimiento INT,
+    IN p_fotoPerfil LONGBLOB
+)
+BEGIN
+    UPDATE Usuario
+    SET
+        Nombre = COALESCE(NULLIF(p_nombre, ''), Nombre),
+        ApellidoPaterno = COALESCE(NULLIF(p_apellidoPaterno, ''), ApellidoPaterno),
+        ApellidoMaterno = COALESCE(NULLIF(p_apellidoMaterno, ''), ApellidoMaterno),
+        Correo = COALESCE(NULLIF(p_correo, ''), Correo),
+        Genero = COALESCE(NULLIF(p_genero, ''), Genero),
+        FechaNacimiento = COALESCE(p_fechaNacimiento, FechaNacimiento),
+        Nacionalidad = COALESCE(NULLIF(p_nacionalidad, 0), Nacionalidad),
+        PaisNacimiento = COALESCE(NULLIF(p_paisNacimiento, 0), PaisNacimiento),
+        FotoPerfil = IF(p_fotoPerfil IS NULL, FotoPerfil, p_fotoPerfil)
+    WHERE IdUsuario = p_idUsuario;
+END$$
+DELIMITER ;
+
+-- actualizar contra del perfil
+
+DELIMITER $$
+
+-- Crear el nuevo procedimiento
+CREATE PROCEDURE sp_updateContrasena(
+    IN p_idUsuario INT,
+    IN p_nuevaContrasena VARCHAR(255)
+)
+BEGIN
+    UPDATE Usuario
+    SET Contraseña = p_nuevaContrasena
+    WHERE IdUsuario = p_idUsuario;
+END$$
+
+DELIMITER ;
+
+-- jugador
+
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_crearJugador$$
+CREATE PROCEDURE sp_crearJugador(
+    IN p_nombre VARCHAR(255),
+    IN p_nacionalidad INT,
+    IN p_fechaNacimiento DATE,
+    IN p_foto LONGBLOB,
+    OUT p_idJugador INT
+)
+BEGIN
+    INSERT INTO Jugador (
+        Nombre, 
+        Nacionalidad, 
+        FechaNacimiento, 
+        Foto
+    ) VALUES (
+        p_nombre, 
+        p_nacionalidad, 
+        p_fechaNacimiento, 
+        p_foto
+    );
+    
+    -- Obtenemos el ID del registro que acabamos de insertar
+    -- y lo asignamos al parámetro de salida.
+    SET p_idJugador = LAST_INSERT_ID();
+END$$
+DELIMITER ;
+
+
+-- get Jugadores
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_getJugadores$$
+CREATE PROCEDURE sp_getJugadores()
+BEGIN
+    SELECT 
+        j.IdJugador, 
+        j.Nombre, 
+        j.Foto,
+        j.Nacionalidad AS IdNacionalidad, -- Devolvemos el ID
+        p.Pais AS NombrePais,             -- y también el nombre del país
+        p.Nacionalidad AS NombreNacionalidad, -- y el nombre de la nacionalidad
+        j.FechaNacimiento
+    FROM Jugador j
+    INNER JOIN Pais p ON j.Nacionalidad = p.IdPais
+    ORDER BY j.Nombre ASC;
+END$$
+DELIMITER ;
 
