@@ -690,26 +690,58 @@ export default class ProfileManager {
     }
 
     handlePasswordChange(e) {
-        e.preventDefault();
-        
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
 
-        if (newPassword !== confirmPassword) {
-            this.showError('Las contraseñas no coinciden');
-            return;
-        }
+    // Validaciones
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        this.showError('Todos los campos son obligatorios');
+        return;
+    }
 
-        if (newPassword.length < 8) {
-            this.showError('La contraseña debe tener al menos 8 caracteres');
-            return;
-        }
+    if (newPassword !== confirmPassword) {
+        this.showError('Las contraseñas no coinciden');
+        return;
+    }
 
-        // Aquí enviarías la nueva contraseña al backend
-        this.simulateRequest(() => {
+    if (newPassword.length < 8) {
+        this.showError('La contraseña debe tener al menos 8 caracteres');
+        return;
+    }
+
+    // Validar fortaleza de contraseña
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!regex.test(newPassword)) {
+        this.showError('La contraseña debe tener:\n- Mínimo 8 caracteres\n- Una mayúscula\n- Una minúscula\n- Un número\n- Un caracter especial (@$!%*?&)');
+        return;
+    }
+
+    // Enviar al backend
+    fetch('index.php?controller=api&action=updatePassword', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            currentPassword: currentPassword,
+            newPassword: newPassword
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
             this.showSuccess('Contraseña actualizada exitosamente');
             this.closeModal('passwordModal');
-        });
+            this.resetPasswordForm();
+        } else {
+            this.showError(data.message || 'Error al actualizar la contraseña');
+        }
+    })
+    .catch(error => {
+        console.error('Error al cambiar contraseña:', error);
+        this.showError('Error de conexión al cambiar la contraseña');
+    });
     }
 
 
@@ -717,58 +749,56 @@ export default class ProfileManager {
     // nueva versión de handleInfoUpdate que maneja la foto de perfil
 
     async handleInfoUpdate(e) {
-        e.preventDefault();
-    
-        const fotoPerfilInput = document.getElementById('fotoPerfil');
-        const file = fotoPerfilInput.files[0];
-        let fotoPerfilBase64 = null;
+    e.preventDefault();
 
-        // Si el usuario seleccionó una nueva foto, la procesamos
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) { // 5MB
-                this.showError("La imagen no puede superar los 5MB.");
-                return;
-            }
-            // Convertimos la nueva foto a Base64 para enviarla
-            fotoPerfilBase64 = await this.toBase64(file);
+    const fotoPerfilInput = document.getElementById('fotoPerfil');
+    const file = fotoPerfilInput.files[0];
+    let fotoPerfilBase64 = null;
+
+    // Procesar nueva foto si existe
+    if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+            this.showError("La imagen no puede superar los 5MB");
+            return;
         }
-
-        // Recolectamos todos los datos del formulario
-        const userData = {
-            nombre: document.getElementById('nombre').value,
-            apellidoPaterno: document.getElementById('apellidoPaterno').value,
-            apellidoMaterno: document.getElementById('apellidoMaterno').value,
-            correo: document.getElementById('correo').value,
-            genero: document.getElementById('genero').value,
-            fechaNacimiento: document.getElementById('fechaNacimiento').value || null,
-            nacionalidad: document.getElementById('nacionalidad').value,
-            paisNacimiento: document.getElementById('paisNacimiento').value,
-            // Enviamos la nueva foto (o null si no se seleccionó una)
-            fotoPerfil: fotoPerfilBase64 
-        };
-
-        // Enviamos los datos al nuevo endpoint del API
-        try {
-            const response = await fetch('index.php?controller=api&action=updateUser', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userData)
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                this.showSuccess('¡Perfil actualizado con éxito!');
-                this.closeModal('infoModal');
-                // Recargamos los datos del usuario en la página para mostrar los cambios
-                await this.loadUserData(); 
-            } else {
-                this.showError(data.message || 'Error al actualizar el perfil.');
-            }
-        } catch (error) {
-            console.error('Error al guardar:', error);
-            this.showError('Error de conexión al guardar los cambios.');
-        }
+        fotoPerfilBase64 = await this.toBase64(file);
     }
+
+    // Recolectar datos del formulario
+    const userData = {
+        nombre: document.getElementById('nombre').value,
+        apellidoPaterno: document.getElementById('apellidoPaterno').value,
+        apellidoMaterno: document.getElementById('apellidoMaterno').value,
+        correo: document.getElementById('correo').value,
+        genero: document.getElementById('genero').value,
+        fechaNacimiento: document.getElementById('fechaNacimiento').value || null,
+        nacionalidad: document.getElementById('nacionalidad').value,
+        paisNacimiento: document.getElementById('paisNacimiento').value,
+        fotoPerfil: fotoPerfilBase64
+    };
+
+    // Enviar al backend
+    try {
+        const response = await fetch('index.php?controller=api&action=updateUser', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        });
+        
+        const data = await response.json();
+
+        if (data.success) {
+            this.showSuccess('¡Perfil actualizado con éxito!');
+            this.closeModal('infoModal');
+            await this.loadUserData();
+        } else {
+            this.showError(data.message || 'Error al actualizar el perfil');
+        }
+    } catch (error) {
+        console.error('Error al guardar:', error);
+        this.showError('Error de conexión al guardar los cambios');
+    }
+}
 
 
     /*handleInfoUpdate(e) {
@@ -1006,42 +1036,56 @@ export default class ProfileManager {
     // VALIDATION
     // ================================
 
-    // validatePasswordStrength() {
-    //     const password = document.getElementById('newPassword').value;
-    //     const strengthIndicator = document.getElementById('passwordStrength');
-        
-    //     if (!strengthIndicator) return;
+    validatePasswordStrength() {
+    const password = document.getElementById('newPassword').value;
+    const strengthIndicator = document.getElementById('passwordStrength');
+    
+    if (!strengthIndicator) return;
 
-    //     let strength = 'weak';
-    //     let message = 'Muy débil';
-        
-    //     if (password.length >= 8) {
-    //         strength = 'medium';
-    //         message = 'Media';
-            
-    //         if (password.match(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)) {
-    //             strength = 'strong';
-    //             message = 'Fuerte';
-    //         }
-    //     }
-
-    //     strengthIndicator.className = `password-strength ${strength}`;
-    //     strengthIndicator.innerHTML = `<i class="fas fa-shield-alt"></i> ${message}`;
-    // }
-
-    validatePasswordMatch() {
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const matchIndicator = document.getElementById('passwordMatch');
-        
-        if (!matchIndicator || !confirmPassword) return;
-
-        const isMatch = newPassword === confirmPassword;
-        matchIndicator.className = `password-match ${isMatch ? 'match' : 'no-match'}`;
-        matchIndicator.innerHTML = isMatch 
-            ? '<i class="fas fa-check"></i> Las contraseñas coinciden'
-            : '<i class="fas fa-times"></i> Las contraseñas no coinciden';
+    let strength = 'weak';
+    let message = 'Muy débil';
+    let color = '#ff4757';
+    
+    if (password.length === 0) {
+        strengthIndicator.style.display = 'none';
+        return;
     }
+
+    strengthIndicator.style.display = 'block';
+    
+    if (password.length >= 8) {
+        strength = 'medium';
+        message = 'Media';
+        color = '#ffa502';
+        
+        // Validar mayúsculas, minúsculas, números y caracteres especiales
+        if (password.match(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)) {
+            strength = 'strong';
+            message = 'Fuerte';
+            color = '#00ff88';
+        }
+    }
+
+    strengthIndicator.className = `password-strength ${strength}`;
+    strengthIndicator.style.color = color;
+    strengthIndicator.innerHTML = `<i class="fas fa-shield-alt"></i> ${message}`;
+}
+
+validatePasswordMatch() {
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const matchIndicator = document.getElementById('passwordMatch');
+    
+    if (!matchIndicator || !confirmPassword) return;
+
+    const isMatch = newPassword === confirmPassword;
+    matchIndicator.style.display = confirmPassword.length > 0 ? 'block' : 'none';
+    matchIndicator.className = `password-match ${isMatch ? 'match' : 'no-match'}`;
+    matchIndicator.style.color = isMatch ? '#00ff88' : '#ff4757';
+    matchIndicator.innerHTML = isMatch 
+        ? '<i class="fas fa-check"></i> Las contraseñas coinciden'
+        : '<i class="fas fa-times"></i> Las contraseñas no coinciden';
+}
 
     updateCharCounter() {
         const content = this.postContent?.value || '';

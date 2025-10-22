@@ -185,7 +185,7 @@ DELIMITER ;
 -- actualizar perfil
 
 DELIMITER $$
-DROP PROCEDURE IF EXISTS sp_updateUsuario; -- Borra el anterior si existe
+DROP PROCEDURE IF EXISTS sp_updateUsuario;
 CREATE PROCEDURE sp_updateUsuario(
     IN p_idUsuario INT,
     IN p_nombre VARCHAR(255),
@@ -201,26 +201,35 @@ CREATE PROCEDURE sp_updateUsuario(
 BEGIN
     UPDATE Usuario
     SET
-        Nombre = IF(p_nombre IS NULL OR p_nombre = '', Nombre, p_nombre),
-        ApellidoPaterno = IF(p_apellidoPaterno IS NULL OR p_apellidoPaterno = '', ApellidoPaterno, p_apellidoPaterno),
-        ApellidoMaterno = IF(p_apellidoMaterno IS NULL OR p_apellidoMaterno = '', ApellidoMaterno, p_apellidoMaterno),
-        Correo = IF(p_correo IS NULL OR p_correo = '', Correo, p_correo),
-        Genero = IF(p_genero IS NULL OR p_genero = '', Genero, p_genero),
-        
-        -- =================================================================
-        -- ===== ESTA ES LA LÍNEA MÁS IMPORTANTE QUE FALTABA =====
-        -- Si la fecha nueva es nula, deja la que ya estaba. Si no, actualiza.
-        -- =================================================================
-        FechaNacimiento = IF(p_fechaNacimiento IS NULL, FechaNacimiento, p_fechaNacimiento),
-
-        Nacionalidad = IF(p_nacionalidad IS NULL OR p_nacionalidad = '', Nacionalidad, p_nacionalidad),
-        PaisNacimiento = IF(p_paisNacimiento IS NULL OR p_paisNacimiento = '', PaisNacimiento, p_paisNacimiento),
-        FotoPerfil = IF(p_fotoPerfil IS NULL OR LENGTH(p_fotoPerfil) = 0, FotoPerfil, p_fotoPerfil)
+        Nombre = COALESCE(NULLIF(p_nombre, ''), Nombre),
+        ApellidoPaterno = COALESCE(NULLIF(p_apellidoPaterno, ''), ApellidoPaterno),
+        ApellidoMaterno = COALESCE(NULLIF(p_apellidoMaterno, ''), ApellidoMaterno),
+        Correo = COALESCE(NULLIF(p_correo, ''), Correo),
+        Genero = COALESCE(NULLIF(p_genero, ''), Genero),
+        FechaNacimiento = COALESCE(p_fechaNacimiento, FechaNacimiento),
+        Nacionalidad = COALESCE(NULLIF(p_nacionalidad, 0), Nacionalidad),
+        PaisNacimiento = COALESCE(NULLIF(p_paisNacimiento, 0), PaisNacimiento),
+        FotoPerfil = IF(p_fotoPerfil IS NULL, FotoPerfil, p_fotoPerfil)
     WHERE IdUsuario = p_idUsuario;
 END$$
 DELIMITER ;
 
+-- actualizar contra del perfil
 
+DELIMITER $$
+
+-- Crear el nuevo procedimiento
+CREATE PROCEDURE sp_updateContrasena(
+    IN p_idUsuario INT,
+    IN p_nuevaContrasena VARCHAR(255)
+)
+BEGIN
+    UPDATE Usuario
+    SET Contraseña = p_nuevaContrasena
+    WHERE IdUsuario = p_idUsuario;
+END$$
+
+DELIMITER ;
 
 -- jugador
 

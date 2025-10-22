@@ -60,6 +60,10 @@ document.addEventListener ('DOMContentLoaded', () => {
                 nacionalidad: document.getElementById('nacionalidad').value,
                 fotoPerfil: fotoPerfilBase64
             }
+
+            if (!validarContrasena(formData.contrasena)) {
+                return; // Detiene el envío si la contraseña no es válida
+            }
             
             // Validación de la edad
             const birthDate = new Date(formData.nacimiento);
@@ -177,4 +181,15 @@ async function cargarPaises () {
     .catch(error => {
         console.error("Error al cargar los países: ", error);
     })
+}
+
+function validarContrasena(contrasena) {
+    // Expresión regular que exige: 8+ caracteres, una mayúscula, una minúscula, un número y un caracter especial.
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    
+    if (!regex.test(contrasena)) {
+        alert("La contraseña no es segura. Debe tener:\n\n- Mínimo 8 caracteres\n- Al menos una letra mayúscula (A-Z)\n- Al menos una letra minúscula (a-z)\n- Al menos un número (0-9)\n- Al menos un caracter especial (ej. @$!%*?&)");
+        return false;
+    }
+    return true;
 }
