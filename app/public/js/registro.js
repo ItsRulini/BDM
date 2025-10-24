@@ -10,12 +10,10 @@ document.addEventListener ('DOMContentLoaded', () => {
 
     const profilePicWrapper = document.querySelector('.profile-pic-wrapper');
 
-    // Al hacer clic en el contenedor, simulamos un clic en el input de archivo oculto
     profilePicWrapper?.addEventListener('click', () => {
         fotoPerfilInput.click();
     });
 
-    // Evento para la vista previa de la imagen
     fotoPerfilInput?.addEventListener('change', () => {
         const file = fotoPerfilInput.files[0];
         if (file) {
@@ -27,9 +25,24 @@ document.addEventListener ('DOMContentLoaded', () => {
         }
     });
 
+    // NUEVO: Validación en tiempo real para nombres (solo letras y espacios)
+    const nombresInput = document.getElementById('nombres');
+    const paternoInput = document.getElementById('paterno');
+    const maternoInput = document.getElementById('materno');
+
+    [nombresInput, paternoInput, maternoInput].forEach(input => {
+        input?.addEventListener('input', (e) => {
+            // Permitir solo letras (incluyendo acentos y ñ) y espacios
+            e.target.value = e.target.value.replace(/[^a-záéíóúñüA-ZÁÉÍÓÚÑÜ\s]/g, '');
+        });
+    });
+
+    // NUEVO: Crear el selector de correo
+    crearSelectorCorreo();
+
     if (registrationForm) {
         registrationForm.addEventListener('submit', async (event) => {
-            event.preventDefault(); // Evita que el formulario se envíe por defecto
+            event.preventDefault();
 
             const file = fotoPerfilInput.files[0];
             let fotoPerfilBase64 = null;
@@ -40,20 +53,35 @@ document.addEventListener ('DOMContentLoaded', () => {
             }
 
             if (file) {
-                if (file.size > 5 * 1024 * 1024) { // 5MB
+                if (file.size > 5 * 1024 * 1024) {
                     alert("La imagen no puede superar los 5MB.");
                     return;
                 }
-                // Ahora "await" funciona porque la función es "async"
                 fotoPerfilBase64 = await toBase64(file);
             }
 
+            // NUEVO: Validar nombres antes de enviar
+            const nombres = document.getElementById('nombres').value;
+            const paterno = document.getElementById('paterno').value;
+            const materno = document.getElementById('materno').value;
+
+            if (!validarNombre(nombres, 'Nombres')) return;
+            if (!validarNombre(paterno, 'Apellido Paterno')) return;
+            if (materno && !validarNombre(materno, 'Apellido Materno')) return;
+
+            // NUEVO: Obtener el correo completo
+            const correoCompleto = obtenerCorreoCompleto();
+            if (!correoCompleto) {
+                alert("Por favor, ingresa un correo válido.");
+                return;
+            }
+
             const formData = {
-                nombres: document.getElementById('nombres').value,
-                paterno: document.getElementById('paterno').value,
-                materno: document.getElementById('materno').value,
+                nombres: nombres,
+                paterno: paterno,
+                materno: materno,
                 nacimiento: document.getElementById('nacimiento').value,
-                correo: document.getElementById('correo').value,
+                correo: correoCompleto,
                 contrasena: document.getElementById('contrasena').value,
                 genero: document.getElementById('genero').value,
                 paisNacimiento: document.getElementById('pais').value,
@@ -62,7 +90,7 @@ document.addEventListener ('DOMContentLoaded', () => {
             }
 
             if (!validarContrasena(formData.contrasena)) {
-                return; // Detiene el envío si la contraseña no es válida
+                return;
             }
             
             // Validación de la edad
@@ -79,15 +107,11 @@ document.addEventListener ('DOMContentLoaded', () => {
                 return;
             }
 
-            // Aquí enviarías los datos al backend (PHP)
-            // Por ahora, solo mostraremos un mensaje de éxito
             console.log("Datos del usuario para enviar:", { formData });
-            alert("¡Formulario validado! Ahora se enviaría al servidor.");
-            // Llamando a la función para crear el usuario
             createUser(formData);
-            
         });
     }
+    
     const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -97,6 +121,128 @@ document.addEventListener ('DOMContentLoaded', () => {
         reader.onerror = error => reject(error);
     });
 });
+
+// NUEVA FUNCIÓN: Validar que solo contenga letras
+function validarNombre(nombre, campo) {
+    if (!nombre || nombre.trim() === '') {
+        alert(`El campo ${campo} es obligatorio.`);
+        return false;
+    }
+    
+    // Verificar que solo contenga letras, espacios y caracteres latinos
+    const regex = /^[a-záéíóúñüA-ZÁÉÍÓÚÑÜ\s]+$/;
+    if (!regex.test(nombre)) {
+        alert(`El campo ${campo} solo puede contener letras.`);
+        return false;
+    }
+    
+    return true;
+}
+
+// NUEVA FUNCIÓN: Crear selector de correo con dominios
+function crearSelectorCorreo() {
+    const correoInput = document.getElementById('correo');
+    if (!correoInput) return;
+
+    // Crear estructura HTML para el selector
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display: flex; gap: 0.5rem; align-items: center;';
+    
+    const inputCorreo = document.createElement('input');
+    inputCorreo.type = 'text';
+    inputCorreo.id = 'correoUsuario';
+    inputCorreo.placeholder = 'usuario';
+    inputCorreo.style.cssText = 'flex: 1;';
+    inputCorreo.required = true;
+
+    const arroba = document.createElement('span');
+    arroba.textContent = '@';
+    arroba.style.cssText = 'font-weight: bold; color: #00ff88;';
+
+    const selectDominio = document.createElement('select');
+    selectDominio.id = 'correoDominio';
+    selectDominio.style.cssText = 'flex: 1;';
+    selectDominio.innerHTML = `
+        <option value="gmail.com">gmail.com</option>
+        <option value="outlook.com">outlook.com</option>
+        <option value="hotmail.com">hotmail.com</option>
+    `;
+
+    wrapper.appendChild(inputCorreo);
+    wrapper.appendChild(arroba);
+    wrapper.appendChild(selectDominio);
+
+    // Reemplazar el input original con el nuevo selector
+    correoInput.parentNode.replaceChild(wrapper, correoInput);
+
+    // Validación en tiempo real del correo
+    inputCorreo.addEventListener('input', (e) => {
+        let valor = e.target.value;
+        
+        // No permitir que inicie con punto
+        if (valor.startsWith('.')) {
+            valor = valor.substring(1);
+        }
+        
+        // No permitir puntos consecutivos
+        valor = valor.replace(/\.{2,}/g, '.');
+        
+        // Solo permitir letras, números, puntos, guiones bajos y guiones
+        valor = valor.replace(/[^a-zA-Z0-9._-]/g, '');
+        
+        e.target.value = valor;
+    });
+
+    // Validación al perder el foco
+    inputCorreo.addEventListener('blur', (e) => {
+        const valor = e.target.value;
+        
+        if (valor && !validarParteLocalCorreo(valor)) {
+            alert('El correo debe:\n• Iniciar con letra o número\n• No contener puntos consecutivos\n• No iniciar con punto');
+            e.target.focus();
+        }
+    });
+}
+
+// NUEVA FUNCIÓN: Validar la parte local del correo (antes del @)
+function validarParteLocalCorreo(parteLocal) {
+    if (!parteLocal || parteLocal.trim() === '') {
+        return false;
+    }
+    
+    // Debe iniciar con letra o número
+    if (!/^[a-zA-Z0-9]/.test(parteLocal)) {
+        return false;
+    }
+    
+    // No debe tener puntos consecutivos
+    if (/\.{2,}/.test(parteLocal)) {
+        return false;
+    }
+    
+    // Solo puede contener letras, números, puntos, guiones y guiones bajos
+    if (!/^[a-zA-Z0-9._-]+$/.test(parteLocal)) {
+        return false;
+    }
+    
+    return true;
+}
+
+// NUEVA FUNCIÓN: Obtener el correo completo
+function obtenerCorreoCompleto() {
+    const parteLocal = document.getElementById('correoUsuario')?.value;
+    const dominio = document.getElementById('correoDominio')?.value;
+    
+    if (!parteLocal || !dominio) {
+        return null;
+    }
+    
+    if (!validarParteLocalCorreo(parteLocal)) {
+        return null;
+    }
+    
+    return `${parteLocal}@${dominio}`;
+}
 
 function togglePasswordVisibility() {
     const passwordInput = document.getElementById('contrasena');
@@ -126,10 +272,7 @@ async function createUser (userData) {
     .then(data => {
         if (data.success) {
             alert("Registro exitoso. Bienvenido, " + userData.correo + "!");
-            // Redirigir o limpiar el formulario si es necesario
             registrationForm.reset();
-
-            // Iniciar sesión automáticamente después del registro
             loginUser(userData.correo, userData.contrasena);
         } else {
             alert("Error en el registro: " + data.message);
@@ -154,18 +297,15 @@ async function cargarPaises () {
             const selectPaisNacimiento = document.getElementById('pais');
             const selectNacionalidad = document.getElementById('nacionalidad');
             
-            // Limpiamos ambos selects y dejamos la opción por defecto
             selectPaisNacimiento.innerHTML = '<option value="">Seleccione...</option>';
             selectNacionalidad.innerHTML = '<option value="">Seleccione...</option>';
 
             data.data.forEach (pais =>{
-                // Opción para país de nacimiento
                 const optionPais = document.createElement('option');
                 optionPais.value = pais.id;
                 optionPais.textContent = pais.nombre;
                 selectPaisNacimiento.appendChild(optionPais);
 
-                // Opción para nacionalidad
                 const optionNacionalidad = document.createElement('option');
                 optionNacionalidad.value = pais.id;
                 optionNacionalidad.textContent = pais.nacionalidad;
@@ -173,7 +313,6 @@ async function cargarPaises () {
             });
 
         } else {
-            // Si el backend devuelve success: false, mostramos el mensaje de error
             console.error("Error desde el API:", data.message);
         }
 
@@ -184,7 +323,6 @@ async function cargarPaises () {
 }
 
 function validarContrasena(contrasena) {
-    // Expresión regular que exige: 8+ caracteres, una mayúscula, una minúscula, un número y un caracter especial.
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     
     if (!regex.test(contrasena)) {
