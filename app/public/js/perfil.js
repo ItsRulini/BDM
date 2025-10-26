@@ -633,34 +633,187 @@ export default class ProfileManager {
 
     
     populateInfoForm() {
-        if (!this.userInfo) {
-            console.error("No hay información de usuario para llenar el formulario.");
-            return;
-        }
-
-        const usuario = this.userInfo.usuario;
-
-        // Llenar campos de texto
-        document.getElementById('nombre').value = usuario.nombre || '';
-        document.getElementById('apellidoPaterno').value = usuario.apellidoPaterno || '';
-        document.getElementById('apellidoMaterno').value = usuario.apellidoMaterno || '';
-        document.getElementById('correo').value = usuario.correo || '';
-        document.getElementById('genero').value = usuario.genero || '';
-    
-        // Llenar fecha de nacimiento
-        const fechaValida = (usuario.fechaNacimiento && usuario.fechaNacimiento !== '0000-00-00') ? usuario.fechaNacimiento : '';
-        document.getElementById('fechaNacimiento').value = fechaValida;
-
-        // Llenar selects de país y nacionalidad
-        // Usamos los IDs que vienen guardados en el objeto 'usuario' de la base de datos
-        document.getElementById('paisNacimiento').value = usuario.paisNacimiento || '';
-        document.getElementById('nacionalidad').value = usuario.nacionalidad || '';
-    
-        // Limpiar la vista previa de la foto para que no muestre una anterior
-        document.getElementById('imagePreview').innerHTML = '';
-        // Limpiar el campo de archivo para que no se envíe una foto vieja por error
-        document.getElementById('fotoPerfil').value = '';
+    if (!this.userInfo) {
+        console.error("No hay información de usuario para llenar el formulario.");
+        return;
     }
+
+    const usuario = this.userInfo.usuario;
+
+    // Llenar campos de texto
+    document.getElementById('nombre').value = usuario.nombre || '';
+    document.getElementById('apellidoPaterno').value = usuario.apellidoPaterno || '';
+    document.getElementById('apellidoMaterno').value = usuario.apellidoMaterno || '';
+    document.getElementById('genero').value = usuario.genero || '';
+
+    // Llenar fecha de nacimiento
+    const fechaValida = (usuario.fechaNacimiento && usuario.fechaNacimiento !== '0000-00-00') ? usuario.fechaNacimiento : '';
+    document.getElementById('fechaNacimiento').value = fechaValida;
+
+    // Llenar selects de país y nacionalidad
+    document.getElementById('paisNacimiento').value = usuario.paisNacimiento || '';
+    document.getElementById('nacionalidad').value = usuario.nacionalidad || '';
+
+    // NUEVO: Configurar el selector de correo con el email actual
+    this.configurarSelectorCorreo(usuario.correo);
+
+    // Limpiar la vista previa de la foto
+    document.getElementById('imagePreview').innerHTML = '';
+    document.getElementById('fotoPerfil').value = '';
+
+    // NUEVO: Validación en tiempo real para nombres
+    const nombreEdit = document.getElementById('nombre');
+    const apellidoPaternoEdit = document.getElementById('apellidoPaterno');
+    const apellidoMaternoEdit = document.getElementById('apellidoMaterno');
+
+    // Remover listeners anteriores para evitar duplicados
+    [nombreEdit, apellidoPaternoEdit, apellidoMaternoEdit].forEach(input => {
+        if (input) {
+            const newInput = input.cloneNode(true);
+            input.parentNode.replaceChild(newInput, input);
+        }
+    });
+
+    // Agregar nuevos listeners
+    const nombreEditNew = document.getElementById('nombre');
+    const apellidoPaternoEditNew = document.getElementById('apellidoPaterno');
+    const apellidoMaternoEditNew = document.getElementById('apellidoMaterno');
+
+    [nombreEditNew, apellidoPaternoEditNew, apellidoMaternoEditNew].forEach(input => {
+        input?.addEventListener('input', (e) => {
+            // Permitir solo letras (incluyendo acentos y ñ) y espacios
+            e.target.value = e.target.value.replace(/[^a-záéíóúñüA-ZÁÉÍÓÚÑÜ\s]/g, '');
+        });
+    });
+}
+
+
+
+
+//correo
+
+configurarSelectorCorreo(correoActual) {
+    // Verificar si ya está configurado
+    if (document.getElementById('correoUsuario')) {
+        // Ya existe el selector, solo actualizar valores
+        const [parteLocal, dominio] = correoActual.split('@');
+        document.getElementById('correoUsuario').value = parteLocal || '';
+        document.getElementById('correoDominio').value = dominio || 'gmail.com';
+        return;
+    }
+
+    // Buscar el input original del correo
+    const correoInput = document.getElementById('correo');
+    if (!correoInput) return;
+
+    // Crear estructura HTML para el selector
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display: flex; gap: 0.5rem; align-items: center; width: 100%;';
+    
+    const inputCorreo = document.createElement('input');
+    inputCorreo.type = 'text';
+    inputCorreo.id = 'correoUsuario';
+    inputCorreo.placeholder = 'usuario';
+    inputCorreo.style.cssText = 'flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: white;';
+    inputCorreo.required = true;
+
+    const arroba = document.createElement('span');
+    arroba.textContent = '@';
+    arroba.style.cssText = 'font-weight: bold; color: #00ff88; font-size: 1.2rem;';
+
+    const selectDominio = document.createElement('select');
+    selectDominio.id = 'correoDominio';
+    selectDominio.style.cssText = 'flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: white;';
+    selectDominio.innerHTML = `
+        <option value="gmail.com">gmail.com</option>
+        <option value="outlook.com">outlook.com</option>
+        <option value="hotmail.com">hotmail.com</option>
+    `;
+
+    wrapper.appendChild(inputCorreo);
+    wrapper.appendChild(arroba);
+    wrapper.appendChild(selectDominio);
+
+    // Separar el correo actual en partes
+    const [parteLocal, dominio] = correoActual.split('@');
+    inputCorreo.value = parteLocal || '';
+    selectDominio.value = dominio || 'gmail.com';
+
+    // Reemplazar el input original con el nuevo selector
+    correoInput.parentNode.replaceChild(wrapper, correoInput);
+
+    // Validación en tiempo real del correo
+    inputCorreo.addEventListener('input', (e) => {
+        let valor = e.target.value;
+        
+        // No permitir que inicie con punto
+        if (valor.startsWith('.')) {
+            valor = valor.substring(1);
+        }
+        
+        // No permitir puntos consecutivos
+        valor = valor.replace(/\.{2,}/g, '.');
+        
+        // Solo permitir letras, números, puntos, guiones bajos y guiones
+        valor = valor.replace(/[^a-zA-Z0-9._-]/g, '');
+        
+        e.target.value = valor;
+    });
+
+    // Validación al perder el foco
+    inputCorreo.addEventListener('blur', (e) => {
+        const valor = e.target.value;
+        
+        if (valor && !this.validarParteLocalCorreo(valor)) {
+            this.showError('El correo debe:\n• Iniciar con letra o número\n• No contener puntos consecutivos\n• No iniciar con punto');
+            e.target.focus();
+        }
+    });
+}
+
+
+
+validarParteLocalCorreo(parteLocal) {
+    if (!parteLocal || parteLocal.trim() === '') {
+        return false;
+    }
+    
+    // Debe iniciar con letra o número
+    if (!/^[a-zA-Z0-9]/.test(parteLocal)) {
+        return false;
+    }
+    
+    // No debe tener puntos consecutivos
+    if (/\.{2,}/.test(parteLocal)) {
+        return false;
+    }
+    
+    // Solo puede contener letras, números, puntos, guiones y guiones bajos
+    if (!/^[a-zA-Z0-9._-]+$/.test(parteLocal)) {
+        return false;
+    }
+    
+    return true;
+}
+
+
+
+obtenerCorreoCompleto() {
+    const parteLocal = document.getElementById('correoUsuario')?.value;
+    const dominio = document.getElementById('correoDominio')?.value;
+    
+    if (!parteLocal || !dominio) {
+        return null;
+    }
+    
+    if (!this.validarParteLocalCorreo(parteLocal)) {
+        return null;
+    }
+    
+    return `${parteLocal}@${dominio}`;
+}
+
+    
 
 
     
@@ -748,8 +901,27 @@ export default class ProfileManager {
 
     // nueva versión de handleInfoUpdate que maneja la foto de perfil
 
+    
+
+
     async handleInfoUpdate(e) {
     e.preventDefault();
+
+    // Validar nombres
+    const nombre = document.getElementById('nombre').value;
+    const apellidoPaterno = document.getElementById('apellidoPaterno').value;
+    const apellidoMaterno = document.getElementById('apellidoMaterno').value;
+
+    if (!this.validarNombre(nombre, 'Nombre')) return;
+    if (!this.validarNombre(apellidoPaterno, 'Apellido Paterno')) return;
+    if (apellidoMaterno && !this.validarNombre(apellidoMaterno, 'Apellido Materno')) return;
+
+    // NUEVO: Obtener el correo completo usando el selector
+    const correoCompleto = this.obtenerCorreoCompleto();
+    if (!correoCompleto) {
+        this.showError("Por favor, ingresa un correo válido.");
+        return;
+    }
 
     const fotoPerfilInput = document.getElementById('fotoPerfil');
     const file = fotoPerfilInput.files[0];
@@ -766,10 +938,10 @@ export default class ProfileManager {
 
     // Recolectar datos del formulario
     const userData = {
-        nombre: document.getElementById('nombre').value,
-        apellidoPaterno: document.getElementById('apellidoPaterno').value,
-        apellidoMaterno: document.getElementById('apellidoMaterno').value,
-        correo: document.getElementById('correo').value,
+        nombre: nombre,
+        apellidoPaterno: apellidoPaterno,
+        apellidoMaterno: apellidoMaterno,
+        correo: correoCompleto, // CAMBIADO: Usar el correo del selector
         genero: document.getElementById('genero').value,
         fechaNacimiento: document.getElementById('fechaNacimiento').value || null,
         nacionalidad: document.getElementById('nacionalidad').value,
@@ -784,7 +956,7 @@ export default class ProfileManager {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(userData)
         });
-        
+    
         const data = await response.json();
 
         if (data.success) {
@@ -798,6 +970,21 @@ export default class ProfileManager {
         console.error('Error al guardar:', error);
         this.showError('Error de conexión al guardar los cambios');
     }
+}
+
+validarNombre(nombre, campo) {
+    if (!nombre || nombre.trim() === '') {
+        this.showError(`El campo ${campo} es obligatorio.`);
+        return false;
+    }
+
+    const regex = /^[a-záéíóúñüA-ZÁÉÍÓÚÑÜ\s]+$/;
+    if (!regex.test(nombre)) {
+        this.showError(`El campo ${campo} solo puede contener letras.`);
+        return false;
+    }
+
+    return true;
 }
 
 
