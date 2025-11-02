@@ -3,3 +3,6 @@ app/Connection/*.php
 SQL/*.sql
 !SQL/Modelo físico.sql
 !SQL/Stored procedures.sql
+!SQL/Triggers.sql
+!SQL/Views.sql
+!SQL/Functions.sql
