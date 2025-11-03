@@ -94,7 +94,9 @@ class UsuarioDAO {
             }
 
             if (!mysqli_stmt_execute($stmt)) {
-                throw new Exception("Error al ejecutar sp_crearUsuario: " . mysqli_stmt_error($stmt));
+                // Se captura el error de ejecución
+                // Incluye el de los triggers
+                throw new Exception(mysqli_stmt_error($stmt));
             }
             mysqli_stmt_close($stmt);
 
@@ -115,8 +117,7 @@ class UsuarioDAO {
             return null;
             
         } catch (Exception $e) {
-            error_log("Error en UsuarioDAO::createUsuario: " . $e->getMessage());
-            return null;
+            throw new Exception($e->getMessage());
         }
     }
 
@@ -172,8 +173,7 @@ class UsuarioDAO {
             }
 
         } catch (Exception $e) {
-            error_log("Error en UsuarioDAO::updateUsuario: " . $e->getMessage());
-            return false;
+            throw new Exception($e->getMessage());
         }
     }
 
