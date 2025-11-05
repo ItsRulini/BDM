@@ -158,7 +158,7 @@ export default class ProfileManager {
         if (birthCountry) birthCountry.textContent = userData.paisNacimiento;
         if (nationality) nationality.textContent = userData.nacionalidad;
         if (email) email.textContent = usuario.correo;
-        if (profileImage) profileImage.src = usuario.fotoPerfil;
+        if (profileImage) profileImage.src = usuario.fotoPerfil ?? 'assets/default-avatar.png';
     }
 
     async loadDropdownData() {

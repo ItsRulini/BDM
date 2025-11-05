@@ -47,10 +47,10 @@ document.addEventListener ('DOMContentLoaded', () => {
             const file = fotoPerfilInput.files[0];
             let fotoPerfilBase64 = null;
             
-            if (!file) {
-                alert("Por favor, selecciona una foto de perfil.");
-                return;
-            }
+            // if (!file) {
+            //     alert("Por favor, selecciona una foto de perfil.");
+            //     return;
+            // }
 
             if (file) {
                 if (file.size > 5 * 1024 * 1024) {
@@ -94,15 +94,7 @@ document.addEventListener ('DOMContentLoaded', () => {
             }
             
             // Validación de la edad
-            const birthDate = new Date(formData.nacimiento);
-            const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-
-            if (age < 12) {
+            if (!esMayorQue12(formData.nacimiento)) {
                 alert("Debes ser mayor de 12 años para registrarte.");
                 return;
             }
@@ -121,6 +113,39 @@ document.addEventListener ('DOMContentLoaded', () => {
         reader.onerror = error => reject(error);
     });
 });
+
+function esMayorQue12(nacimiento) {
+    if (!nacimiento) return false;
+
+    let y, m, d;
+    if (nacimiento instanceof Date) {
+        y = nacimiento.getFullYear();
+        m = nacimiento.getMonth() + 1;
+        d = nacimiento.getDate();
+    } else {
+        // Acepta 'YYYY-MM-DD' o 'YYYY/MM/DD'
+        const s = String(nacimiento).trim();
+        // Normalizar separador
+        const parts = s.includes('-') ? s.split('-') : s.split('/');
+        if (parts.length < 3) return false;
+        y = parseInt(parts[0], 10);
+        m = parseInt(parts[1], 10);
+        d = parseInt(parts[2], 10);
+        if (Number.isNaN(y) || Number.isNaN(m) || Number.isNaN(d)) return false;
+    }
+
+    // Crear fecha en *hora local* usando componentes (evita problemas UTC)
+    const birthDate = new Date(y, m - 1, d);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+
+    return age > 12;
+}
 
 // NUEVA FUNCIÓN: Validar que solo contenga letras
 function validarNombre(nombre, campo) {
@@ -257,8 +282,6 @@ function togglePasswordVisibility() {
         toggleIcon.classList.add('fa-eye');
     }
 }
-
-function validatePasswordStrength() {}
 
 async function createUser (userData) {
     fetch('index.php?controller=api&action=registrarUsuario', {
