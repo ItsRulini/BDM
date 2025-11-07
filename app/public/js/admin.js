@@ -1,7 +1,7 @@
 // Variable para almacenar el ID de la categoría en edición
 let editingCategoryId = null;
 
-async function loadAdminWorldCups () {
+async function loadAdminWorldCups() {
     try {
         const response = await fetch('index.php?controller=api&action=getMundiales', {
             method: 'GET',
@@ -10,17 +10,35 @@ async function loadAdminWorldCups () {
             }
         });
 
+        // Verificar si la respuesta es JSON válido
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            const text = await response.text();
+            console.error("Respuesta no es JSON:", text);
+            throw new Error("El servidor no devolvió JSON válido");
+        }
+
         const data = await response.json();
 
-        if (data.success && data.data.length > 0) {
-            displayAdminWorldCups(data.data);
+        if (data.success) {
+            if (data.data && data.data.length > 0) {
+                displayAdminWorldCups(data.data);
+                console.log('✅ Mundiales cargados:', data.data.length);
+            } else {
+                displayNoWorldCupsMessage();
+                console.log('ℹ️ No hay mundiales registrados');
+            }
         } else {
+            console.error('❌ Error desde API:', data.message);
             displayNoWorldCupsMessage();
         }
 
     } catch (error) {
-        console.error("Error al obtener los mundiales", error);
+        console.error("❌ Error al obtener los mundiales:", error);
         displayNoWorldCupsMessage();
+        
+        // Mostrar notificación al usuario
+        alert('Error al cargar los mundiales. Por favor recarga la página.');
     }
 }
 

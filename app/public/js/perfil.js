@@ -163,9 +163,7 @@ export default class ProfileManager {
 
     async loadDropdownData() {
         try {
-            // Simulación de carga de datos - aquí conectarías con tu backend
-
-            // Obtener países desde la base de datos usando fetch
+            // Obtener países
             const response = await fetch('index.php?controller=api&action=getPaises', {
                 method: 'GET',
                 headers: {
@@ -180,7 +178,7 @@ export default class ProfileManager {
                 }))
                 : [];
 
-            // Obtener categorías desde la base de datos usando fetch
+            // Obtener categorías
             const catResponse = await fetch('index.php?controller=api&action=getCategorias', {
                 method: 'GET',
                 headers: {
@@ -195,15 +193,24 @@ export default class ProfileManager {
                 }))
                 : [];
 
-            this.mundiales = [
-                { id: 1, name: 'Qatar 2022', year: 2022, country: 'Qatar' },
-                { id: 2, name: 'Rusia 2018', year: 2018, country: 'Rusia' },
-                { id: 3, name: 'Brasil 2014', year: 2014, country: 'Brasil' },
-                { id: 4, name: 'Sudáfrica 2010', year: 2010, country: 'Sudáfrica' },
-                { id: 5, name: 'Alemania 2006', year: 2006, country: 'Alemania' },
-                { id: 6, name: 'Francia 1998', year: 1998, country: 'Francia' },
-                { id: 7, name: 'México 1986', year: 1986, country: 'México' }
-            ];
+            // NUEVO: Obtener mundiales desde la base de datos
+            const mundialesResponse = await fetch('index.php?controller=api&action=getMundiales', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const mundialesData = await mundialesResponse.json();
+        
+            if (mundialesData.success && Array.isArray(mundialesData.data)) {
+                this.mundiales = mundialesData.data.map(mundial => ({
+                    id: mundial.id,
+                    name: mundial.name,
+                    year: mundial.year
+                }));
+            } else {
+                this.mundiales = [];
+            }
 
             this.populateDropdowns();
         } catch (error) {
@@ -1009,12 +1016,12 @@ validarNombre(nombre, campo) {
         });
     }*/
 
-    handleCreatePost(e) {
+    async handleCreatePost(e) {
         e.preventDefault();
-        
+    
         const content = document.getElementById('postContent').value;
         const mundialId = document.getElementById('postMundial').value;
-        
+    
         if (!content.trim()) {
             this.showError('El contenido de la publicación es obligatorio');
             return;
@@ -1030,38 +1037,50 @@ validarNombre(nombre, campo) {
             return;
         }
 
+        // Convertir archivos a Base64
+        const multimediaBase64 = [];
+        for (const file of this.selectedFiles) {
+            try {
+                const base64 = await this.toBase64(file);
+                multimediaBase64.push(base64);
+            } catch (error) {
+                console.error('Error convirtiendo archivo:', error);
+            }
+        }
+
         const postData = {
             contenido: content,
-            idMundial: mundialId,
+            idMundial: parseInt(mundialId),
             categorias: this.selectedCategories,
-            multimedia: this.selectedFiles
+            multimedia: multimediaBase64
         };
 
-        // Aquí enviarías la publicación al backend
-        this.simulateRequest(() => {
-            this.showSuccess('Publicación enviada para revisión');
-            this.closeModal('createPostModal');
-            // Agregar el nuevo post a la lista (con estado pendiente)
-            const newPost = {
-                id: Date.now(),
-                title: content.substring(0, 50) + '...',
-                content: content,
-                status: 'pending',
-                fechaCreacion: new Date().toISOString().split('T')[0],
-                mundial: this.mundiales.find(m => m.id == mundialId)?.name || 'Unknown',
-                categorias: this.selectedCategories.map(id => 
-                    this.categories.find(c => c.id == id)?.name || 'Unknown'
-                ),
-                multimedia: [] // Los archivos se procesarían en el backend
-            };
+        try {
+            const response = await fetch('index.php?controller=api&action=crearPublicacion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(postData)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.showSuccess('Publicación enviada para revisión');
+                this.closeModal('createPostModal');
+                this.resetCreatePostForm();
             
-            this.userPosts.unshift(newPost);
-            this.updatePostsCounts();
+                // Recargar publicaciones del usuario
+                await this.loadUserPosts();
             
-            if (this.currentTab === 'pending') {
+                // Cambiar a pestaña de pendientes
                 this.showPosts('pending');
+            } else {
+                this.showError(data.message || 'Error al crear la publicación');
             }
-        });
+        } catch (error) {
+            console.error('Error:', error);
+            this.showError('Error de conexión al crear la publicación');
+        }
     }
 
     // ================================
@@ -1104,8 +1123,9 @@ validarNombre(nombre, campo) {
         let validFiles = [];
 
         newFiles.forEach(file => {
-            if (file.size > 10 * 1024 * 1024) { // 10MB
-                this.showError(`El archivo ${file.name} supera los 10MB permitidos`);
+            // AUMENTADO A 50MB
+            if (file.size > 50 * 1024 * 1024) {
+                this.showError(`El archivo ${file.name} supera los 50MB permitidos`);
                 return;
             }
 
@@ -1114,7 +1134,6 @@ validarNombre(nombre, campo) {
                 return;
             }
 
-            // Verificar que el archivo no esté ya agregado (por nombre y tamaño)
             const isDuplicate = this.selectedFiles.some(existingFile => 
                 existingFile.name === file.name && existingFile.size === file.size
             );
@@ -1124,10 +1143,7 @@ validarNombre(nombre, campo) {
             }
         });
 
-        // Agregar archivos válidos a la lista existente (acumular)
         this.selectedFiles = [...this.selectedFiles, ...validFiles];
-
-        // Limpiar el input para permitir seleccionar los mismos archivos nuevamente si es necesario
         e.target.value = '';
 
         this.displayMultimediaPreview();

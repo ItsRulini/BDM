@@ -415,17 +415,15 @@ function validarMarcador(marcador) {
 }
 
 // Manejar envío del formulario
-function handleFormSubmit(event) {
+async function handleFormSubmit(event) {
     event.preventDefault();
 
-    // Recopilar datos básicos
     const year = document.getElementById('year').value;
     const descripcion = document.getElementById('descripcion').value;
     const nombreMascota = document.getElementById('nombreMascota').value;
 
-    // Validaciones básicas
     if (!year || year < 1900 || year > 2100) {
-        alert('Por favor ingresa un año válido entre 1900 y 2100.');
+        alert('Por favor ingresa un año válido.');
         return;
     }
 
@@ -435,135 +433,169 @@ function handleFormSubmit(event) {
     }
 
     if (!descripcion.trim()) {
-        alert('Por favor escribe una descripción del mundial.');
+        alert('Por favor escribe una descripción.');
         return;
     }
 
-    // Validar marcadores
-    const marcador = document.getElementById('marcador').value;
-    const marcadorTiempoExtra = document.getElementById('marcadorTiempoExtra').value;
-    
-    if (marcador && !validarMarcador(marcador)) {
-        alert('El marcador debe tener el formato: goles-goles (Ej: 3-3)');
-        return;
+    // Convertir imágenes a Base64
+    let logoBase64 = null;
+    let mascotaBase64 = null;
+
+    const logoFile = document.getElementById('logo').files[0];
+    const mascotaFile = document.getElementById('imgMascota').files[0];
+
+    if (logoFile) {
+        logoBase64 = await toBase64(logoFile);
     }
 
-    if (marcadorTiempoExtra && !validarMarcador(marcadorTiempoExtra)) {
-        alert('El marcador de tiempo extra debe tener el formato: goles-goles (Ej: 3-3)');
-        return;
+    if (mascotaFile) {
+        mascotaBase64 = await toBase64(mascotaFile);
     }
 
-    // Recopilar posiciones
-    const posiciones = {
-        campeon: document.getElementById('campeon').value,
-        subcampeon: document.getElementById('subcampeon').value,
-        tercerPuesto: document.getElementById('tercerPuesto').value,
-        cuartoPuesto: document.getElementById('cuartoPuesto').value
-    };
-
-    // Recopilar resultados
-    const resultados = {
-        marcador: marcador,
+    const mundialData = {
+        year: parseInt(year),
+        descripcion: descripcion.trim(),
+        nombreMascota: nombreMascota || null,
+        sedes: JSON.stringify(selectedCountries.map(c => c.id)),
+        logo: logoBase64,
+        imgMascota: mascotaBase64,
+        campeon: document.getElementById('campeon').value || null,
+        subcampeon: document.getElementById('subcampeon').value || null,
+        tercerPuesto: document.getElementById('tercerPuesto').value || null,
+        cuartoPuesto: document.getElementById('cuartoPuesto').value || null,
+        marcador: document.getElementById('marcador').value || null,
         tiempoExtra: document.getElementById('tiempoExtra').checked,
-        marcadorTiempoExtra: marcadorTiempoExtra,
+        marcadorTiempoExtra: document.getElementById('marcadorTiempoExtra').value || null,
         penalties: document.getElementById('penalties').checked,
         muerteSubita: document.getElementById('muerteSubita').checked,
-        marcadorFinal: document.getElementById('marcadorFinal').value
+        marcadorFinal: document.getElementById('marcadorFinal').value || null,
+        balonOro: document.getElementById('balonOro').value || null,
+        balonPlata: document.getElementById('balonPlata').value || null,
+        balonBronce: document.getElementById('balonBronce').value || null,
+        botinOro: document.getElementById('botinOro').value || null,
+        botinPlata: document.getElementById('botinPlata').value || null,
+        botinBronce: document.getElementById('botinBronce').value || null,
+        guanteOro: document.getElementById('guanteOro').value || null,
+        golesMaximoGoleador: document.getElementById('golesMaximoGoleador').value || null
     };
 
-    // Recopilar premios
-    const premios = {
-        balonOro: document.getElementById('balonOro').value,
-        balonPlata: document.getElementById('balonPlata').value,
-        balonBronce: document.getElementById('balonBronce').value,
-        botinOro: document.getElementById('botinOro').value,
-        botinPlata: document.getElementById('botinPlata').value,
-        botinBronce: document.getElementById('botinBronce').value,
-        guanteOro: document.getElementById('guanteOro').value
-    };
+    try {
+        const response = await fetch('index.php?controller=api&action=crearMundial', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(mundialData)
+        });
 
-    // Recopilar máxima cantidad de goles anotados
-    const maxGoles = document.getElementById('golesMaximoGoleador').value;
+        const data = await response.json();
 
-    // Preparar FormData para envío
-    const formData = new FormData();
-    formData.append('year', parseInt(year));
-    formData.append('descripcion', descripcion.trim());
-    formData.append('sedes', JSON.stringify(selectedCountries.map(c => c.id)));
-    
-    // Mascota
-    formData.append('nombreMascota', nombreMascota);
-    const imgMascota = document.getElementById('imgMascota').files[0];
-    if (imgMascota) {
-        formData.append('imgMascota', imgMascota);
-    }
-
-    // Logo
-    const logo = document.getElementById('logo').files[0];
-    if (logo) {
-        formData.append('logo', logo);
-    }
-
-    // Posiciones
-    Object.keys(posiciones).forEach(key => {
-        if (posiciones[key]) {
-            formData.append(key, posiciones[key]);
-        }
-    });
-
-    // Resultados
-    Object.keys(resultados).forEach(key => {
-        if (resultados[key] !== '' && resultados[key] !== false) {
-            formData.append(key, resultados[key]);
-        }
-    });
-
-    // Premios
-    Object.keys(premios).forEach(key => {
-        if (premios[key]) {
-            formData.append(key, premios[key]);
-        }
-    });
-
-    // Máxima cantidad de goles
-    formData.append('golesMaximoGoleador', maxGoles);
-
-    // Multimedia adicional
-    uploadedFiles.forEach((fileObj, index) => {
-        formData.append(`multimedia_${index}`, fileObj.file);
-    });
-
-    console.log('Datos del mundial a crear:');
-    console.log('Año:', year);
-    console.log('Sedes:', selectedCountries);
-    console.log('Posiciones:', posiciones);
-    console.log('Resultados:', resultados);
-    console.log('Premios:', premios);
-    
-    // TODO: Enviar al backend
-    /*
-    fetch('index.php?controller=admin&action=crearMundial', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
         if (data.success) {
-            alert('Mundial creado exitosamente');
+            alert('¡Mundial creado exitosamente!');
             window.location.href = 'index.php?controller=admin&action=index';
         } else {
-            alert('Error al crear mundial: ' + data.message);
+            alert('Error: ' + data.message);
         }
-    })
-    .catch(error => {
+    } catch (error) {
         console.error('Error:', error);
-        alert('Error al conectar con el servidor');
-    });
-    */
-
-    // Simulación de éxito
-    alert(`¡Mundial "${selectedCountries.map(c => c.nombre).join(' y ')} ${year}" listo para crear!`);
+        alert('Error de conexión');
+    }
 }
+
+// Función auxiliar para convertir archivo a Base64
+function toBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = error => reject(error);
+    });
+}
+
+
+
+
+// ==========================================
+// CARGAR Y MOSTRAR MUNDIALES CREADOS
+// ==========================================
+
+async function cargarMundialesCreados() {
+    try {
+        const response = await fetch('index.php?controller=api&action=getMundiales', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.data.length > 0) {
+            mostrarMundialesEnUI(data.data);
+            console.log('Mundiales cargados:', data.data.length);
+        } else {
+            console.log('No hay mundiales creados todavía');
+        }
+    } catch (error) {
+        console.error("Error al cargar los mundiales:", error);
+    }
+}
+
+function mostrarMundialesEnUI(mundiales) {
+    // Buscar el contenedor donde se muestran los mundiales
+    // (Necesitas tener este div en tu HTML del admin)
+    const container = document.getElementById('mundialesContainer');
+    
+    if (!container) {
+        console.warn('No se encontró el contenedor de mundiales');
+        return;
+    }
+
+    container.innerHTML = '';
+
+    mundiales.forEach(mundial => {
+        const sedesText = mundial.sedes && mundial.sedes.length > 0 
+            ? mundial.sedes.join(', ') 
+            : 'Sin sedes';
+
+        const mundialCard = document.createElement('div');
+        mundialCard.className = 'mundial-card';
+        mundialCard.innerHTML = `
+            <div class="mundial-header">
+                ${mundial.logo ? `<img src="${mundial.logo}" alt="Logo" class="mundial-logo">` : ''}
+                <h3>${sedesText} ${mundial.año}</h3>
+            </div>
+            <div class="mundial-body">
+                <p class="mundial-descripcion">${mundial.descripcion || 'Sin descripción'}</p>
+                ${mundial.nombreMascota ? `<p class="mundial-mascota">Mascota: ${mundial.nombreMascota}</p>` : ''}
+            </div>
+            <div class="mundial-actions">
+                <button onclick="editarMundial(${mundial.id})" class="btn-edit">
+                    <i class="fas fa-edit"></i> Editar
+                </button>
+                <button onclick="verDetalles(${mundial.id})" class="btn-view">
+                    <i class="fas fa-eye"></i> Ver detalles
+                </button>
+            </div>
+        `;
+        
+        container.appendChild(mundialCard);
+    });
+}
+
+function editarMundial(id) {
+    window.location.href = `index.php?controller=admin&action=crearMundial&edit=${id}`;
+}
+
+function verDetalles(id) {
+    // Implementar vista de detalles
+    console.log('Ver detalles del mundial:', id);
+}
+
+
+
+
+
+
+
 
 // ==========================================
 // INICIALIZACIÓN
@@ -573,6 +605,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar datos desde la API
     cargarPaises();
     cargarJugadores();
+    cargarMundialesCreados();
     
     // Inicializar UI
     updateSelectedCountries();
