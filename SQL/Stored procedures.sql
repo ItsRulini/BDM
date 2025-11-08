@@ -283,3 +283,266 @@ BEGIN
 END$$
 DELIMITER ;
 
+
+-- crear mundial y sedes
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_crearMundial$$
+CREATE PROCEDURE sp_crearMundial(
+    IN p_año INT,
+    IN p_descripcion TEXT,
+    IN p_logo LONGBLOB,
+    IN p_imgMascota LONGBLOB,
+    IN p_nombreMascota VARCHAR(100),
+    IN p_campeon INT,
+    IN p_subcampeon INT,
+    IN p_tercerPuesto INT,
+    IN p_cuartoPuesto INT,
+    IN p_marcador VARCHAR(10),
+    IN p_tiempoExtra BOOLEAN,
+    IN p_marcadorTiempoExtra VARCHAR(10),
+    IN p_penalties BOOLEAN,
+    IN p_muerteSubita BOOLEAN,
+    IN p_marcadorFinal VARCHAR(20),
+    IN p_balonOro INT,
+    IN p_balonPlata INT,
+    IN p_balonBronce INT,
+    IN p_botinOro INT,
+    IN p_botinPlata INT,
+    IN p_botinBronce INT,
+    IN p_guanteOro INT,
+    IN p_maxGoles INT,
+    OUT p_idMundial INT
+)
+BEGIN
+    INSERT INTO Mundial (
+        Año, Descripcion, logo, img_mascota, nombre_mascota,
+        campeon, subcampeon, tercer_puesto, cuarto_puesto,
+        marcador, tiempo_extra, marcador_tiempo_extra,
+        penalties, muerte_subita, marcador_final,
+        balon_oro, balon_plata, balon_bronce,
+        botin_oro, botin_plata, botin_bronce,
+        guante_oro, max_goles
+    ) VALUES (
+        p_año, p_descripcion, p_logo, p_imgMascota, p_nombreMascota,
+        p_campeon, p_subcampeon, p_tercerPuesto, p_cuartoPuesto,
+        p_marcador, p_tiempoExtra, p_marcadorTiempoExtra,
+        p_penalties, p_muerteSubita, p_marcadorFinal,
+        p_balonOro, p_balonPlata, p_balonBronce,
+        p_botinOro, p_botinPlata, p_botinBronce,
+        p_guanteOro, p_maxGoles
+    );
+    
+    SET p_idMundial = LAST_INSERT_ID();
+END$$
+DELIMITER ;
+
+
+-- sedes
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_agregarSede$$
+CREATE PROCEDURE sp_agregarSede(
+    IN p_idMundial INT,
+    IN p_idPais INT
+)
+BEGIN
+    INSERT INTO Sedes (IdMundial, Sede)
+    VALUES (p_idMundial, p_idPais);
+END$$
+DELIMITER ;
+
+
+-- get mundiales
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_getMundiales$$
+CREATE PROCEDURE sp_getMundiales()
+BEGIN
+    SELECT 
+        IdMundial,
+        Año,
+        Descripcion,
+        logo,
+        img_mascota,
+        nombre_mascota,
+        campeon,
+        subcampeon,
+        tercer_puesto,
+        cuarto_puesto,
+        marcador,
+        tiempo_extra,
+        marcador_tiempo_extra,
+        penalties,
+        muerte_subita,
+        marcador_final,
+        balon_oro,
+        balon_plata,
+        balon_bronce,
+        botin_oro,
+        botin_plata,
+        botin_bronce,
+        guante_oro,
+        max_goles
+    FROM Mundial
+    ORDER BY Año DESC;
+END$$
+DELIMITER ;
+
+
+
+
+
+-- ==========================================
+-- PROCEDIMIENTOS PARA PUBLICACIONES
+-- ==========================================
+
+-- Crear publicación
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_crearPublicacion$$
+CREATE PROCEDURE sp_crearPublicacion(
+    IN p_contenido TEXT,
+    IN p_idCreador INT,
+    IN p_idMundial INT,
+    OUT p_idPublicacion INT
+)
+BEGIN
+    INSERT INTO Publicacion (
+        Contenido,
+        IdCreador,
+        IdMundial,
+        EstatusAprobacion
+    ) VALUES (
+        p_contenido,
+        p_idCreador,
+        p_idMundial,
+        'Pendiente'
+    );
+    
+    SET p_idPublicacion = LAST_INSERT_ID();
+END$$
+DELIMITER ;
+
+-- Obtener publicaciones del usuario
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_getPublicacionesPorUsuario$$
+CREATE PROCEDURE sp_getPublicacionesPorUsuario(
+    IN p_idUsuario INT
+)
+BEGIN
+    SELECT 
+        p.IdPublicacion,
+        p.Contenido,
+        p.FechaCreacion,
+        p.FechaAprobacion,
+        p.EstatusAprobacion,
+        p.IdCreador,
+        p.IdMundial,
+        m.Año AS MundialAño
+    FROM Publicacion p
+    INNER JOIN Mundial m ON p.IdMundial = m.IdMundial
+    WHERE p.IdCreador = p_idUsuario
+    ORDER BY p.FechaCreacion DESC;
+END$$
+DELIMITER ;
+
+-- Obtener todas las publicaciones (para admin)
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_getTodasPublicaciones$$
+CREATE PROCEDURE sp_getTodasPublicaciones()
+BEGIN
+    SELECT 
+        p.IdPublicacion,
+        p.Contenido,
+        p.FechaCreacion,
+        p.FechaAprobacion,
+        p.EstatusAprobacion,
+        p.IdCreador,
+        u.Nombre AS UsuarioNombre,
+        u.ApellidoPaterno AS UsuarioApellido,
+        p.IdMundial,
+        m.Año AS MundialAño
+    FROM Publicacion p
+    INNER JOIN Usuario u ON p.IdCreador = u.IdUsuario
+    INNER JOIN Mundial m ON p.IdMundial = m.IdMundial
+    ORDER BY p.FechaCreacion DESC;
+END$$
+DELIMITER ;
+
+-- Aprobar publicación
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_aprobarPublicacion$$
+CREATE PROCEDURE sp_aprobarPublicacion(
+    IN p_idPublicacion INT
+)
+BEGIN
+    UPDATE Publicacion
+    SET 
+        EstatusAprobacion = 'Aprobado',
+        FechaAprobacion = NOW()
+    WHERE IdPublicacion = p_idPublicacion;
+END$$
+DELIMITER ;
+
+-- Rechazar publicación
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_rechazarPublicacion$$
+CREATE PROCEDURE sp_rechazarPublicacion(
+    IN p_idPublicacion INT
+)
+BEGIN
+    UPDATE Publicacion
+    SET 
+        EstatusAprobacion = 'Rechazado',
+        FechaAprobacion = NOW()
+    WHERE IdPublicacion = p_idPublicacion;
+END$$
+DELIMITER ;
+
+-- Asociar categorías a publicación
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_asociarCategoriaPublicacion$$
+CREATE PROCEDURE sp_asociarCategoriaPublicacion(
+    IN p_idPublicacion INT,
+    IN p_idCategoria INT
+)
+BEGIN
+    INSERT INTO Publicacion_Categoria (IdPublicacion, IdCategoria)
+    VALUES (p_idPublicacion, p_idCategoria);
+END$$
+DELIMITER ;
+
+-- Obtener categorías de una publicación
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_getCategoriasPublicacion$$
+CREATE PROCEDURE sp_getCategoriasPublicacion(
+    IN p_idPublicacion INT
+)
+BEGIN
+    SELECT 
+        c.IdCategoria,
+        c.Nombre
+    FROM Categoria c
+    INNER JOIN Publicacion_Categoria pc ON c.IdCategoria = pc.IdCategoria
+    WHERE pc.IdPublicacion = p_idPublicacion;
+END$$
+DELIMITER ;
+
+-- Guardar multimedia de publicación
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_guardarMultimediaPublicacion$$
+CREATE PROCEDURE sp_guardarMultimediaPublicacion(
+    IN p_contenido LONGBLOB,
+    IN p_idPublicacion INT,
+    OUT p_idMultimedia INT
+)
+BEGIN
+    INSERT INTO Multimedia (Contenido)
+    VALUES (p_contenido);
+    
+    SET p_idMultimedia = LAST_INSERT_ID();
+    
+    INSERT INTO Multimedia_Publicacion (IdMultimedia, IdPublicacion)
+    VALUES (p_idMultimedia, p_idPublicacion);
+END$$
+DELIMITER ;
