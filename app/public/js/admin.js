@@ -23,18 +23,18 @@ async function loadAdminWorldCups() {
         if (data.success) {
             if (data.data && data.data.length > 0) {
                 displayAdminWorldCups(data.data);
-                console.log('✅ Mundiales cargados:', data.data.length);
+                console.log('Mundiales cargados:', data.data.length);
             } else {
                 displayNoWorldCupsMessage();
-                console.log('ℹ️ No hay mundiales registrados');
+                console.log('No hay mundiales registrados');
             }
         } else {
-            console.error('❌ Error desde API:', data.message);
+            console.error('Error desde API:', data.message);
             displayNoWorldCupsMessage();
         }
 
     } catch (error) {
-        console.error("❌ Error al obtener los mundiales:", error);
+        console.error("Error al obtener los mundiales:", error);
         displayNoWorldCupsMessage();
         
         // Mostrar notificación al usuario
@@ -65,6 +65,19 @@ function displayNoWorldCupsMessage() {
 // ==========================================
 
 function createAdminWorldCupCard(worldCup) {
+    // Si el nombre contiene comas, reemplazar la última coma por " y " (manteniendo el resto igual)
+    const rawName = (typeof worldCup.name === 'string') ? worldCup.name.trim() : '';
+    if (rawName.includes(',')) {
+        const parts = rawName.split(',').map(s => s.trim()).filter(Boolean);
+        if (parts.length > 1) {
+            worldCup.name = parts.slice(0, -1).join(', ') + ' y ' + parts[parts.length - 1];
+        } else {
+            worldCup.name = rawName;
+        }
+    } else {
+        worldCup.name = rawName;
+    }
+
     return `
         <div class="world-cup-card">
             <img src="${worldCup.image}" alt="Copa del Mundo ${worldCup.year}">

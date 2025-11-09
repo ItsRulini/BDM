@@ -7,7 +7,7 @@ include_once '../Utils/Auth.php';
 
 // models
 include_once '../Models/Usuario.php';
-include_once '../Models/Jugador.php'; //nuevo
+include_once '../Models/Jugador.php';
 include_once '../Models/Publicacion.php';
 
 // dao
@@ -15,7 +15,7 @@ include_once '../DAO/UsuarioDAO.php';
 include_once '../DAO/PaisDAO.php';
 include_once '../DAO/MundialDAO.php';
 include_once '../DAO/CategoriaDAO.php';
-include_once '../DAO/JugadorDAO.php'; //nuevo
+include_once '../DAO/JugadorDAO.php';
 include_once '../DAO/PublicacionDAO.php';
 
 
@@ -579,98 +579,82 @@ class ApiController {
 
     }
 
-    
     // @GET /api/getMundiales
-public function getMundiales() {
-    // Evitar cualquier salida antes del JSON
-    if (ob_get_level()) {
-        ob_clean();
-    }
-    
-    header('Content-Type: application/json');
-    
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Método no permitido'
-        ]);
-        return;
-    }
-
-    try {
-        $mundialDAO = new MundialDAO($GLOBALS['conn']);
-        $mundiales = $mundialDAO->getMundiales();
-
-        if ($mundiales === null) {
-            throw new Exception("Error al obtener los mundiales");
+    public function getMundiales() {
+        // Evitar cualquier salida antes del JSON
+        if (ob_get_level()) {
+            ob_clean();
         }
-
-        if (empty($mundiales)) {
+        
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
             echo json_encode([
-                'success' => true,
-                'data' => [],
-                'message' => 'No hay mundiales registrados'
+                'success' => false,
+                'message' => 'Método no permitido'
             ]);
             return;
         }
 
-        // Convertir mundiales a array
-        $mundialesArray = array_map(function($mundial) {
-            // Obtener sedes
-            $sedesQuery = "SELECT p.Pais FROM Sedes s 
-                          INNER JOIN Pais p ON s.Sede = p.IdPais 
-                          WHERE s.IdMundial = ?";
-            $stmt = mysqli_prepare($GLOBALS['conn'], $sedesQuery);
-            $mundialId = $mundial->getIdMundial(); // Guardar en variable primero
-            mysqli_stmt_bind_param($stmt, 'i', $mundialId); // Pasar la variable
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-            
-            $sedes = [];
-            while ($row = mysqli_fetch_assoc($result)) {
-                $sedes[] = $row['Pais'];
-            }
-            mysqli_stmt_close($stmt);
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $mundiales = $mundialDAO->getMundiales();
 
-            // Construir nombre del mundial
-            $nombre = '';
-            if (!empty($sedes)) {
-                if (count($sedes) === 1) {
-                    $nombre = $sedes[0] . ' ' . $mundial->getAño();
-                } else {
-                    $nombre = implode(' y ', $sedes) . ' ' . $mundial->getAño();
+            if ($mundiales === null) {
+                throw new Exception("Error al obtener los mundiales");
+            }
+
+            if (empty($mundiales)) {
+                echo json_encode([
+                    'success' => true,
+                    'data' => [],
+                    'message' => 'No hay mundiales registrados'
+                ]);
+                return;
+            }
+
+            // Convertir mundiales a array
+            $mundialesArray = array_map(function($mundial) {
+                // Obtener sedes
+                $sedes = '';
+
+                try {
+                    $mundialDAO = new MundialDAO($GLOBALS['conn']);
+                    $sedesMundial = $mundialDAO->getSedesMundial($mundial->getIdMundial());
+                    
+                    if ($sedesMundial !== null) {
+                        $sedes = $nombre = $sedesMundial;
+                    }
+
+                } catch (Exception $e) {
+                   error_log("Error al obtener sedes: " . $e->getMessage());
                 }
-            } else {
-                $nombre = 'Mundial ' . $mundial->getAño();
-            }
 
-            return [
-                'id' => $mundial->getIdMundial(),
-                'year' => $mundial->getAño(),
-                'name' => $nombre,
-                'description' => $mundial->getDescripcion() ?: 'Sin descripción',
-                'image' => $mundial->getLogo() ? 'data:image/jpeg;base64,' . base64_encode($mundial->getLogo()) : 'assets/default-mundial.png',
-                'sedes' => $sedes,
-                'mascota' => $mundial->getNombreMascota()
-            ];
-        }, $mundiales);
+                return [
+                    'id' => $mundial->getIdMundial(),
+                    'year' => $mundial->getAño(),
+                    'name' => $nombre . ' ' . $mundial->getAño(),
+                    'description' => $mundial->getDescripcion() ?: 'Sin descripción',
+                    'image' => $mundial->getLogo() ? 'data:image/jpeg;base64,' . base64_encode($mundial->getLogo()) : 'assets/default-mundial.png',
+                    'sedes' => $sedes,
+                    'mascota' => $mundial->getNombreMascota()
+                ];
+            }, $mundiales);
 
-        echo json_encode([
-            'success' => true,
-            'data' => $mundialesArray
-        ], JSON_UNESCAPED_UNICODE);
+            echo json_encode([
+                'success' => true,
+                'data' => $mundialesArray
+            ], JSON_UNESCAPED_UNICODE);
 
-    } catch (Exception $e) {
-        error_log("Error en getMundiales API: " . $e->getMessage());
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Error del servidor: ' . $e->getMessage()
-        ]);
+        } catch (Exception $e) {
+            error_log("Error en getMundiales API: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
     }
-}
-
-
 
     // @POST /api/crearJugador
     public function crearJugador() {
@@ -848,8 +832,6 @@ public function getMundiales() {
         }
     }
 
-
-
     // @POST /api/crearPublicacion
     public function crearPublicacion() {
 
@@ -987,166 +969,163 @@ public function getMundiales() {
         }
     }
 
-
-
-
     // @GET /api/getTodasPublicaciones (para admin)
-public function getTodasPublicaciones() {
-    if (ob_get_level()) {
-        ob_clean();
-    }
-    
-    if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-        return;
-    }
-
-    if (!Auth::check()) {
-        echo json_encode(['success' => false, 'message' => 'No autorizado']);
-        return;
-    }
-
-    try {
-        $publicacionDAO = new PublicacionDAO($GLOBALS['conn']);
-        $publicaciones = $publicacionDAO->getTodasPublicaciones();
-
-        if ($publicaciones === null) {
-            throw new Exception("Error al obtener publicaciones");
+    public function getTodasPublicaciones() {
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
         }
 
-        // Formatear respuesta con multimedia y categorías
-        $publicacionesArray = array_map(function($item) use ($publicacionDAO) {
-            $pub = $item['publicacion'];
-            
-            // Obtener multimedia
-            $multimedia = $publicacionDAO->getMultimediaPublicacion($pub->getIdPublicacion());
-            $multimediaArray = array_map(function($media) {
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'No autorizado']);
+            return;
+        }
+
+        try {
+            $publicacionDAO = new PublicacionDAO($GLOBALS['conn']);
+            $publicaciones = $publicacionDAO->getTodasPublicaciones();
+
+            if ($publicaciones === null) {
+                throw new Exception("Error al obtener publicaciones");
+            }
+
+            // Formatear respuesta con multimedia y categorías
+            $publicacionesArray = array_map(function($item) use ($publicacionDAO) {
+                $pub = $item['publicacion'];
+                
+                // Obtener multimedia
+                $multimedia = $publicacionDAO->getMultimediaPublicacion($pub->getIdPublicacion());
+                $multimediaArray = array_map(function($media) {
+                    return [
+                        'id' => $media['id'],
+                        'contenido' => base64_encode($media['contenido'])
+                    ];
+                }, $multimedia);
+                
+                // Obtener categorías
+                $categorias = $publicacionDAO->getCategoriasPublicacion($pub->getIdPublicacion());
+                
                 return [
-                    'id' => $media['id'],
-                    'contenido' => base64_encode($media['contenido'])
+                    'id' => $pub->getIdPublicacion(),
+                    'contenido' => $pub->getContenido(),
+                    'fechaCreacion' => $pub->getFechaCreacion(),
+                    'estatus' => $pub->getEstatusAprobacion(),
+                    'mundialAño' => $item['mundialAño'],
+                    'autorNombre' => $item['autorNombre'],
+                    'idCreador' => $pub->getIdCreador(),
+                    'multimedia' => $multimediaArray,
+                    'categorias' => $categorias,
+                    'views' => 0,
+                    'likes' => 0,
+                    'comments' => 0
                 ];
-            }, $multimedia);
-            
-            // Obtener categorías
-            $categorias = $publicacionDAO->getCategoriasPublicacion($pub->getIdPublicacion());
-            
-            return [
-                'id' => $pub->getIdPublicacion(),
-                'contenido' => $pub->getContenido(),
-                'fechaCreacion' => $pub->getFechaCreacion(),
-                'estatus' => $pub->getEstatusAprobacion(),
-                'mundialAño' => $item['mundialAño'],
-                'autorNombre' => $item['autorNombre'],
-                'idCreador' => $pub->getIdCreador(),
-                'multimedia' => $multimediaArray,
-                'categorias' => $categorias,
-                'views' => 0,
-                'likes' => 0,
-                'comments' => 0
-            ];
-        }, $publicaciones);
+            }, $publicaciones);
 
-        echo json_encode([
-            'success' => true,
-            'data' => $publicacionesArray
-        ]);
-
-    } catch (Exception $e) {
-        error_log("Error en getTodasPublicaciones: " . $e->getMessage());
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Error: ' . $e->getMessage()
-        ]);
-    }
-}
-
-// @POST /api/aprobarPublicacion
-public function aprobarPublicacion() {
-    if (ob_get_level()) {
-        ob_clean();
-    }
-    
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-        return;
-    }
-
-    if (!Auth::check()) {
-        echo json_encode(['success' => false, 'message' => 'No autorizado']);
-        return;
-    }
-
-    try {
-        $data = json_decode(file_get_contents("php://input"), true);
-        
-        if (!isset($data['idPublicacion'])) {
-            throw new Exception('ID de publicación requerido');
-        }
-        
-        $publicacionDAO = new PublicacionDAO($GLOBALS['conn']);
-        $result = $publicacionDAO->aprobarPublicacion((int)$data['idPublicacion']);
-
-        if ($result) {
             echo json_encode([
                 'success' => true,
-                'message' => 'Publicación aprobada exitosamente'
+                'data' => $publicacionesArray
             ]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Error al aprobar la publicación']);
-        }
 
-    } catch (Exception $e) {
-        error_log("Error en aprobarPublicacion: " . $e->getMessage());
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Error: ' . $e->getMessage()
-        ]);
-    }
-}
-
-// @POST /api/rechazarPublicacion
-public function rechazarPublicacion() {
-    if (ob_get_level()) {
-        ob_clean();
-    }
-    
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
-        return;
-    }
-
-    if (!Auth::check()) {
-        echo json_encode(['success' => false, 'message' => 'No autorizado']);
-        return;
-    }
-
-    try {
-        $data = json_decode(file_get_contents("php://input"), true);
-        
-        if (!isset($data['idPublicacion'])) {
-            throw new Exception('ID de publicación requerido');
-        }
-        
-        $publicacionDAO = new PublicacionDAO($GLOBALS['conn']);
-        $result = $publicacionDAO->rechazarPublicacion((int)$data['idPublicacion']);
-
-        if ($result) {
+        } catch (Exception $e) {
+            error_log("Error en getTodasPublicaciones: " . $e->getMessage());
             echo json_encode([
-                'success' => true,
-                'message' => 'Publicación rechazada exitosamente'
+                'success' => false, 
+                'message' => 'Error: ' . $e->getMessage()
             ]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Error al rechazar la publicación']);
+        }
+    }
+
+    // @POST /api/aprobarPublicacion
+    public function aprobarPublicacion() {
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
         }
 
-    } catch (Exception $e) {
-        error_log("Error en rechazarPublicacion: " . $e->getMessage());
-        echo json_encode([
-            'success' => false, 
-            'message' => 'Error: ' . $e->getMessage()
-        ]);
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'No autorizado']);
+            return;
+        }
+
+        try {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (!isset($data['idPublicacion'])) {
+                throw new Exception('ID de publicación requerido');
+            }
+            
+            $publicacionDAO = new PublicacionDAO($GLOBALS['conn']);
+            $result = $publicacionDAO->aprobarPublicacion((int)$data['idPublicacion']);
+
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Publicación aprobada exitosamente'
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al aprobar la publicación']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en aprobarPublicacion: " . $e->getMessage());
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
     }
-}
+
+    // @POST /api/rechazarPublicacion
+    public function rechazarPublicacion() {
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'No autorizado']);
+            return;
+        }
+
+        try {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (!isset($data['idPublicacion'])) {
+                throw new Exception('ID de publicación requerido');
+            }
+            
+            $publicacionDAO = new PublicacionDAO($GLOBALS['conn']);
+            $result = $publicacionDAO->rechazarPublicacion((int)$data['idPublicacion']);
+
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Publicación rechazada exitosamente'
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al rechazar la publicación']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en rechazarPublicacion: " . $e->getMessage());
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
 
 
     

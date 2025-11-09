@@ -24,7 +24,8 @@ async function cargarPaises() {
         if (data.success) {
             countries = data.data.map(pais => ({
                 id: pais.id,
-                nombre: pais.nombre
+                nombre: pais.nombre,
+                nacionalidad: pais.nacionalidad
             }));
             
             renderCountryList();
@@ -200,7 +201,8 @@ function loadPlayerSelects() {
         players.forEach(player => {
             const option = document.createElement('option');
             option.value = player.id;
-            option.textContent = `${player.nombre} (${player.nacionalidad || 'N/A'})`;
+            const nacionalidad = countries.find(c => c.id === player.nacionalidad)?.nombre || 'N/A';
+            option.textContent = `${player.nombre} (${nacionalidad})`;
             select.appendChild(option);
         });
     });
@@ -422,7 +424,7 @@ async function handleFormSubmit(event) {
     const descripcion = document.getElementById('descripcion').value;
     const nombreMascota = document.getElementById('nombreMascota').value;
 
-    if (!year || year < 1900 || year > 2100) {
+    if (!year || year < 1930 || year > 2100) {
         alert('Por favor ingresa un año válido.');
         return;
     }
@@ -601,11 +603,11 @@ function verDetalles(id) {
 // INICIALIZACIÓN
 // ==========================================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // Cargar datos desde la API
-    cargarPaises();
-    cargarJugadores();
-    cargarMundialesCreados();
+    await cargarPaises();
+    await cargarJugadores();
+    await cargarMundialesCreados();
     
     // Inicializar UI
     updateSelectedCountries();

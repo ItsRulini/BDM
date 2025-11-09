@@ -289,7 +289,7 @@ DELIMITER ;
 DELIMITER $$
 DROP PROCEDURE IF EXISTS sp_crearMundial$$
 CREATE PROCEDURE sp_crearMundial(
-    IN p_año INT,
+    IN p_año YEAR,
     IN p_descripcion TEXT,
     IN p_logo LONGBLOB,
     IN p_imgMascota LONGBLOB,
@@ -389,8 +389,8 @@ BEGIN
 END$$
 DELIMITER ;
 
-
-
+-- get sedes de mundial
+;;;;;;,
 
 
 -- ==========================================
