@@ -384,14 +384,21 @@ BEGIN
         botin_bronce,
         guante_oro,
         max_goles
-    FROM Mundial
+    FROM vw_info_mundiales
     ORDER BY Año DESC;
 END$$
 DELIMITER ;
 
 -- get sedes de mundial
-;;;;;;,
-
+DELIMITER **
+DROP PROCEDURE IF EXISTS sp_getSedes**
+CREATE PROCEDURE sp_getSedes ( IN p_IdMundial INT) 
+BEGIN
+	SELECT Sedes
+	FROM vw_info_mundiales
+	WHERE IdMundial = p_IdMundial;
+END**
+DELIMITER ;
 
 -- ==========================================
 -- PROCEDIMIENTOS PARA PUBLICACIONES

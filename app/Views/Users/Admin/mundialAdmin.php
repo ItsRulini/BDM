@@ -14,6 +14,11 @@
     <link rel="icon" type="image/png" href="assets/isotipo.png">
 </head>
 <body>
+    <script>
+        const mundialId = <?= isset($idMundial) ? (int)$idMundial : 'null' ?>;
+        console.log('Mundial ID:', mundialId);
+    </script>
+
     <nav class="navbar">
         <div class="logo">
             <a href="index.php?controller=admin&action=index">

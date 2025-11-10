@@ -87,6 +87,56 @@ class MundialDAO {
         }
     }
 
+    public function getMundialPorId(int $idMundial): ?Mundial {
+        try {
+            $query = "CALL sp_getMundial(?)";
+            $stmt = mysqli_prepare($this->conn, $query);
+            mysqli_stmt_bind_param($stmt, 'i', $idMundial);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+
+            if ($result && mysqli_num_rows($result) > 0) {
+                $row = mysqli_fetch_assoc($result);
+                $mundial = new Mundial();
+                $mundial->setIdMundial($row['IdMundial']);
+                $mundial->setAño($row['Año']);
+                $mundial->setDescripcion($row['Descripcion']);
+                $mundial->setLogo($row['logo']);
+                $mundial->setImgMascota($row['img_mascota']);
+                $mundial->setNombreMascota($row['nombre_mascota']);
+                $mundial->setCampeon($row['campeon']);
+                $mundial->setSubcampeon($row['subcampeon']);
+                $mundial->setTercerPuesto($row['tercer_puesto']);
+                $mundial->setCuartoPuesto($row['cuarto_puesto']);
+                $mundial->setMarcador($row['marcador']);
+                $mundial->setTiempoExtra($row['tiempo_extra']);
+                $mundial->setMarcadorTiempoExtra($row['marcador_tiempo_extra']);
+                $mundial->setPenalties($row['penalties']);
+                $mundial->setMuerteSubita($row['muerte_subita']);
+                $mundial->setMarcadorFinal($row['marcador_final']);
+                $mundial->setBalonOro($row['balon_oro']);
+                $mundial->setBalonPlata($row['balon_plata']);
+                $mundial->setBalonBronce($row['balon_bronce']);
+                $mundial->setBotinOro($row['botin_oro']);
+                $mundial->setBotinPlata($row['botin_plata']);
+                $mundial->setBotinBronce($row['botin_bronce']);
+                $mundial->setGuanteOro($row['guante_oro']);
+                $mundial->setMaxGoles($row['max_goles']);
+
+                return $mundial;
+            }
+
+            mysqli_stmt_close($stmt);
+            mysqli_next_result($this->conn);
+
+            return null;
+
+        } catch (Exception $e) {
+            error_log("Error en MundialDAO::getMundialPorId: " . $e->getMessage());
+            return null;
+        }
+    }
+
     public function getMundiales(): ?array {
         try {
             $query = "CALL sp_getMundiales()";
@@ -174,6 +224,29 @@ class MundialDAO {
         }
     }
 
+    public function getIdSedesMundial(int $idMundial): ?string {
+        try {
+            $query = "CALL sp_getSedes(?)";
+            $stmt = mysqli_prepare($this->conn, $query);
+            mysqli_stmt_bind_param($stmt, 'i', $idMundial);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            
+            $sedes = null;
+            if ($result && mysqli_num_rows($result) > 0) {
+                $row = mysqli_fetch_assoc($result);
+                $sedes = $row['IDSedes'];
+            }
+
+            mysqli_stmt_close($stmt);
+            mysqli_next_result($this->conn);
+
+            return $sedes;
+        } catch (Exception $e) {
+            error_log("Error en MundialDAO::getIDSedesMundial: " . $e->getMessage());
+            return null;
+        }
+    }
 
     public function crearMundial(Mundial $mundial, array $sedes): ?int {
         try {

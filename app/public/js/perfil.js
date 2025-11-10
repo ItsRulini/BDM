@@ -240,7 +240,7 @@ export default class ProfileManager {
             this.mundiales.forEach(mundial => {
                 const option = document.createElement('option');
                 option.value = mundial.id;
-                option.textContent = `${mundial.name} (${mundial.year})`;
+                option.textContent = `${mundial.name}`;
                 mundialSelect.appendChild(option);
             });
         }

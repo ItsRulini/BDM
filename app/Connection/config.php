@@ -1,6 +1,6 @@
 <?php
 return [
-    'env' => 'local', // Cambia a 'cloud' para usar la base en la nube
+    'env' => 'cloud', // Cambia a 'cloud' para usar la base en la nube
     'local' => [
         'DB_SERVER' => 'localhost',
         'DB_USER'   => 'root',

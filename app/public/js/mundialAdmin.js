@@ -481,9 +481,17 @@ async function handleFormSubmit(event) {
         golesMaximoGoleador: document.getElementById('golesMaximoGoleador').value || null
     };
 
+    let action = '';
+
+    if (!mundialId) { // Nuevo mundial
+        action = 'crearMundial';
+    } else { // Edición de mundial existente
+        action = 'actualizarMundial&id=' + mundialId;
+    }
+
     try {
-        const response = await fetch('index.php?controller=api&action=crearMundial', {
-            method: 'POST',
+        const response = await fetch(`index.php?controller=api&action=${action}`, {
+            method: !mundialId ? 'POST' : 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(mundialData)
         });
@@ -491,7 +499,7 @@ async function handleFormSubmit(event) {
         const data = await response.json();
 
         if (data.success) {
-            alert('¡Mundial creado exitosamente!');
+            !mundialId ? alert('¡Mundial creado exitosamente!') : alert('¡Mundial actualizado exitosamente!');
             window.location.href = 'index.php?controller=admin&action=index';
         } else {
             alert('Error: ' + data.message);
@@ -513,101 +521,164 @@ function toBase64(file) {
 }
 
 
-
-
-// ==========================================
-// CARGAR Y MOSTRAR MUNDIALES CREADOS
-// ==========================================
-
-async function cargarMundialesCreados() {
-    try {
-        const response = await fetch('index.php?controller=api&action=getMundiales', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.data.length > 0) {
-            mostrarMundialesEnUI(data.data);
-            console.log('Mundiales cargados:', data.data.length);
-        } else {
-            console.log('No hay mundiales creados todavía');
-        }
-    } catch (error) {
-        console.error("Error al cargar los mundiales:", error);
-    }
-}
-
-function mostrarMundialesEnUI(mundiales) {
-    // Buscar el contenedor donde se muestran los mundiales
-    // (Necesitas tener este div en tu HTML del admin)
-    const container = document.getElementById('mundialesContainer');
-    
-    if (!container) {
-        console.warn('No se encontró el contenedor de mundiales');
-        return;
-    }
-
-    container.innerHTML = '';
-
-    mundiales.forEach(mundial => {
-        const sedesText = mundial.sedes && mundial.sedes.length > 0 
-            ? mundial.sedes.join(', ') 
-            : 'Sin sedes';
-
-        const mundialCard = document.createElement('div');
-        mundialCard.className = 'mundial-card';
-        mundialCard.innerHTML = `
-            <div class="mundial-header">
-                ${mundial.logo ? `<img src="${mundial.logo}" alt="Logo" class="mundial-logo">` : ''}
-                <h3>${sedesText} ${mundial.año}</h3>
-            </div>
-            <div class="mundial-body">
-                <p class="mundial-descripcion">${mundial.descripcion || 'Sin descripción'}</p>
-                ${mundial.nombreMascota ? `<p class="mundial-mascota">Mascota: ${mundial.nombreMascota}</p>` : ''}
-            </div>
-            <div class="mundial-actions">
-                <button onclick="editarMundial(${mundial.id})" class="btn-edit">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button onclick="verDetalles(${mundial.id})" class="btn-view">
-                    <i class="fas fa-eye"></i> Ver detalles
-                </button>
-            </div>
-        `;
-        
-        container.appendChild(mundialCard);
-    });
-}
-
 function editarMundial(id) {
     window.location.href = `index.php?controller=admin&action=crearMundial&edit=${id}`;
 }
 
-function verDetalles(id) {
-    // Implementar vista de detalles
-    console.log('Ver detalles del mundial:', id);
+async function loadMundialActual(id) {
+    try {
+        const response = await fetch(`index.php?controller=api&action=getMundial&id=${id}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            console.error('Error al cargar el mundial:', data.message);
+            alert('No se pudo cargar el mundial.');
+            return;
+        }
+        
+        const mundial = data.data;
+        //alert('Cargando datos del mundial para edición...');
+
+        populateMundialForm(mundial, id);
+        cargarSedesSeleccionadas(data.sedes);
+        
+    } catch (error) {
+        console.error('Error al cargar el mundial:', error);
+    }
 }
 
+async function populateMundialForm(mundial, id) {
+    // ======== Información básica ========
+    document.getElementById('year').value = mundial.año;
+    currentYear = mundial.año; // para actualizar el título
+    updateMundialTitle();
 
+    document.getElementById('descripcion').value = mundial.descripcion || '';
+    document.getElementById('nombreMascota').value = mundial.nombreMascota || '';
 
+    // ======== Logo ========
+    if (mundial.logo) {
+        const logoPreview = document.getElementById('logoPreview');
+        logoPreview.innerHTML = `<img src="${mundial.logo}" alt="Logo del Mundial">`;
+        logoPreview.classList.add('has-image');
+    }
 
+    // ======== Imagen Mascota ========
+    if (mundial.imgMascota) {
+        const mascotaPreview = document.getElementById('mascotaPreview');
+        mascotaPreview.innerHTML = `<img src="${mundial.imgMascota}" alt="Mascota del Mundial">`;
+        mascotaPreview.classList.add('has-image');
+    }
 
+    // ======== Posiciones finales ========
+    const posiciones = [
+        { id: 'campeon', value: mundial.campeon },
+        { id: 'subcampeon', value: mundial.subcampeon },
+        { id: 'tercerPuesto', value: mundial.tercerPuesto },
+        { id: 'cuartoPuesto', value: mundial.cuartoPuesto }
+    ];
+    posiciones.forEach(p => {
+        const select = document.getElementById(p.id);
+        if (select && p.value) select.value = p.value;
+    });
 
+    // ======== Resultado final ========
+    document.getElementById('marcador').value = mundial.marcador || '';
 
+    if (mundial.tiempoExtra) {
+        document.getElementById('tiempoExtra').checked = true;
+        document.getElementById('marcadorTiempoExtraGroup').style.display = 'block';
+        document.getElementById('marcadorTiempoExtra').value = mundial.marcadorTiempoExtra || '';
+    }
 
-// ==========================================
+    if (mundial.penalties) {
+        document.getElementById('penalties').checked = true;
+        document.getElementById('marcadorFinalGroup').style.display = 'block';
+        document.getElementById('marcadorFinal').value = mundial.marcadorFinal || '';
+    }
+
+    if (mundial.muerteSubita) {
+        document.getElementById('muerteSubita').checked = true;
+    }
+
+    // ======== Premios individuales ========
+    const premios = [
+        { id: 'balonOro', value: mundial.balonOro },
+        { id: 'balonPlata', value: mundial.balonPlata },
+        { id: 'balonBronce', value: mundial.balonBronce },
+        { id: 'botinOro', value: mundial.botinOro },
+        { id: 'botinPlata', value: mundial.botinPlata },
+        { id: 'botinBronce', value: mundial.botinBronce },
+        { id: 'guanteOro', value: mundial.guanteOro }
+    ];
+    premios.forEach(p => {
+        const select = document.getElementById(p.id);
+        if (select && p.value) select.value = p.value;
+    });
+
+    document.getElementById('golesMaximoGoleador').value = mundial.maxGoles || '';
+
+    // ======== Multimedia ========
+    if (Array.isArray(mundial.multimedia)) {
+        const carousel = document.getElementById('multimediaCarousel');
+        mundial.multimedia.forEach(item => {
+            const div = document.createElement('div');
+            div.classList.add('multimedia-item');
+            if (item.type.startsWith('image')) {
+                div.innerHTML = `<img src="${item.url}" alt="Multimedia">`;
+            } else if (item.type.startsWith('video')) {
+                div.innerHTML = `<video src="${item.url}" controls></video>`;
+            } else {
+                div.innerHTML = `<a href="${item.url}" target="_blank">${item.name}</a>`;
+            }
+            carousel.appendChild(div);
+        });
+    }
+
+    // ======== Ajustar el botón principal ========
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.textContent = 'Guardar Cambios';
+    submitBtn.onclick = async (e) => {
+        e.preventDefault();
+        await actualizarMundial(id);
+    };
+}
+
+async function cargarSedesSeleccionadas(sedes) {
+    // ======== Sedes ========
+    if (Array.isArray(sedes)) {
+        selectedCountries = sedes.map(sedeId => {
+            const country = countries.find(c => c.id === parseInt(sedeId));
+            console.log('Buscando país para sede ID:', sedeId, 'Encontrado:', country);
+            if (country) {
+                return {
+                    id: country.id,
+                    nombre: country.nombre
+                };
+            }
+            return null;
+        }).filter(c => c !== null);
+
+        console.log('Sedes cargadas:', selectedCountries);
+        updateSelectedCountries();
+        updateMundialTitle();
+        renderCountryList();
+    }
+}
+
+// Actualizar mundial existente
+async function actualizarMundial(id) {
+    // Aquí puedes implementar la lógica para actualizar el mundial existente
+    alert('Funcionalidad de actualización aún no implementada.');
+}
+
 // INICIALIZACIÓN
-// ==========================================
 
 document.addEventListener('DOMContentLoaded', async function() {
     // Cargar datos desde la API
     await cargarPaises();
     await cargarJugadores();
-    await cargarMundialesCreados();
+    //await cargarMundialesCreados();
     
     // Inicializar UI
     updateSelectedCountries();
@@ -635,12 +706,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // Verificar si es edición
-    const urlParams = new URLSearchParams(window.location.search);
-    const editId = urlParams.get('edit');
     
-    if (editId) {
-        document.getElementById('submitBtn').textContent = 'Actualizar Mundial';
-        console.log('Modo edición para mundial ID:', editId);
-        // TODO: Cargar datos del mundial a editar
+    if (mundialId) {
+        //document.getElementById('submitBtn').textContent = 'Actualizar Mundial';
+        console.log('Modo edición para mundial ID:', mundialId);
+        await loadMundialActual(mundialId);
     }
 });

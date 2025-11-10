@@ -1,6 +1,6 @@
 use BDM;
 
-
+-- ALTER
 CREATE VIEW vw_info_mundiales
 AS
 SELECT 
@@ -28,9 +28,13 @@ SELECT
 	m.botin_bronce,
 	m.guante_oro,
 	m.max_goles,
+    GROUP_CONCAT(p.IdPais SEPARATOR ', ') AS 'IDSedes',
     GROUP_CONCAT(p.Pais SEPARATOR ', ') AS 'Sedes'
 FROM Mundial m
 INNER JOIN Sedes s ON m.IdMundial = s.IdMundial
 INNER JOIN Pais p ON s.Sede = p.IdPais
 GROUP BY m.IdMundial;
+
+
+
 

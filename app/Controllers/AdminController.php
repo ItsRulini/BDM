@@ -15,10 +15,11 @@ class AdminController {
     }
     public function crearMundial() {
         // Lógica para la gestión del Mundial
-        require_once '../Views/Users/Admin/mundialAdmin.html';
+        require_once '../Views/Users/Admin/mundialAdmin.php';
     }
     public function editarMundial($id) {
-        require_once '../Views/Users/Admin/mundialAdmin.html';
+        $idMundial = $id;
+        require_once '../Views/Users/Admin/mundialAdmin.php';
     }
     public function perfil() {
         // Lógica para la gestión del Mundial

@@ -579,6 +579,56 @@ class ApiController {
 
     }
 
+    // @GET /api/getMundial
+    public function getMundial ($id) {
+        if ($_SERVER['REQUEST_METHOD' !== 'GET']) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $mundial = $mundialDAO->getMundialPorId($id);
+
+            if ($mundial === null) {
+                throw new Exception("No se pudo obtener el mundial desde la base de datos.");
+            }
+
+            $sedes = $mundialDAO->getIdSedesMundial($id);
+
+            if ($sedes === null) {
+                throw new Exception("No se pudieron obtener las sedes del mundial desde la base de datos.");
+            }
+
+            // Convertir 'sedes' (cadena separada por comas) a un array limpio
+            $sedesArray = [];
+            if (is_string($sedes)) {
+                $sedesArray = array_values(array_filter(
+                    array_map('trim', 
+                    explode(',', $sedes)), 
+                    function($v) { return $v !== ''; }));
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $mundial->toArray(),
+                'sedes' => $sedesArray,
+                'message' => 'Mundial obtenido correctamente'
+            ]);
+            
+        } catch(Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+
+    }
+
     // @GET /api/getMundiales
     public function getMundiales() {
         // Evitar cualquier salida antes del JSON
