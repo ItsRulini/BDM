@@ -368,21 +368,30 @@
             </div>
 
             <div class="input-group">
-                <label for="multimedia">Imágenes y Videos:</label>
+                <label for="multimedia">Imágenes y Videos del Mundial:</label>
+                <p>
+                    Agrega fotos y videos relacionados con el mundial. Solo se permiten imágenes (JPG, PNG, GIF, WEBP) 
+                    hasta 5MB y videos (MP4, WEBM, OGG) hasta 50MB.
+                </p>
                 <div class="multimedia-container" id="multimediaContainer">
                     <div class="multimedia-carousel" id="multimediaCarousel">
                         <div class="upload-placeholder" onclick="triggerFileInput()">
                             <i class="fas fa-plus-circle"></i>
                             <p>Agregar archivos multimedia</p>
-                            <span>Imágenes, videos, documentos</span>
+                            <span>Imágenes (máx. 5MB) y videos (máx. 50MB)</span>
                         </div>
                     </div>
-                    <input type="file" id="multimediaInput" multiple accept="image/*,video/*,.pdf,.doc,.docx" style="display: none;">
+                    <input 
+                        type="file" 
+                        id="multimediaInput" 
+                        multiple 
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,video/mp4,video/webm,video/ogg" 
+                        style="display: none;">
                     <div class="carousel-controls">
-                        <button type="button" class="carousel-btn prev" onclick="scrollCarousel(-1)">
+                        <button type="button" class="carousel-btn prev" onclick="scrollCarousel(-1)" title="Anterior">
                             <i class="fas fa-chevron-left"></i>
                         </button>
-                        <button type="button" class="carousel-btn next" onclick="scrollCarousel(1)">
+                        <button type="button" class="carousel-btn next" onclick="scrollCarousel(1)" title="Siguiente">
                             <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>

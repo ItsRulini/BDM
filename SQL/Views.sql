@@ -35,6 +35,17 @@ INNER JOIN Sedes s ON m.IdMundial = s.IdMundial
 INNER JOIN Pais p ON s.Sede = p.IdPais
 GROUP BY m.IdMundial;
 
+-- ALTER
+DROP VIEW vw_multimedia;
+AS
+SELECT
+	mul.IdMultimedia,
+	mul.Contenido
+FROM Multimedia mul
+LEFT JOIN Galeria_Mundial gm ON mul.IdMultimedia = gm.IdMultimedia
+INNER JOIN Multimedia_Publicacion mp ON mul.IdMultimedia = mp.IdMultimedia;
 
+
+SELECT * FROM vw_multimedia;
 
 

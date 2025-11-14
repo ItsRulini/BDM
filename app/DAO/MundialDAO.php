@@ -333,5 +333,202 @@ class MundialDAO {
             return null;
         }
     }
+
+    public function insertarMultimedia(int $idMundial, array $archivosMultimedia): bool {
+        try {
+            foreach ($archivosMultimedia as $archivo) {
+                $query = "CALL sp_insertMultimediaMundial(?, ?, @idMultimedia)";
+                $stmt = mysqli_prepare($this->conn, $query);
+
+                if (!$stmt) {
+                    throw new Exception("Error al preparar la consulta: " . mysqli_error($this->conn));
+                }
+
+                $nullContent = NULL;
+                mysqli_stmt_bind_param($stmt, 'bi', $nullContent, $idMundial);
+
+                // Enviar el contenido BLOB
+                if (!empty($archivo) && strlen($archivo) > 0) {
+                    mysqli_stmt_send_long_data($stmt, 0, $archivo);
+                }
+
+                if (!mysqli_stmt_execute($stmt)) {
+                    throw new Exception("Error al ejecutar: " . mysqli_stmt_error($stmt));
+                }
+
+                mysqli_stmt_close($stmt);
+                
+                // Liberar el resultado del stored procedure
+                mysqli_next_result($this->conn);
+            }
+
+            return true;
+
+        } catch (Exception $e) {
+            error_log("Error en MundialDAO::insertarMultimedia: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getMultimediaMundial(int $idMundial): array {
+        try {
+            error_log("=== INICIO DAO::getMultimediaMundial ===");
+            error_log("ID Mundial: $idMundial");
+            
+            $query = "CALL sp_getGaleriaMundial(?)";
+            
+            $stmt = mysqli_prepare($this->conn, $query);
+            
+            if (!$stmt) {
+                throw new Exception("Error al preparar consulta: " . mysqli_error($this->conn));
+            }
+            
+            mysqli_stmt_bind_param($stmt, 'i', $idMundial);
+            
+            if (!mysqli_stmt_execute($stmt)) {
+                throw new Exception("Error al ejecutar consulta: " . mysqli_stmt_error($stmt));
+            }
+            
+            $result = mysqli_stmt_get_result($stmt);
+            $multimedia = [];
+            
+            while ($row = mysqli_fetch_assoc($result)) {
+                $contenido = $row['contenido'];
+                
+                // Detectar el tipo MIME del contenido
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mimeType = $finfo->buffer($contenido);
+                
+                // Convertir a Base64 para enviar al frontend
+                $base64 = base64_encode($contenido);
+                
+                // Crear data URL
+                $dataUrl = "data:$mimeType;base64,$base64";
+                
+                $multimedia[] = [
+                    'id' => (int)$row['id'],
+                    'url' => $dataUrl,
+                    'type' => $mimeType,
+                    'size' => strlen($contenido)
+                ];
+                
+                error_log("Multimedia ID " . $row['id'] . " - Tipo: $mimeType - Tamaño: " . strlen($contenido) . " bytes");
+            }
+            
+            mysqli_stmt_close($stmt);
+            
+            error_log("Total multimedia encontrados: " . count($multimedia));
+            error_log("=== FIN DAO::getMultimediaMundial ===");
+            
+            return $multimedia;
+            
+        } catch (Exception $e) {
+            error_log("ERROR en MundialDAO::getMultimediaMundial: " . $e->getMessage());
+            return [];
+        }
+    }
     
+    public function updateMundial(Mundial $mundial, array $sedes, array $multimedia): bool {
+        try {
+            $query = "CALL sp_updateMundial(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = mysqli_prepare($this->conn, $query);
+
+            if (!$stmt) {
+                throw new Exception("Error al preparar la consulta: " . mysqli_error($this->conn));
+            }
+
+            $año = $mundial->getAño();
+            $descripcion = $mundial->getDescripcion();
+            $logo = $mundial->getLogo();
+            $imgMascota = $mundial->getImgMascota();
+            $nombreMascota = $mundial->getNombreMascota();
+            $campeon = $mundial->getCampeon();
+            $subcampeon = $mundial->getSubcampeon();
+            $tercerPuesto = $mundial->getTercerPuesto();
+            $cuartoPuesto = $mundial->getCuartoPuesto();
+            $marcador = $mundial->getMarcador();
+            $tiempoExtra = $mundial->getTiempoExtra() ? 1 : 0;
+            $marcadorTiempoExtra = $mundial->getMarcadorTiempoExtra();
+            $penalties = $mundial->getPenalties() ? 1 : 0;
+            $muerteSubita = $mundial->getMuerteSubita() ? 1 : 0;
+            $marcadorFinal = $mundial->getMarcadorFinal();
+            $balonOro = $mundial->getBalonOro();
+            $balonPlata = $mundial->getBalonPlata();
+            $balonBronce = $mundial->getBalonBronce();
+            $botinOro = $mundial->getBotinOro();
+            $botinPlata = $mundial->getBotinPlata();
+            $botinBronce = $mundial->getBotinBronce();
+            $guanteOro = $mundial->getGuanteOro();
+            $maxGoles = $mundial->getMaxGoles();
+            $idMundial = $mundial->getIdMundial();
+            
+            $nullLogo = NULL;
+            $nullMascota = NULL;
+
+            mysqli_stmt_bind_param(
+                $stmt,
+                'iisbbsiiiisisiisiiiiiiii',
+                $idMundial,
+                $año, $descripcion, $nullLogo, $nullMascota, $nombreMascota,
+                $campeon, $subcampeon, $tercerPuesto, $cuartoPuesto,
+                $marcador, $tiempoExtra, $marcadorTiempoExtra,
+                $penalties, $muerteSubita, $marcadorFinal,
+                $balonOro, $balonPlata, $balonBronce,
+                $botinOro, $botinPlata, $botinBronce,
+                $guanteOro, $maxGoles
+            );
+
+             // Enviar BLOBs si existen
+            if ($logo !== null && strlen($logo) > 0) {
+                mysqli_stmt_send_long_data($stmt, 3, $logo);
+            }
+            if ($imgMascota !== null && strlen($imgMascota) > 0) {
+                mysqli_stmt_send_long_data($stmt, 4, $imgMascota);
+            }
+
+            if (!mysqli_stmt_execute($stmt)) {
+                throw new Exception("Error al ejecutar: " . mysqli_stmt_error($stmt));
+            }
+
+            mysqli_stmt_close($stmt);
+            mysqli_next_result($this->conn);
+
+            //Borramos las sedes
+            $queryDeleteSedes = "CALL sp_replaceSedes(?)";
+            $stmtDeleteSedes = mysqli_prepare($this->conn, $queryDeleteSedes);
+            mysqli_stmt_bind_param($stmtDeleteSedes, 'i', $idMundial);
+            mysqli_stmt_execute($stmtDeleteSedes);
+            mysqli_stmt_close($stmtDeleteSedes);
+            mysqli_next_result($this->conn);
+
+            // Despues las volvemos a insertar
+            foreach ($sedes as $sedeId) {
+                $querySede = "CALL sp_agregarSede(?, ?)";
+                $stmtSede = mysqli_prepare($this->conn, $querySede);
+                mysqli_stmt_bind_param($stmtSede, 'ii', $idMundial, $sedeId);
+                mysqli_stmt_execute($stmtSede);
+                mysqli_stmt_close($stmtSede);
+                mysqli_next_result($this->conn);
+            }
+
+            // Borramos la multimedia asociada
+            $queryDeleteMultimedia = "CALL sp_replaceGaleria(?)";
+            $stmtDeleteMultimedia = mysqli_prepare($this->conn, $queryDeleteMultimedia);
+            mysqli_stmt_bind_param($stmtDeleteMultimedia, 'i', $idMundial);
+            mysqli_stmt_execute($stmtDeleteMultimedia);
+            mysqli_stmt_close($stmtDeleteMultimedia);
+            mysqli_next_result($this->conn);
+
+            // Insertamos la nueva multimedia
+            $this->insertarMultimedia($idMundial, $multimedia);
+
+            // Todo salió bien
+            return true;
+        } catch (Exception $e) {
+            error_log("Error en MundialDAO::updateMundial: " . $e->getMessage());
+            return false;
+        }
+    }
+
+
 }

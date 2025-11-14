@@ -706,6 +706,48 @@ class ApiController {
         }
     }
 
+    // @GET /api/getMultimediaMundial
+    public function getMultimediaMundial() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        try {
+            $idMundial = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            
+            if ($idMundial <= 0) {
+                echo json_encode(['success' => false, 'message' => 'ID de mundial inválido']);
+                return;
+            }
+
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $multimedia = $mundialDAO->getMultimediaMundial($idMundial);
+
+            if ($multimedia !== null) {
+                echo json_encode([
+                    'success' => true,
+                    'data' => $multimedia
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => true,
+                    'data' => [],
+                    'message' => 'No se encontró multimedia para este mundial'
+                ]);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en getMultimediaMundial: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
     // @POST /api/crearJugador
     public function crearJugador() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -864,13 +906,33 @@ class ApiController {
             $sedes = json_decode($data['sedes'], true) ?? [];
 
             $mundialDAO = new MundialDAO($GLOBALS['conn']);
-            $result = $mundialDAO->crearMundial($mundial, $sedes);
+            $idMundial = $mundialDAO->crearMundial($mundial, $sedes);
 
-            if ($result) {
+            if ($idMundial) {
+                // Procesar multimedia (imágenes y videos)
+                if (!empty($data['multimedia']) && is_array($data['multimedia'])) {
+                    $archivosMultimedia = [];
+                    
+                    foreach ($data['multimedia'] as $archivoBase64) {
+                        if (!empty($archivoBase64)) {
+                            $archivoBinario = base64_decode($archivoBase64);
+                            $archivosMultimedia[] = $archivoBinario;
+                        }
+                    }
+
+                    if (!empty($archivosMultimedia)) {
+                        $resultMultimedia = $mundialDAO->insertarMultimedia($idMundial, $archivosMultimedia);
+                        
+                        if (!$resultMultimedia) {
+                            error_log("Advertencia: Mundial creado pero hubo error al insertar multimedia");
+                        }
+                    }
+                }
+
                 echo json_encode([
                     'success' => true,
                     'message' => 'Mundial creado exitosamente',
-                    'id' => $result
+                    'id' => $idMundial
                 ]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Error al crear el mundial']);
@@ -878,6 +940,96 @@ class ApiController {
 
         } catch (Exception $e) {
             error_log("Error en crearMundial: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    // @PUT /api/updateMundial
+    public function actualizarMundial() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'No autorizado']);
+            return;
+        }
+
+        try {
+            $data = json_decode(file_get_contents("php://input"), true);
+
+            if (!$data) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Datos inválidos o vacíos.'
+                ]);
+                return;
+            }
+
+            $mundial = new Mundial();
+            $mundial->setIdMundial((int)$data['id']);
+            $mundial->setAño((int)$data['year']);
+            $mundial->setDescripcion($data['descripcion']);
+            $mundial->setNombreMascota($data['nombreMascota'] ?? null);
+            $mundial->setCampeon($data['campeon'] ? (int)$data['campeon'] : null);
+            $mundial->setSubcampeon($data['subcampeon'] ? (int)$data['subcampeon'] : null);
+            $mundial->setTercerPuesto($data['tercerPuesto'] ? (int)$data['tercerPuesto'] : null);
+            $mundial->setCuartoPuesto($data['cuartoPuesto'] ? (int)$data['cuartoPuesto'] : null);
+            $mundial->setMarcador($data['marcador'] ?? null);
+            $mundial->setTiempoExtra($data['tiempoExtra'] ?? false);
+            $mundial->setMarcadorTiempoExtra($data['marcadorTiempoExtra'] ?? null);
+            $mundial->setPenalties($data['penalties'] ?? false);
+            $mundial->setMuerteSubita($data['muerteSubita'] ?? false);
+            $mundial->setMarcadorFinal($data['marcadorFinal'] ?? null);
+            $mundial->setBalonOro($data['balonOro'] ? (int)$data['balonOro'] : null);
+            $mundial->setBalonPlata($data['balonPlata'] ? (int)$data['balonPlata'] : null);
+            $mundial->setBalonBronce($data['balonBronce'] ? (int)$data['balonBronce'] : null);
+            $mundial->setBotinOro($data['botinOro'] ? (int)$data['botinOro'] : null);
+            $mundial->setBotinPlata($data['botinPlata'] ? (int)$data['botinPlata'] : null);
+            $mundial->setBotinBronce($data['botinBronce'] ? (int)$data['botinBronce'] : null);
+            $mundial->setGuanteOro($data['guanteOro'] ? (int)$data['guanteOro'] : null);
+            $mundial->setMaxGoles($data['golesMaximoGoleador'] ? (int)$data['golesMaximoGoleador'] : null);
+
+            // Procesar logo
+            if (!empty($data['logo'])) {
+                $logoBinario = base64_decode($data['logo']);
+                $mundial->setLogo($logoBinario);
+            }
+
+            // Procesar imagen mascota
+            if (!empty($data['imgMascota'])) {
+                $mascotaBinaria = base64_decode($data['imgMascota']);
+                $mundial->setImgMascota($mascotaBinaria);
+            }
+
+            $sedes = json_decode($data['sedes'], true) ?? [];
+
+            // Procesar multimedia (imágenes y videos)
+            $archivosMultimedia = [];
+            if (!empty($data['multimedia']) && is_array($data['multimedia'])) {
+                foreach ($data['multimedia'] as $archivoBase64) {
+                    if (!empty($archivoBase64)) {
+                        $archivoBinario = base64_decode($archivoBase64);
+                        $archivosMultimedia[] = $archivoBinario;
+                    }
+                }
+            }
+
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $resultado = $mundialDAO->updateMundial($mundial, $sedes, $archivosMultimedia);
+
+            if (!$resultado) {
+                throw new Exception('No se pudo actualizar el mundial.');
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Mundial actualizado exitosamente'
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en actualizarMundial: " . $e->getMessage());
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }

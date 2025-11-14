@@ -3,7 +3,12 @@ let countries = [];
 let players = [];
 let selectedCountries = [];
 let uploadedFiles = [];
+let multimediaFiles = []; // Array para archivos multimedia
 let currentYear = null;
+
+// Variables globales para almacenar los files
+let existingLogoFile = null;
+let existingMascotaFile = null;
 
 // ==========================================
 // CARGA INICIAL DE DATOS
@@ -230,29 +235,25 @@ function updateMundialTitle() {
             countryText = `${otherCountries} y ${lastCountry}`;
         }
         
-        titleElement.textContent = `${countryText} ${currentYear}`;
-        subtitleElement.textContent = 'Mundial de la FIFA';
+        titleElement.textContent = `Mundial ${countryText} ${currentYear}`;
+        subtitleElement.textContent = `Copa del Mundo FIFA ${currentYear}`;
     } else if (currentYear) {
         titleElement.textContent = `Mundial ${currentYear}`;
-        subtitleElement.textContent = 'Selecciona las sedes para completar el título';
+        subtitleElement.textContent = 'Selecciona las sedes para ver el título completo';
+    } else if (selectedCountries.length > 0) {
+        titleElement.textContent = 'Mundial';
+        subtitleElement.textContent = 'Selecciona el año para ver el título completo';
     } else {
         titleElement.textContent = 'Mundial';
         subtitleElement.textContent = 'Selecciona el año y las sedes para ver el título';
     }
 }
 
-// Manejar cambio de año
-function handleYearChange() {
-    const yearInput = document.getElementById('year');
-    currentYear = yearInput.value;
-    updateMundialTitle();
-}
-
 // ==========================================
 // FUNCIONES DE IMÁGENES
 // ==========================================
 
-// Previsualizar imagen
+// Vista previa de imagen (logo y mascota)
 function previewImage(event, previewId) {
     const file = event.target.files[0];
     const preview = document.getElementById(previewId);
@@ -261,19 +262,21 @@ function previewImage(event, previewId) {
 
     // Validar tipo de archivo
     if (!file.type.startsWith('image/')) {
-        alert('Por favor selecciona un archivo de imagen válido');
+        alert('Por favor selecciona un archivo de imagen válido.');
+        event.target.value = '';
         return;
     }
 
-    // Validar tamaño (5MB máximo)
+    // Validar tamaño (máx 5MB)
     if (file.size > 5 * 1024 * 1024) {
-        alert('La imagen no puede superar los 5MB');
+        alert('La imagen no debe superar los 5MB.');
+        event.target.value = '';
         return;
     }
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        preview.innerHTML = `<img src="${e.target.result}" alt="Vista previa">`;
+        preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
         preview.classList.add('has-image');
     };
     reader.readAsDataURL(file);
@@ -288,98 +291,135 @@ function triggerFileInput() {
     document.getElementById('multimediaInput').click();
 }
 
-// Manejar archivos seleccionados
-function handleFileSelect(event) {
+// Validar tipo de archivo multimedia
+function validarTipoArchivo(file) {
+    const allowedTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'video/mp4',
+        'video/webm',
+        'video/ogg'
+    ];
+    
+    return allowedTypes.includes(file.type);
+}
+
+// Manejar selección de archivos multimedia
+async function handleFileSelect(event) {
     const files = Array.from(event.target.files);
     
-    files.forEach(file => {
-        if (uploadedFiles.length < 10) {
-            uploadedFiles.push({
-                file: file,
-                id: Date.now() + Math.random(),
-                type: getFileType(file),
-                url: URL.createObjectURL(file)
-            });
-        }
-    });
+    if (files.length === 0) return;
 
-    renderMediaCarousel();
-}
-
-// Determinar tipo de archivo
-function getFileType(file) {
-    if (file.type.startsWith('image/')) return 'image';
-    if (file.type.startsWith('video/')) return 'video';
-    return 'document';
-}
-
-// Renderizar carrusel de multimedia
-function renderMediaCarousel() {
     const carousel = document.getElementById('multimediaCarousel');
     
-    carousel.innerHTML = `
-    <div class="upload-placeholder" onclick="triggerFileInput()">
-        <i class="fas fa-plus-circle"></i>
-        <p>Agregar más archivos</p>
-        <span>Imágenes, videos, documentos</span>
-    </div>`;
+    for (const file of files) {
+        // Validar tipo de archivo
+        if (!validarTipoArchivo(file)) {
+            alert(`El archivo "${file.name}" no es un tipo válido. Solo se permiten imágenes (JPG, PNG, GIF, WEBP) y videos (MP4, WEBM, OGG).`);
+            continue;
+        }
 
-    uploadedFiles.forEach(fileObj => {
+        // Validar tamaño (máx 50MB para videos, 5MB para imágenes)
+        // const maxSize = file.type.startsWith('video/') ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+        // if (file.size > maxSize) {
+        //     const maxSizeMB = file.type.startsWith('video/') ? '50MB' : '5MB';
+        //     alert(`El archivo "${file.name}" supera el tamaño máximo de ${maxSizeMB}.`);
+        //     continue;
+        // }
+
+        // Guardar el índice actual ANTES de hacer push
+        const currentIndex = multimediaFiles.length;
+        
+        // Agregar archivo al array
+        multimediaFiles.push(file);
+
+        // Crear preview
         const mediaItem = document.createElement('div');
         mediaItem.className = 'media-item';
+        mediaItem.setAttribute('data-file-index', currentIndex);
 
-        let content = '';
-        if (fileObj.type === 'image') {
-            content = `<img src="${fileObj.url}" alt="Imagen">`;
-        } else if (fileObj.type === 'video') {
-            content = `<video src="${fileObj.url}" muted></video>`;
-        } else {
-            content = `<div class="file-icon"><i class="fas fa-file-alt"></i></div>`;
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            // IMPORTANTE: Usar el índice guardado, no multimediaFiles.length - 1
+            reader.onload = function(e) {
+                mediaItem.innerHTML = `
+                    <img src="${e.target.result}" alt="${file.name}">
+                    <button type="button" class="remove-btn" onclick="removeMultimediaFile(${currentIndex})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <span class="media-filename">${file.name}</span>
+                `;
+            };
+            reader.readAsDataURL(file);
+        } else if (file.type.startsWith('video/')) {
+            const videoURL = URL.createObjectURL(file);
+            mediaItem.innerHTML = `
+                <video controls>
+                    <source src="${videoURL}" type="${file.type}">
+                    Tu navegador no soporta el elemento de video.
+                </video>
+                <button type="button" class="remove-btn" onclick="removeMultimediaFile(${currentIndex})">
+                    <i class="fas fa-times"></i>
+                </button>
+                <span class="media-filename">${file.name}</span>
+            `;
         }
 
-        mediaItem.innerHTML = `
-            ${content}
-            <button class="remove-btn" onclick="removeFile(${fileObj.id})">
-                <i class="fas fa-times"></i>
-            </button>`;
+        // Insertar ANTES del placeholder
+        const placeholder = carousel.querySelector('.upload-placeholder');
+        if (placeholder) {
+            carousel.insertBefore(mediaItem, placeholder);
+        } else {
+            carousel.appendChild(mediaItem);
+        }
+    }
 
-        carousel.appendChild(mediaItem);
+    // Limpiar input para permitir seleccionar los mismos archivos de nuevo
+    event.target.value = '';
+}
+
+// Remover archivo multimedia
+function removeMultimediaFile(index) {
+    // Remover del array (marcar como null en lugar de splice para mantener índices)
+    if (index < 0 || index >= multimediaFiles.length) return;
+    
+    multimediaFiles[index] = null;
+
+    // Actualizar el carrusel - remover solo el elemento con ese índice
+    const carousel = document.getElementById('multimediaCarousel');
+    const items = carousel.querySelectorAll('.media-item');
+    
+    items.forEach((item) => {
+        const itemIndex = parseInt(item.getAttribute('data-file-index'));
+        if (itemIndex === index) {
+            item.remove();
+        }
     });
-
-    updateCarouselControls();
 }
 
-// Remover archivo
-function removeFile(fileId) {
-    uploadedFiles = uploadedFiles.filter(file => file.id !== fileId);
-    renderMediaCarousel();
-}
-
-// Controles del carrusel
+// Scroll del carrusel
 function scrollCarousel(direction) {
     const carousel = document.getElementById('multimediaCarousel');
-    const scrollAmount = 200;
-    carousel.scrollLeft += direction * scrollAmount;
-    
-    setTimeout(updateCarouselControls, 300);
-}
-
-function updateCarouselControls() {
-    const carousel = document.getElementById('multimediaCarousel');
-    const prevBtn = document.querySelector('.carousel-btn.prev');
-    const nextBtn = document.querySelector('.carousel-btn.next');
-
-    if (prevBtn && nextBtn) {
-        prevBtn.disabled = carousel.scrollLeft <= 0;
-        nextBtn.disabled = carousel.scrollLeft >= (carousel.scrollWidth - carousel.clientWidth);
-    }
+    const scrollAmount = 320; // Ancho del item + margen
+    carousel.scrollBy({
+        left: direction * scrollAmount,
+        behavior: 'smooth'
+    });
 }
 
 // ==========================================
-// FUNCIONES DE RESULTADOS
+// FUNCIONES DE RESULTADO FINAL
 // ==========================================
 
-// Toggle tiempo extra
+function handleYearChange() {
+    const yearInput = document.getElementById('year');
+    currentYear = yearInput.value ? parseInt(yearInput.value) : null;
+    updateMundialTitle();
+}
+
 function toggleTiempoExtra() {
     const checkbox = document.getElementById('tiempoExtra');
     const group = document.getElementById('marcadorTiempoExtraGroup');
@@ -392,7 +432,6 @@ function toggleTiempoExtra() {
     }
 }
 
-// Toggle penales
 function togglePenalties() {
     const checkbox = document.getElementById('penalties');
     const group = document.getElementById('marcadorFinalGroup');
@@ -406,15 +445,8 @@ function togglePenalties() {
 }
 
 // ==========================================
-// ENVÍO DE FORMULARIO
+// ENVÍO DEL FORMULARIO
 // ==========================================
-
-// Validar marcador
-function validarMarcador(marcador) {
-    if (!marcador) return true; // Opcional
-    const regex = /^\d+-\d+$/;
-    return regex.test(marcador);
-}
 
 // Manejar envío del formulario
 async function handleFormSubmit(event) {
@@ -439,19 +471,44 @@ async function handleFormSubmit(event) {
         return;
     }
 
-    // Convertir imágenes a Base64
+    // Convertir imágenes a Base64 - MODIFICADO
     let logoBase64 = null;
     let mascotaBase64 = null;
 
     const logoFile = document.getElementById('logo').files[0];
     const mascotaFile = document.getElementById('imgMascota').files[0];
 
+    // Usar el nuevo file si se subió, o el existente si no
     if (logoFile) {
         logoBase64 = await toBase64(logoFile);
+    } else if (existingLogoFile) {
+        logoBase64 = await toBase64(existingLogoFile);
     }
 
     if (mascotaFile) {
         mascotaBase64 = await toBase64(mascotaFile);
+    } else if (existingMascotaFile) {
+        mascotaBase64 = await toBase64(existingMascotaFile);
+    }
+
+    // Convertir archivos multimedia a Base64
+    const multimediaBase64 = [];
+    if (multimediaFiles.length > 0) {
+        for (let i = 0; i < multimediaFiles.length; i++) {
+            const file = multimediaFiles[i];
+            
+            // Saltar archivos eliminados (null)
+            if (file === null) continue;
+            
+            try {
+                const base64 = await toBase64(file);
+                multimediaBase64.push(base64);
+            } catch (error) {
+                console.error('Error al convertir archivo multimedia:', error);
+                alert(`Error al procesar el archivo "${file.name}"`);
+                return;
+            }
+        }
     }
 
     const mundialData = {
@@ -461,6 +518,7 @@ async function handleFormSubmit(event) {
         sedes: JSON.stringify(selectedCountries.map(c => c.id)),
         logo: logoBase64,
         imgMascota: mascotaBase64,
+        multimedia: multimediaBase64, // Agregar multimedia al objeto
         campeon: document.getElementById('campeon').value || null,
         subcampeon: document.getElementById('subcampeon').value || null,
         tercerPuesto: document.getElementById('tercerPuesto').value || null,
@@ -486,9 +544,11 @@ async function handleFormSubmit(event) {
     if (!mundialId) { // Nuevo mundial
         action = 'crearMundial';
     } else { // Edición de mundial existente
-        action = 'actualizarMundial&id=' + mundialId;
+        action = 'actualizarMundial';
+        mundialData.id = mundialId;
     }
-
+    //return;
+    
     try {
         const response = await fetch(`index.php?controller=api&action=${action}`, {
             method: !mundialId ? 'POST' : 'PUT',
@@ -506,7 +566,7 @@ async function handleFormSubmit(event) {
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error de conexión');
+        alert('Error de en el servidor al procesar la solicitud.');
     }
 }
 
@@ -537,10 +597,10 @@ async function loadMundialActual(id) {
         }
         
         const mundial = data.data;
-        //alert('Cargando datos del mundial para edición...');
 
         populateMundialForm(mundial, id);
         cargarSedesSeleccionadas(data.sedes);
+        loadMultimediaMundial(id);
         
     } catch (error) {
         console.error('Error al cargar el mundial:', error);
@@ -550,7 +610,7 @@ async function loadMundialActual(id) {
 async function populateMundialForm(mundial, id) {
     // ======== Información básica ========
     document.getElementById('year').value = mundial.año;
-    currentYear = mundial.año; // para actualizar el título
+    currentYear = mundial.año;
     updateMundialTitle();
 
     document.getElementById('descripcion').value = mundial.descripcion || '';
@@ -561,6 +621,15 @@ async function populateMundialForm(mundial, id) {
         const logoPreview = document.getElementById('logoPreview');
         logoPreview.innerHTML = `<img src="${mundial.logo}" alt="Logo del Mundial">`;
         logoPreview.classList.add('has-image');
+
+        // Convertir la imagen existente a File
+        try {
+            const response = await fetch(mundial.logo);
+            const blob = await response.blob();
+            existingLogoFile = new File([blob], 'logo_existente.jpg', { type: blob.type });
+        } catch (error) {
+            console.error('Error cargando logo existente:', error);
+        }
     }
 
     // ======== Imagen Mascota ========
@@ -568,6 +637,15 @@ async function populateMundialForm(mundial, id) {
         const mascotaPreview = document.getElementById('mascotaPreview');
         mascotaPreview.innerHTML = `<img src="${mundial.imgMascota}" alt="Mascota del Mundial">`;
         mascotaPreview.classList.add('has-image');
+
+        // Convertir la imagen existente a File
+        try {
+            const response = await fetch(mundial.imgMascota);
+            const blob = await response.blob();
+            existingMascotaFile = new File([blob], 'mascota_existente.jpg', { type: blob.type });
+        } catch (error) {
+            console.error('Error cargando mascota existente:', error);
+        }
     }
 
     // ======== Posiciones finales ========
@@ -618,30 +696,13 @@ async function populateMundialForm(mundial, id) {
 
     document.getElementById('golesMaximoGoleador').value = mundial.maxGoles || '';
 
-    // ======== Multimedia ========
-    if (Array.isArray(mundial.multimedia)) {
-        const carousel = document.getElementById('multimediaCarousel');
-        mundial.multimedia.forEach(item => {
-            const div = document.createElement('div');
-            div.classList.add('multimedia-item');
-            if (item.type.startsWith('image')) {
-                div.innerHTML = `<img src="${item.url}" alt="Multimedia">`;
-            } else if (item.type.startsWith('video')) {
-                div.innerHTML = `<video src="${item.url}" controls></video>`;
-            } else {
-                div.innerHTML = `<a href="${item.url}" target="_blank">${item.name}</a>`;
-            }
-            carousel.appendChild(div);
-        });
-    }
-
     // ======== Ajustar el botón principal ========
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.textContent = 'Guardar Cambios';
-    submitBtn.onclick = async (e) => {
-        e.preventDefault();
-        await actualizarMundial(id);
-    };
+    // submitBtn.onclick = async (e) => {
+    //     e.preventDefault();
+    //     await actualizarMundial(id);
+    // };
 }
 
 async function cargarSedesSeleccionadas(sedes) {
@@ -666,9 +727,126 @@ async function cargarSedesSeleccionadas(sedes) {
     }
 }
 
+// Función auxiliar para obtener extensión del archivo
+function getFileExtension(mimeType) {
+    const extensions = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'image/webp': 'webp',
+        'video/mp4': 'mp4',
+        'video/webm': 'webm',
+        'video/ogg': 'ogg',
+    };
+    return extensions[mimeType] || 'bin';
+}
+
+// Cargar multimedia del mundial desde la BD
+async function loadMultimediaMundial(id) {
+    try {
+        console.log('Cargando multimedia del mundial ID:', id);
+        
+        const response = await fetch(`index.php?controller=api&action=getMultimediaMundial&id=${id}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            console.error('Error al cargar multimedia del mundial:', data.message);
+            return;
+        }
+
+        const multimedia = data.data;
+        console.log('Multimedia recibida:', multimedia);
+        
+        if (Array.isArray(multimedia) && multimedia.length > 0) {
+            const carousel = document.getElementById('multimediaCarousel');
+            const placeholder = carousel.querySelector('.upload-placeholder');
+
+            // Limpiar array existente
+            multimediaFiles = [];
+
+            for (const item of multimedia) {
+                try {
+                    // Convertir URL a File object
+                    const response = await fetch(item.url);
+                    const blob = await response.blob();
+                    
+                    // Crear File object con metadata
+                    const file = new File([blob], 
+                        item.filename || `multimedia_${item.id}.${getFileExtension(blob.type)}`, 
+                        { type: blob.type }
+                    );
+                    
+                    // Guardar información adicional si la necesitas
+                    file.dbId = item.id; // ID de la BD
+                    file.existingUrl = item.url; // URL original
+                    
+                    // Agregar al array
+                    const currentIndex = multimediaFiles.length;
+                    multimediaFiles.push(file);
+
+                    // Crear elemento visual
+                    const mediaItem = document.createElement('div');
+                    mediaItem.className = 'media-item';
+                    mediaItem.setAttribute('data-file-index', currentIndex);
+                    mediaItem.setAttribute('data-bd-id', item.id);
+
+                    let mediaContent = '';
+                    if (blob.type.startsWith('image')) {
+                        mediaContent = `
+                            <img src="${item.url}" alt="Multimedia del mundial">
+                            <button type="button" class="remove-btn" onclick="removeMultimediaFile(${currentIndex})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <span class="media-filename">${file.name}</span>
+                        `;
+                    } else if (blob.type.startsWith('video')) {
+                        mediaContent = `
+                            <video controls>
+                                <source src="${item.url}" type="${blob.type}">
+                                Tu navegador no soporta el elemento de video.
+                            </video>
+                            <button type="button" class="remove-btn" onclick="removeMultimediaFile(${currentIndex})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <span class="media-filename">${file.name}</span>
+                        `;
+                    } else {
+                        mediaContent = `
+                            <img src="${item.url}" alt="Multimedia del mundial">
+                            <button type="button" class="remove-btn" onclick="removeMultimediaFile(${currentIndex})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <span class="media-filename">${file.name}</span>
+                        `;
+                    }
+
+                    mediaItem.innerHTML = mediaContent;
+
+                    if (placeholder) {
+                        carousel.insertBefore(mediaItem, placeholder);
+                    } else {
+                        carousel.appendChild(mediaItem);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error procesando archivo multimedia:', error);
+                    // Continuar con el siguiente archivo
+                    continue;
+                }
+            }
+            
+            console.log('Multimedia cargada exitosamente:', multimediaFiles.length, 'archivos');
+        } else {
+            console.log('No hay multimedia para cargar');
+            multimediaFiles = []; // Asegurar que esté vacío
+        }
+    } catch (error) {
+        console.error('Error al cargar multimedia del mundial:', error);
+    }
+}
+
 // Actualizar mundial existente
 async function actualizarMundial(id) {
-    // Aquí puedes implementar la lógica para actualizar el mundial existente
     alert('Funcionalidad de actualización aún no implementada.');
 }
 
@@ -678,7 +856,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Cargar datos desde la API
     await cargarPaises();
     await cargarJugadores();
-    //await cargarMundialesCreados();
     
     // Inicializar UI
     updateSelectedCountries();
@@ -706,9 +883,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // Verificar si es edición
-    
     if (mundialId) {
-        //document.getElementById('submitBtn').textContent = 'Actualizar Mundial';
         console.log('Modo edición para mundial ID:', mundialId);
         await loadMundialActual(mundialId);
     }

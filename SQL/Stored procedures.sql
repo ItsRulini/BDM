@@ -339,7 +339,6 @@ DELIMITER ;
 
 
 -- sedes
-
 DELIMITER $$
 DROP PROCEDURE IF EXISTS sp_agregarSede$$
 CREATE PROCEDURE sp_agregarSede(
@@ -352,9 +351,87 @@ BEGIN
 END$$
 DELIMITER ;
 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_insertMultimedia$$
+CREATE PROCEDURE sp_insertMultimedia( 
+	IN p_contenido LONGBLOB,
+	OUT p_id INT 
+)
+BEGIN
+	INSERT INTO Multimedia (Contenido)
+    VALUES (p_contenido);
+    
+    SET p_id = LAST_INSERT_ID();
+END $$
+
+DELIMITER ;
+
+-- Insertar la multimedia
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_insertMultimediaMundial$$
+CREATE PROCEDURE sp_insertMultimediaMundial( 
+	IN p_multimedia LONGBLOB,
+	IN p_id_mundial INT,
+    OUT p_id_multimedia INT
+)
+BEGIN
+	CALL sp_insertMultimedia(p_multimedia, p_id_multimedia);
+	
+	INSERT INTO Galeria_Mundial (IdMundial, IdMultimedia)
+    VALUES (p_id_mundial, p_id_multimedia);
+END $$
+DELIMITER ;
+
+-- Get multimedia de mundiales
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_getGaleriaMundial$$
+CREATE PROCEDURE sp_getGaleriaMundial(IN p_id_mundial INT)
+BEGIN
+	SELECT
+		m.IdMultimedia as id,
+		m.Contenido as contenido
+	FROM Galeria_Mundial gm
+	INNER JOIN Multimedia m ON gm.IdMultimedia = m.IdMultimedia
+	WHERE gm.IdMundial = 
+	ORDER BY m.IdMultimedia ASC;
+END$$
+DELIMITER ;
+
+-- get mundial por id
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_getMundial$$
+CREATE PROCEDURE sp_getMundial(IN p_id_mundial INT)
+BEGIN
+	SELECT 
+        IdMundial,
+        Año,
+        Descripcion,
+        logo,
+        img_mascota,
+        nombre_mascota,
+        campeon,
+        subcampeon,
+        tercer_puesto,
+        cuarto_puesto,
+        marcador,
+        tiempo_extra,
+        marcador_tiempo_extra,
+        penalties,
+        muerte_subita,
+        marcador_final,
+        balon_oro,
+        balon_plata,
+        balon_bronce,
+        botin_oro,
+        botin_plata,
+        botin_bronce,
+        guante_oro,
+        max_goles
+    FROM vw_info_mundiales
+    WHERE IdMundial = p_id_mundial;
+END $$
 
 -- get mundiales
-
 DELIMITER $$
 DROP PROCEDURE IF EXISTS sp_getMundiales$$
 CREATE PROCEDURE sp_getMundiales()
@@ -394,7 +471,9 @@ DELIMITER **
 DROP PROCEDURE IF EXISTS sp_getSedes**
 CREATE PROCEDURE sp_getSedes ( IN p_IdMundial INT) 
 BEGIN
-	SELECT Sedes
+	SELECT 
+		IDSedes,
+        Sedes
 	FROM vw_info_mundiales
 	WHERE IdMundial = p_IdMundial;
 END**
@@ -544,12 +623,11 @@ CREATE PROCEDURE sp_guardarMultimediaPublicacion(
     OUT p_idMultimedia INT
 )
 BEGIN
-    INSERT INTO Multimedia (Contenido)
-    VALUES (p_contenido);
-    
-    SET p_idMultimedia = LAST_INSERT_ID();
+    CALL sp_insertMultimedia (p_contenido, p_idMultimedia);
     
     INSERT INTO Multimedia_Publicacion (IdMultimedia, IdPublicacion)
     VALUES (p_idMultimedia, p_idPublicacion);
 END$$
 DELIMITER ;
+
+
