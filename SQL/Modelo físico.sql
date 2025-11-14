@@ -155,10 +155,6 @@ ADD CONSTRAINT fk_botin_bronce FOREIGN KEY (botin_bronce) REFERENCES Jugador(IdJ
 ADD CONSTRAINT fk_guante_oro FOREIGN KEY (guante_oro) REFERENCES Jugador(IdJugador);
 
 
-
-
-
-
 CREATE TABLE Sedes (
 	IdMundial INT,
     Sede INT, -- ID del país

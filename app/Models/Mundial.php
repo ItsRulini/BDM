@@ -46,6 +46,36 @@ class Mundial {
 
     public function __destruct() {}
 
+    public function toArray(): array {
+        return [
+            'idMundial' => $this->idMundial,
+            'año' => $this->año,
+            'descripcion' => $this->descripcion,
+            'logo' => $this->logo ? 'data:image/jpeg;base64,' . base64_encode($this->logo) : null,
+            'imgMascota' => $this->imgMascota ? 'data:image/jpeg;base64,' . base64_encode($this->imgMascota) : null,
+            'nombreMascota' => $this->nombreMascota,
+            'campeon' => $this->campeon,
+            'subcampeon' => $this->subcampeon,
+            'tercerPuesto' => $this->tercerPuesto,
+            'cuartoPuesto' => $this->cuartoPuesto,
+            'marcador' => $this->marcador,
+            'tiempoExtra' => $this->tiempoExtra,
+            'marcadorTiempoExtra' => $this->marcadorTiempoExtra,
+            'penalties' => $this->penalties,
+            'muerteSubita' => $this->muerteSubita,
+            'marcadorFinal' => $this->marcadorFinal,
+            'balonOro' => $this->balonOro,
+            'balonPlata' => $this->balonPlata,
+            'balonBronce' => $this->balonBronce,
+            'botinOro' => $this->botinOro,
+            'botinPlata' => $this->botinPlata,
+            'botinBronce' => $this->botinBronce,
+            'guanteOro' => $this->guanteOro,
+            'maxGoles' => $this->maxGoles
+        ];
+    }
+
+
     // --- Getters ---
     public function getIdMundial(): int { return $this->idMundial; }
     public function getAño(): int { return $this->año; }
