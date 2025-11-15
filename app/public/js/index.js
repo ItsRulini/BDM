@@ -1,23 +1,27 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Cargar mundiales
-    displayWorldCups(allWorldCups);
-    initWorldCupSwiper();
+    loadWorldCups(); // AÑADIDO
     
-    // Cargar premios
+    // Cargar premios (estos siguen hardcodeados, pero está bien por ahora)
     displayGoldenBallWinners(goldenBallWinners);
     displayGoldenBootWinners(goldenBootWinners);
     displayGoldenGloveWinners(goldenGloveWinners);
     
     // Event listeners para búsqueda y filtros
-    document.querySelector('.search-input').addEventListener('input', handleSearchAndFilter);
-    document.getElementById('filterCountry').addEventListener('change', handleSearchAndFilter);
-    document.getElementById('filterYear').addEventListener('change', handleSearchAndFilter);
+    const searchInput = document.querySelector('.search-input');
+    const filterCountry = document.getElementById('filterCountry');
+    const filterYear = document.getElementById('filterYear');
+
+    if (searchInput) searchInput.addEventListener('input', handleSearchAndFilter);
+    if (filterCountry) filterCountry.addEventListener('change', handleSearchAndFilter);
+    if (filterYear) filterYear.addEventListener('change', handleSearchAndFilter);
 });
 
 document.addEventListener('click', function(e) {
     const mobileMenu = document.getElementById('mobileMenu');
     const hamburger = document.querySelector('.hamburger');
-    if (!hamburger.contains(e.target) && !mobileMenu.contains(e.target)) {
+    // Asegurarse que los elementos existan antes de acceder a 'contains'
+    if (hamburger && mobileMenu && !hamburger.contains(e.target) && !mobileMenu.contains(e.target) && mobileMenu.classList.contains('active')) {
         hamburger.classList.remove('active');
         mobileMenu.classList.remove('active');
     }
@@ -27,30 +31,9 @@ document.addEventListener('click', function(e) {
 // DATOS DE MUNDIALES
 // ==========================================
 
-const allWorldCups = [
-    { id: 1, year: 2022, name: "Qatar 2022", image: "https://cdn-3.expansion.mx/dims4/default/68cb107/2147483647/strip/true/crop/1371x876+0+0/resize/1800x1150!/format/webp/quality/80/?url=https%3A%2F%2Fcdn-3.expansion.mx%2F6f%2Fc4%2F8766f2ff44a9b37bcd371593de2f%2Fqatar-2022.JPG", description: "El primer mundial en el Medio Oriente, lleno de sorpresas y con la épica final entre Argentina y Francia." },
-    { id: 2, year: 2018, name: "Rusia 2018", image: "https://i.pinimg.com/736x/51/96/44/519644869b0fe4d59baa467249594234.jpg", description: "La sorprendente victoria de Francia y la memorable actuación de Croacia." },
-    { id: 3, year: 2014, name: "Brasil 2014", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQq06obpmRyvsfrJT8CZCMvgdKK4fON5LNe8A&s", description: "El mundial en la cuna del fútbol, recordado por el 7-1 de Alemania a Brasil." },
-    { id: 4, year: 2010, name: "Sudáfrica 2010", image: "https://s3.superluchas.com/2021/07/mundial-sudafrica-2010.jpg", description: "El primer mundial en África. Se caracterizó por la 'Vuvuzela' y el gol de Iniesta que le dio la victoria a España." },
-    { id: 5, year: 2006, name: "Alemania 2006", image: "https://www.sopitas.com/wp-content/uploads/2015/09/MundialAlemania2006.jpg", description: "" },
-    { id: 6, year: 2002, name: "Corea del Sur y Japón 2002", image: "https://i.ytimg.com/vi/8PKmFt-FQ_A/hqdefault.jpg", description: "" },
-    { id: 7, year: 1998, name: "Francia 1998", image: "https://static.wikia.nocookie.net/futbol/images/a/a4/Francia_98.png/revision/latest?cb=20150723192137", description: "" },
-    { id: 8, year: 1994, name: "Estados Unidos 1994", image: "https://photos1.blogger.com/x/blogger/7251/2454/400/104044/94.jpg", description: "" },
-    { id: 9, year: 1990, name: "Italia 1990", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgBB2O7QSHQ-zWdI3may0iY0YCoNW7RSnfNyEjnYI2NdligdtOLFI4uL8r3_b04NCf7Bc&usqp=CAU", description: "" },
-    { id: 10, year: 1986, name: "México 1986", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrkN6EKOFBAMVMpE1q1lHEWkeVvVe0hkTZAQ&s", description: "" },
-    { id: 11, year: 1982, name: "España 1982", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUvrgcBm-JUc1T9pTcUCac82InBBPKg8ml-A&s", description: "" },
-    { id: 12, year: 1978, name: "Argentina 1978", image: "https://i.pinimg.com/1200x/30/b7/65/30b76543bc79fd19621417e4301ea294.jpg", description: "" },
-    { id: 13, year: 1974, name: "Alemania 1974", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcST-oEQykSHP6U7yZHJAl1_cljoPjJddUWrjw&s", description: "" },
-    { id: 14, year: 1970, name: "México 1970", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbzRN5_SP3SkSjV5iP5QRqSAAAS7_wk_IqNw&s", description: "" },
-    { id: 15, year: 1966, name: "Inglaterra 1966", image: "https://wc-2022.com/wp-content/uploads/2022/05/England-1966-Mascot-Willie-300x300.jpg", description: "" },
-    { id: 16, year: 1962, name: "Chile 1962", image: "https://i.pinimg.com/736x/2c/b4/03/2cb40311871fc9d42edd3e1eaab661ac.jpg", description: "" },
-    { id: 17, year: 1958, name: "Suecia 1958", image: "https://static.wikia.nocookie.net/logopedia/images/c/c9/Worldcup-sweden-1958.jpg/revision/latest/scale-to-width-down/250?cb=20211008030701&path-prefix=es", description: "" },
-    { id: 18, year: 1954, name: "Suiza 1954", image: "https://i.ytimg.com/vi/aWHr05G5XYc/maxresdefault.jpg", description: "" },
-    { id: 19, year: 1950, name: "Brasil 1950", image: "https://i.etsystatic.com/11494662/r/il/ee4ad9/6823565202/il_fullxfull.6823565202_nnbt.jpg", description: "" },
-    { id: 20, year: 1938, name: "Francia 1938", image: "https://www.panoramadigital.co.cr/wp-content/uploads/2018/02/poster-francia-1-1938-pandemonium.com_.mx_.jpg", description: "" },
-    { id: 21, year: 1934, name: "Italia 1934", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgz72nxetm23vXIJ2MhYpwbSTHZJxbZ9NFWA&s", description: "" },
-    { id: 22, year: 1930, name: "Uruguay 1930", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRw9aiuzPwpyblji1WvAvbnvwiUqm6NxnwxrQ&s", description: "" },
-];
+// ELIMINAMOS LA VARIABLE allWorldCups
+let fetchedWorldCups = []; // AÑADIDO: para guardar los mundiales de la API
+let worldCupSwiperInstance = null; // AÑADIDO: para manejar el swiper
 
 // ==========================================
 // DATOS DE PREMIOS
@@ -101,13 +84,39 @@ const goldenGloveWinners = [
 // FUNCIONES PARA MUNDIALES
 // ==========================================
 
+// AÑADIDO: Nueva función para cargar mundiales desde la API
+async function loadWorldCups() {
+    try {
+        const response = await fetch('index.php?controller=api&action=getMundiales');
+        if (!response.ok) {
+            throw new Error('Error al cargar los mundiales');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && Array.isArray(data.data)) {
+            fetchedWorldCups = data.data; // Guardar para los filtros
+            displayWorldCups(fetchedWorldCups);
+            worldCupSwiperInstance = initWorldCupSwiper(); // Iniciar Swiper después de cargar
+        } else {
+            console.error('Error en los datos recibidos:', data.message);
+            displayWorldCups([]); // Mostrar vacío
+        }
+    } catch (error) {
+        console.error(error);
+        displayWorldCups([]); // Mostrar vacío en caso de error
+    }
+}
+
+
 function createWorldCupCard(worldCup) {
+    // La API ya manda 'image' (Base64), 'name' (Sede + Año) y 'description'
     return `
         <div class="world-cup-card" onclick="goToWorldCupPage(${worldCup.id})">
-            <img src="${worldCup.image}" alt="Copa del Mundo ${worldCup.year}">
+            <img src="${worldCup.image}" alt="Copa del Mundo ${worldCup.year}" onerror="this.src='assets/default-mundial.png'">
             <div class="world-cup-info">
                 <h3>${worldCup.name}</h3>
-                <p>${worldCup.description}</p>
+                <p>${worldCup.description || 'Sin descripción.'}</p>
             </div>
         </div>
     `;
@@ -115,14 +124,22 @@ function createWorldCupCard(worldCup) {
 
 function displayWorldCups(worldCups) {
     const worldCupsContainer = document.getElementById('worldCupsWrapper');
+    if (!worldCupsContainer) return;
+
+    if (worldCups.length === 0) {
+        worldCupsContainer.innerHTML = '<p style="color: white; text-align: center; width: 100%;">No se encontraron mundiales.</p>';
+        return;
+    }
+
     worldCupsContainer.innerHTML = worldCups.map(worldCup => {
         return `<div class="swiper-slide">${createWorldCupCard(worldCup)}</div>`
     }).join('');
 }
 
 function initWorldCupSwiper() {
-    const swiper = new Swiper('.worldCupSwiper', {
-        loop: true,
+    // Devuelve la instancia para poder destruirla
+    return new Swiper('.worldCupSwiper', {
+        loop: false, // Es mejor false si no son muchos datos
         slidesPerView: 1,
         spaceBetween: 20,
         navigation: {
@@ -201,11 +218,13 @@ function handleSearchAndFilter() {
     const filterCountry = document.getElementById('filterCountry').value.toLowerCase();
     const filterYear = document.getElementById('filterYear').value;
 
-    let filteredWorldCups = allWorldCups.filter(worldCup => {
+    // MODIFICADO: Filtra sobre fetchedWorldCups en lugar de allWorldCups
+    let filteredWorldCups = fetchedWorldCups.filter(worldCup => {
         const matchesSearch = worldCup.name.toLowerCase().includes(searchTerm) ||
                             worldCup.year.toString().includes(searchTerm) ||
-                            worldCup.description.toLowerCase().includes(searchTerm);
+                            (worldCup.description && worldCup.description.toLowerCase().includes(searchTerm));
         
+        // Asumimos que el filtro de país busca en el nombre (Ej. "Qatar 2022")
         const matchesCountry = !filterCountry || worldCup.name.toLowerCase().includes(filterCountry);
         const matchesYear = !filterYear || worldCup.year.toString() === filterYear;
 
@@ -216,7 +235,7 @@ function handleSearchAndFilter() {
     
     // Reinicializar Swiper después de actualizar
     if (window.worldCupSwiperInstance) {
-        window.worldCupSwiperInstance.destroy();
+        window.worldCupSwiperInstance.destroy(true, true); // Destruir instancia anterior
     }
-    window.worldCupSwiperInstance = initWorldCupSwiper();
+    window.worldCupSwiperInstance = initWorldCupSwiper(); // Crear nueva instancia
 }

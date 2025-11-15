@@ -29,6 +29,7 @@ export default class ProfileManager {
         this.passwordModal = document.getElementById('passwordModal');
         this.infoModal = document.getElementById('infoModal');
         this.createPostModal = document.getElementById('createPostModal');
+        this.postStatsModal = document.getElementById('postStatsModal'); // Añadido
         
         // Form elements
         this.passwordForm = document.getElementById('passwordForm');
@@ -85,8 +86,11 @@ export default class ProfileManager {
         // Tab buttons
         this.tabs.forEach(tab => {
             tab.addEventListener('click', (e) => {
-                const status = e.target.dataset.status.toLowerCase();
-                this.showPosts(status);
+                // Obtener el status desde el dataset, asegurándose de que sea el botón
+                const status = e.target.closest('.tab-btn')?.dataset.status?.toLowerCase();
+                if(status) {
+                    this.showPosts(status);
+                }
             });
         });
 
@@ -112,22 +116,27 @@ export default class ProfileManager {
                 return response.json();
             })
             .then(data => {
-                this.userInfo = data.data;
-                this.displayUserInfo(this.userInfo);
+                if (data.success) {
+                    this.userInfo = data.data;
+                    this.displayUserInfo(this.userInfo);
+                } else {
+                    throw new Error(data.message || 'Error en formato de datos');
+                }
             })
             .catch(error => {
                 console.error('Error cargando datos del usuario:', error);
-                // Fallback a datos simulados si ocurre un error
                 const userData = {
-                    nombre: "None",
-                    apellidoPaterno: "None",
-                    apellidoMaterno: "None",
-                    correo: "None",
-                    genero: "None",
-                    fechaNacimiento: "None",
-                    nacionalidad: "None",
-                    paisNacimiento: "None",
-                    fotoPerfil: "assets/default-avatar.png"
+                    usuario: {
+                        nombre: "Error",
+                        apellidoPaterno: "Cargando",
+                        apellidoMaterno: "",
+                        correo: "error@cargando.com",
+                        genero: "N/A",
+                        fechaNacimiento: null,
+                        fotoPerfil: "assets/default-avatar.png"
+                    },
+                    paisNacimiento: "N/A",
+                    nacionalidad: "N/A"
                 };
                 this.displayUserInfo(userData);
             });
@@ -151,12 +160,12 @@ export default class ProfileManager {
             if (usuario.fechaNacimiento && usuario.fechaNacimiento !== '0000-00-00') {
                 birthDate.textContent = this.formatDate(usuario.fechaNacimiento);
             } else {
-                birthDate.textContent = "Sin fecha"; // Muestra esto si no hay fecha
+                birthDate.textContent = "No especificado";
             }
         }
-        if (gender) gender.textContent = usuario.genero;
-        if (birthCountry) birthCountry.textContent = userData.paisNacimiento;
-        if (nationality) nationality.textContent = userData.nacionalidad;
+        if (gender) gender.textContent = usuario.genero || 'No especificado';
+        if (birthCountry) birthCountry.textContent = userData.paisNacimiento || 'No especificado';
+        if (nationality) nationality.textContent = userData.nacionalidad || 'No especificado';
         if (email) email.textContent = usuario.correo;
         if (profileImage) profileImage.src = usuario.fotoPerfil ?? 'assets/default-avatar.png';
     }
@@ -164,42 +173,21 @@ export default class ProfileManager {
     async loadDropdownData() {
         try {
             // Obtener países
-            const response = await fetch('index.php?controller=api&action=getPaises', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await fetch('index.php?controller=api&action=getPaises');
             const data = await response.json();
-            this.countries = Array.isArray(data.data)
-                ? data.data.map(pais => ({
-                    id: pais.id,
-                    name: pais.nombre
-                }))
+            this.countries = (data.success && Array.isArray(data.data))
+                ? data.data.map(pais => ({ id: pais.id, name: pais.nombre }))
                 : [];
 
             // Obtener categorías
-            const catResponse = await fetch('index.php?controller=api&action=getCategorias', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            const catResponse = await fetch('index.php?controller=api&action=getCategorias');
             const catData = await catResponse.json();
-            this.categories = Array.isArray(catData.data)
-                ? catData.data.map(cat => ({
-                    id: cat.id,
-                    name: cat.nombre
-                }))
+            this.categories = (catData.success && Array.isArray(catData.data))
+                ? catData.data.map(cat => ({ id: cat.id, name: cat.nombre }))
                 : [];
 
-            // NUEVO: Obtener mundiales desde la base de datos
-            const mundialesResponse = await fetch('index.php?controller=api&action=getMundiales', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            // Obtener mundiales
+            const mundialesResponse = await fetch('index.php?controller=api&action=getMundiales');
             const mundialesData = await mundialesResponse.json();
         
             if (mundialesData.success && Array.isArray(mundialesData.data)) {
@@ -225,6 +213,7 @@ export default class ProfileManager {
         
         [nacionalidadSelect, paisNacimientoSelect].forEach(select => {
             if (select) {
+                select.innerHTML = '<option value="">Selecciona...</option>'; // Reset
                 this.countries.forEach(country => {
                     const option = document.createElement('option');
                     option.value = country.id;
@@ -237,6 +226,7 @@ export default class ProfileManager {
         // Populate mundiales dropdown
         const mundialSelect = document.getElementById('postMundial');
         if (mundialSelect) {
+            mundialSelect.innerHTML = '<option value="">Selecciona un mundial...</option>'; // Reset
             this.mundiales.forEach(mundial => {
                 const option = document.createElement('option');
                 option.value = mundial.id;
@@ -248,6 +238,7 @@ export default class ProfileManager {
         // Populate categories as interactive pills
         const categoriesContainer = document.getElementById('categoriesContainer');
         if (categoriesContainer) {
+            categoriesContainer.innerHTML = ''; // Reset
             this.categories.forEach(category => {
                 const categoryItem = document.createElement('div');
                 categoryItem.className = 'category-item';
@@ -259,19 +250,10 @@ export default class ProfileManager {
                 `;
                 
                 const checkbox = categoryItem.querySelector('input');
-                const pill = categoryItem.querySelector('.category-pill');
                 
-                // Event listeners para el efecto visual
                 checkbox.addEventListener('change', () => {
                     this.updateSelectedCategories();
                     this.updateCategoryCounter();
-                });
-                
-                // Click en la píldora para alternar
-                pill.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    checkbox.checked = !checkbox.checked;
-                    checkbox.dispatchEvent(new Event('change'));
                 });
                 
                 categoriesContainer.appendChild(categoryItem);
@@ -285,77 +267,45 @@ export default class ProfileManager {
 
     async loadUserPosts() {
         try {
-            // Simulación de posts del usuario con multimedia - aquí conectarías con tu backend
-            this.userPosts = [
-                {
-                    id: 1,
-                    title: "Mi análisis del Mundial de Qatar 2022",
-                    content: "El mundial de Qatar fue espectacular, especialmente la final entre Argentina y Francia. Messi finalmente consiguió su tan ansiado mundial y demostró por qué es considerado el GOAT por muchos. La final fue épica con penales incluidos.",
-                    status: "approved",
-                    fechaCreacion: "2024-12-15",
-                    mundial: "Qatar 2022",
-                    categorias: ["Análisis", "Opinión"],
-                    multimedia: [
-                        {
-                            type: 'image',
-                            src: 'assets/posts/qatar-final.jpg',
-                            alt: 'Final de Qatar 2022'
-                        },
-                        {
-                            type: 'image',
-                            src: 'assets/posts/messi-trofeo.jpg',
-                            alt: 'Messi con el trofeo'
-                        },
-                        {
-                            type: 'video',
-                            src: 'assets/posts/highlights-final.mp4',
-                            poster: 'assets/posts/video-poster.jpg'
-                        }
-                    ]
-                },
-                {
-                    id: 2,
-                    title: "Historia de los mundiales mexicanos",
-                    content: "México ha sido sede de dos mundiales increíbles en 1970 y 1986. En 1970 fue el primer mundial transmitido a color y en 1986 vimos la mano de Dios de Maradona. Ambos eventos marcaron la historia del fútbol mundial.",
-                    status: "pending",
-                    fechaCreacion: "2024-12-14",
-                    mundial: "México 1986",
-                    categorias: ["Historia"],
-                    multimedia: [
-                        {
-                            type: 'image',
-                            src: 'assets/posts/mexico-70.jpg',
-                            alt: 'Mundial México 1970'
-                        },
-                        {
-                            type: 'image',
-                            src: 'assets/posts/maradona-86.jpg',
-                            alt: 'Maradona 1986'
-                        }
-                    ]
-                },
-                {
-                    id: 3,
-                    title: "Predicciones para el Mundial 2026",
-                    content: "Con la expansión a 48 equipos, el próximo mundial será muy diferente. Estados Unidos, México y Canadá serán sedes conjuntas por primera vez en la historia. ¿Estará preparado el mundo para este cambio?",
-                    status: "rejected",
-                    fechaCreacion: "2024-12-13",
-                    mundial: "Estados Unidos 2026",
-                    categorias: ["Predicciones"],
-                    multimedia: [
-                        {
-                            type: 'image',
-                            src: 'assets/posts/mundial-2026.jpg',
-                            alt: 'Logo Mundial 2026'
-                        }
-                    ]
-                }
-            ];
+            // AÑADIDA LLAMADA A API
+            const response = await fetch('index.php?controller=api&action=getPublicacionesUsuario');
+            if (!response.ok) {
+                throw new Error('Error al cargar las publicaciones del usuario');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Normalizar el campo `estatus` para que coincida con los valores usados en las pestañas
+                const statusMap = {
+                    'Aprobado': 'approved',
+                    'Aprobada': 'approved',
+                    'Aprobadas': 'approved',
+                    'Pendiente': 'pending',
+                    'Pendientes': 'pending',
+                    'Rechazado': 'rejected',
+                    'Rechazada': 'rejected',
+                    'Rechazadas': 'rejected'
+                };
+
+                this.userPosts = data.data.map(p => {
+                    const raw = p.estatus || p.status || '';
+                    const mapped = statusMap[raw] || raw.toString().toLowerCase();
+                    return Object.assign({}, p, { estatus: mapped });
+                });
+                console.log('[perfil] userPosts cargadas:', this.userPosts.length, this.userPosts.slice(0,3));
+            } else {
+                console.error('Error fetching user posts:', data.message);
+                this.userPosts = [];
+            }
 
             this.updatePostsCounts();
             this.showPosts(this.currentTab);
         } catch (error) {
             console.error('Error loading user posts:', error);
+            this.userPosts = []; // Asegurar que sea un array en caso de error
+            this.updatePostsCounts();
+            this.showPosts(this.currentTab);
         }
     }
 
@@ -373,7 +323,7 @@ export default class ProfileManager {
 
         // Filter and display posts
         const filteredPosts = this.userPosts.filter(post => {
-            return post.status === status;
+            return post.estatus === status; // MODIFICADO: de post.status a post.estatus
         });
 
         this.renderPosts(filteredPosts);
@@ -384,13 +334,12 @@ export default class ProfileManager {
 
         if (posts.length === 0) {
             this.userPostsGrid.style.display = 'none';
-            this.noPosts.style.display = 'block';
+            if (this.noPosts) this.noPosts.style.display = 'block';
             return;
         }
 
+        if (this.noPosts) this.noPosts.style.display = 'none';
         this.userPostsGrid.style.display = 'grid';
-        this.noPosts.style.display = 'none';
-
         this.userPostsGrid.innerHTML = posts.map(post => this.createPostHTML(post)).join('');
     }
 
@@ -401,10 +350,10 @@ export default class ProfileManager {
             rejected: { icon: 'fas fa-times-circle', text: 'Rechazado', class: 'rejected' }
         };
 
-        const config = statusConfig[post.status];
+        const config = statusConfig[post.estatus] || statusConfig.pending;
         const formattedDate = this.formatDate(post.fechaCreacion);
-        const categories = Array.isArray(post.categorias) ? post.categorias.join(', ') : post.categorias;
-        const isClickable = post.status === 'approved';
+        const categories = Array.isArray(post.categorias) ? post.categorias.join(', ') : '';
+        const isClickable = post.estatus === 'approved';
 
         // Crear carrusel de multimedia
         const createMultimediaCarousel = (multimedia) => {
@@ -413,17 +362,18 @@ export default class ProfileManager {
             const carouselId = `carousel-${post.id}`;
             
             const slides = multimedia.map((item, index) => {
-                if (item.type === 'image') {
+                // MODIFICADO: La API envía 'type' (MIME) y 'src' (URL Base64)
+                if (item.type.startsWith('image/')) {
                     return `
                         <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <img src="${item.src}" alt="${item.alt}" onerror="this.parentElement.style.display='none'">
+                            <img src="${item.src}" alt="Multimedia de publicación" onerror="this.parentElement.style.display='none'">
                         </div>
                     `;
-                } else if (item.type === 'video') {
+                } else if (item.type.startsWith('video/')) {
                     return `
                         <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <video controls poster="${item.poster || ''}" preload="metadata">
-                                <source src="${item.src}" type="video/mp4">
+                            <video controls preload="metadata">
+                                <source src="${item.src}" type="${item.type}">
                                 Tu navegador no soporta el elemento video.
                             </video>
                         </div>
@@ -461,19 +411,19 @@ export default class ProfileManager {
         return `
             <div class="post-card fade-in ${isClickable ? 'clickable' : ''}" ${isClickable ? `onclick="profileManager.openPostStats(${post.id})"` : ''}>
                 <div class="post-header">
-                    <h4>${post.title}</h4>
+                    <h4>${this.truncateText(post.contenido, 50)}</h4>
                     <div class="post-author-info">
                         <span><i class="fas fa-calendar"></i> ${formattedDate}</span>
                     </div>
                 </div>
                 
                 <div class="post-content">
-                    <p>${this.truncateText(post.content, 150)}</p>
+                    <p>${this.truncateText(post.contenido, 150)}</p>
                     ${createMultimediaCarousel(post.multimedia)}
                 </div>
                 
                 <div class="post-meta">
-                    <small><strong>Mundial:</strong> ${post.mundial}</small>
+                    <small><strong>Mundial:</strong> ${post.mundialAño}</small>
                     <small><strong>Categorías:</strong> ${categories}</small>
                 </div>
                 
@@ -504,11 +454,9 @@ export default class ProfileManager {
         let currentIndex = parseInt(activeSlide.dataset.index);
         let nextIndex = (currentIndex + 1) % slides.length;
 
-        // Remove active class from current elements
         activeSlide.classList.remove('active');
         if (activeIndicator) activeIndicator.classList.remove('active');
 
-        // Add active class to next elements
         slides[nextIndex].classList.add('active');
         if (indicators[nextIndex]) indicators[nextIndex].classList.add('active');
     }
@@ -527,11 +475,9 @@ export default class ProfileManager {
         let currentIndex = parseInt(activeSlide.dataset.index);
         let prevIndex = currentIndex === 0 ? slides.length - 1 : currentIndex - 1;
 
-        // Remove active class from current elements
         activeSlide.classList.remove('active');
         if (activeIndicator) activeIndicator.classList.remove('active');
 
-        // Add active class to previous elements
         slides[prevIndex].classList.add('active');
         if (indicators[prevIndex]) indicators[prevIndex].classList.add('active');
     }
@@ -543,20 +489,18 @@ export default class ProfileManager {
         const slides = carousel.querySelectorAll('.carousel-slide');
         const indicators = carousel.querySelectorAll('.carousel-indicator');
         
-        // Remove active class from all elements
         slides.forEach(slide => slide.classList.remove('active'));
         indicators.forEach(indicator => indicator.classList.remove('active'));
 
-        // Add active class to target elements
         if (slides[slideIndex]) slides[slideIndex].classList.add('active');
         if (indicators[slideIndex]) indicators[slideIndex].classList.add('active');
     }
 
     updatePostsCounts() {
         const counts = {
-            approved: this.userPosts.filter(p => p.status === 'approved').length,
-            pending: this.userPosts.filter(p => p.status === 'pending').length,
-            rejected: this.userPosts.filter(p => p.status === 'rejected').length
+            approved: this.userPosts.filter(p => p.estatus === 'approved').length,
+            pending: this.userPosts.filter(p => p.estatus === 'pending').length,
+            rejected: this.userPosts.filter(p => p.estatus === 'rejected').length
         };
 
         if (this.approvedCount) this.approvedCount.textContent = counts.approved;
@@ -604,11 +548,14 @@ export default class ProfileManager {
             modal.classList.remove('active');
         }
         
-        if (this.modalOverlay) {
-            this.modalOverlay.classList.remove('active');
+        // Solo cerrar overlay si no hay otros modales activos
+        const activeModals = document.querySelectorAll('.modal.active');
+        if (activeModals.length === 0) {
+            if (this.modalOverlay) {
+                this.modalOverlay.classList.remove('active');
+            }
+            document.body.style.overflow = 'auto';
         }
-        
-        document.body.style.overflow = 'auto';
     }
 
     closeAllModals() {
@@ -633,208 +580,118 @@ export default class ProfileManager {
             this.passwordForm.reset();
             const passwordStrength = document.getElementById('passwordStrength');
             const passwordMatch = document.getElementById('passwordMatch');
-            if (passwordStrength) passwordStrength.textContent = '';
-            if (passwordMatch) passwordMatch.textContent = '';
+            if (passwordStrength) passwordStrength.style.display = 'none';
+            if (passwordMatch) passwordMatch.style.display = 'none';
         }
     }
 
-    
     populateInfoForm() {
-    if (!this.userInfo) {
-        console.error("No hay información de usuario para llenar el formulario.");
-        return;
-    }
-
-    const usuario = this.userInfo.usuario;
-
-    // Llenar campos de texto
-    document.getElementById('nombre').value = usuario.nombre || '';
-    document.getElementById('apellidoPaterno').value = usuario.apellidoPaterno || '';
-    document.getElementById('apellidoMaterno').value = usuario.apellidoMaterno || '';
-    document.getElementById('genero').value = usuario.genero || '';
-
-    // Llenar fecha de nacimiento
-    const fechaValida = (usuario.fechaNacimiento && usuario.fechaNacimiento !== '0000-00-00') ? usuario.fechaNacimiento : '';
-    document.getElementById('fechaNacimiento').value = fechaValida;
-
-    // Llenar selects de país y nacionalidad
-    document.getElementById('paisNacimiento').value = usuario.paisNacimiento || '';
-    document.getElementById('nacionalidad').value = usuario.nacionalidad || '';
-
-    // NUEVO: Configurar el selector de correo con el email actual
-    this.configurarSelectorCorreo(usuario.correo);
-
-    // Limpiar la vista previa de la foto
-    document.getElementById('imagePreview').innerHTML = '';
-    document.getElementById('fotoPerfil').value = '';
-
-    // NUEVO: Validación en tiempo real para nombres
-    const nombreEdit = document.getElementById('nombre');
-    const apellidoPaternoEdit = document.getElementById('apellidoPaterno');
-    const apellidoMaternoEdit = document.getElementById('apellidoMaterno');
-
-    // Remover listeners anteriores para evitar duplicados
-    [nombreEdit, apellidoPaternoEdit, apellidoMaternoEdit].forEach(input => {
-        if (input) {
-            const newInput = input.cloneNode(true);
-            input.parentNode.replaceChild(newInput, input);
+        if (!this.userInfo) {
+            console.error("No hay información de usuario para llenar el formulario.");
+            return;
         }
-    });
 
-    // Agregar nuevos listeners
-    const nombreEditNew = document.getElementById('nombre');
-    const apellidoPaternoEditNew = document.getElementById('apellidoPaterno');
-    const apellidoMaternoEditNew = document.getElementById('apellidoMaterno');
+        const usuario = this.userInfo.usuario;
 
-    [nombreEditNew, apellidoPaternoEditNew, apellidoMaternoEditNew].forEach(input => {
-        input?.addEventListener('input', (e) => {
-            // Permitir solo letras (incluyendo acentos y ñ) y espacios
-            e.target.value = e.target.value.replace(/[^a-záéíóúñüA-ZÁÉÍÓÚÑÜ\s]/g, '');
-        });
-    });
-}
+        document.getElementById('nombre').value = usuario.nombre || '';
+        document.getElementById('apellidoPaterno').value = usuario.apellidoPaterno || '';
+        document.getElementById('apellidoMaterno').value = usuario.apellidoMaterno || '';
+        document.getElementById('genero').value = usuario.genero || '';
 
+        const fechaValida = (usuario.fechaNacimiento && usuario.fechaNacimiento !== '0000-00-00') ? usuario.fechaNacimiento : '';
+        document.getElementById('fechaNacimiento').value = fechaValida;
 
+        document.getElementById('paisNacimiento').value = usuario.paisNacimiento || '';
+        document.getElementById('nacionalidad').value = usuario.nacionalidad || '';
 
+        this.configurarSelectorCorreo(usuario.correo);
 
-//correo
+        document.getElementById('imagePreview').innerHTML = '';
+        document.getElementById('fotoPerfil').value = '';
 
-configurarSelectorCorreo(correoActual) {
-    // Verificar si ya está configurado
-    if (document.getElementById('correoUsuario')) {
-        // Ya existe el selector, solo actualizar valores
-        const [parteLocal, dominio] = correoActual.split('@');
-        document.getElementById('correoUsuario').value = parteLocal || '';
-        document.getElementById('correoDominio').value = dominio || 'gmail.com';
-        return;
-    }
+        // Validación en tiempo real para nombres
+        const nombreEdit = document.getElementById('nombre');
+        const apellidoPaternoEdit = document.getElementById('apellidoPaterno');
+        const apellidoMaternoEdit = document.getElementById('apellidoMaterno');
 
-    // Buscar el input original del correo
-    const correoInput = document.getElementById('correo');
-    if (!correoInput) return;
-
-    // Crear estructura HTML para el selector
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'display: flex; gap: 0.5rem; align-items: center; width: 100%;';
-    
-    const inputCorreo = document.createElement('input');
-    inputCorreo.type = 'text';
-    inputCorreo.id = 'correoUsuario';
-    inputCorreo.placeholder = 'usuario';
-    inputCorreo.style.cssText = 'flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: white;';
-    inputCorreo.required = true;
-
-    const arroba = document.createElement('span');
-    arroba.textContent = '@';
-    arroba.style.cssText = 'font-weight: bold; color: #00ff88; font-size: 1.2rem;';
-
-    const selectDominio = document.createElement('select');
-    selectDominio.id = 'correoDominio';
-    selectDominio.style.cssText = 'flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: white;';
-    selectDominio.innerHTML = `
-        <option value="gmail.com">gmail.com</option>
-        <option value="outlook.com">outlook.com</option>
-        <option value="hotmail.com">hotmail.com</option>
-    `;
-
-    wrapper.appendChild(inputCorreo);
-    wrapper.appendChild(arroba);
-    wrapper.appendChild(selectDominio);
-
-    // Separar el correo actual en partes
-    const [parteLocal, dominio] = correoActual.split('@');
-    inputCorreo.value = parteLocal || '';
-    selectDominio.value = dominio || 'gmail.com';
-
-    // Reemplazar el input original con el nuevo selector
-    correoInput.parentNode.replaceChild(wrapper, correoInput);
-
-    // Validación en tiempo real del correo
-    inputCorreo.addEventListener('input', (e) => {
-        let valor = e.target.value;
-        
-        // No permitir que inicie con punto
-        if (valor.startsWith('.')) {
-            valor = valor.substring(1);
-        }
-        
-        // No permitir puntos consecutivos
-        valor = valor.replace(/\.{2,}/g, '.');
-        
-        // Solo permitir letras, números, puntos, guiones bajos y guiones
-        valor = valor.replace(/[^a-zA-Z0-9._-]/g, '');
-        
-        e.target.value = valor;
-    });
-
-    // Validación al perder el foco
-    inputCorreo.addEventListener('blur', (e) => {
-        const valor = e.target.value;
-        
-        if (valor && !this.validarParteLocalCorreo(valor)) {
-            this.showError('El correo debe:\n• Iniciar con letra o número\n• No contener puntos consecutivos\n• No iniciar con punto');
-            e.target.focus();
-        }
-    });
-}
-
-
-
-validarParteLocalCorreo(parteLocal) {
-    if (!parteLocal || parteLocal.trim() === '') {
-        return false;
-    }
-    
-    // Debe iniciar con letra o número
-    if (!/^[a-zA-Z0-9]/.test(parteLocal)) {
-        return false;
-    }
-    
-    // No debe tener puntos consecutivos
-    if (/\.{2,}/.test(parteLocal)) {
-        return false;
-    }
-    
-    // Solo puede contener letras, números, puntos, guiones y guiones bajos
-    if (!/^[a-zA-Z0-9._-]+$/.test(parteLocal)) {
-        return false;
-    }
-    
-    return true;
-}
-
-
-
-obtenerCorreoCompleto() {
-    const parteLocal = document.getElementById('correoUsuario')?.value;
-    const dominio = document.getElementById('correoDominio')?.value;
-    
-    if (!parteLocal || !dominio) {
-        return null;
-    }
-    
-    if (!this.validarParteLocalCorreo(parteLocal)) {
-        return null;
-    }
-    
-    return `${parteLocal}@${dominio}`;
-}
-
-    
-
-
-    
-    /*populateInfoForm() {
-        // Llenar los datos del formulario con la información actual del usuario
-        const currentData = this.userInfo ? { ...this.userInfo.usuario } : {};
-
-        Object.keys(currentData).forEach(key => {
-            const field = document.getElementById(key);
-            if (field) {
-                field.value = currentData[key];
+        [nombreEdit, apellidoPaternoEdit, apellidoMaternoEdit].forEach(input => {
+            if (input) {
+                // Limpiar listeners antiguos
+                const newInput = input.cloneNode(true);
+                input.parentNode.replaceChild(newInput, input);
+                // Añadir nuevos listeners
+                newInput.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/[^a-záéíóúñüA-ZÁÉÍÓÚÑÜ\s]/g, '');
+                });
             }
         });
-    }*/
+    }
+
+    configurarSelectorCorreo(correoActual) {
+        const correoContainer = document.getElementById('correoContainer');
+        if (!correoContainer) return;
+
+        // Separar el correo actual en partes
+        const [parteLocal, dominio] = correoActual.split('@');
+
+        // Si ya está configurado, solo actualizar valores
+        const inputUsuario = document.getElementById('correoUsuario');
+        const selectDominio = document.getElementById('correoDominio');
+        
+        if (inputUsuario && selectDominio) {
+            inputUsuario.value = parteLocal || '';
+            selectDominio.value = dominio || 'gmail.com';
+            return;
+        }
+
+        // Crear estructura HTML si no existe
+        correoContainer.innerHTML = `
+            <input type="text" id="correoUsuario" placeholder="usuario" style="flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: white;" required>
+            <span style="font-weight: bold; color: #00ff88; font-size: 1.2rem;">@</span>
+            <select id="correoDominio" style="flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: white;">
+                <option value="gmail.com">gmail.com</option>
+                <option value="outlook.com">outlook.com</option>
+                <option value="hotmail.com">hotmail.com</option>
+            </select>
+        `;
+        
+        // Asignar valores
+        document.getElementById('correoUsuario').value = parteLocal || '';
+        document.getElementById('correoDominio').value = dominio || 'gmail.com';
+
+        // Validación en tiempo real del correo
+        document.getElementById('correoUsuario').addEventListener('input', (e) => {
+            let valor = e.target.value;
+            if (valor.startsWith('.')) valor = valor.substring(1);
+            valor = valor.replace(/\.{2,}/g, '.');
+            valor = valor.replace(/[^a-zA-Z0-9._-]/g, '');
+            e.target.value = valor;
+        });
+
+        document.getElementById('correoUsuario').addEventListener('blur', (e) => {
+            const valor = e.target.value;
+            if (valor && !this.validarParteLocalCorreo(valor)) {
+                this.showError('El correo debe:\n• Iniciar con letra o número\n• No contener puntos consecutivos');
+                e.target.focus();
+            }
+        });
+    }
+
+    validarParteLocalCorreo(parteLocal) {
+        if (!parteLocal || parteLocal.trim() === '') return false;
+        if (!/^[a-zA-Z0-9]/.test(parteLocal)) return false;
+        if (/\.{2,}/.test(parteLocal)) return false;
+        if (!/^[a-zA-Z0-9._-]+$/.test(parteLocal)) return false;
+        return true;
+    }
+
+    obtenerCorreoCompleto() {
+        const parteLocal = document.getElementById('correoUsuario')?.value;
+        const dominio = document.getElementById('correoDominio')?.value;
+        if (!parteLocal || !dominio) return null;
+        if (!this.validarParteLocalCorreo(parteLocal)) return null;
+        return `${parteLocal}@${dominio}`;
+    }
 
     resetCreatePostForm() {
         if (this.createPostForm) {
@@ -850,171 +707,131 @@ obtenerCorreoCompleto() {
     }
 
     handlePasswordChange(e) {
-    e.preventDefault();
-    
-    const currentPassword = document.getElementById('currentPassword').value;
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-
-    // Validaciones
-    if (!currentPassword || !newPassword || !confirmPassword) {
-        this.showError('Todos los campos son obligatorios');
-        return;
-    }
-
-    if (newPassword !== confirmPassword) {
-        this.showError('Las contraseñas no coinciden');
-        return;
-    }
-
-    if (newPassword.length < 8) {
-        this.showError('La contraseña debe tener al menos 8 caracteres');
-        return;
-    }
-
-    // Validar fortaleza de contraseña
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!regex.test(newPassword)) {
-        this.showError('La contraseña debe tener:\n- Mínimo 8 caracteres\n- Una mayúscula\n- Una minúscula\n- Un número\n- Un caracter especial (@$!%*?&)');
-        return;
-    }
-
-    // Enviar al backend
-    fetch('index.php?controller=api&action=updatePassword', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            currentPassword: currentPassword,
-            newPassword: newPassword
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            this.showSuccess('Contraseña actualizada exitosamente');
-            this.closeModal('passwordModal');
-            this.resetPasswordForm();
-        } else {
-            this.showError(data.message || 'Error al actualizar la contraseña');
-        }
-    })
-    .catch(error => {
-        console.error('Error al cambiar contraseña:', error);
-        this.showError('Error de conexión al cambiar la contraseña');
-    });
-    }
-
-
-
-    // nueva versión de handleInfoUpdate que maneja la foto de perfil
-
-    
-
-
-    async handleInfoUpdate(e) {
-    e.preventDefault();
-
-    // Validar nombres
-    const nombre = document.getElementById('nombre').value;
-    const apellidoPaterno = document.getElementById('apellidoPaterno').value;
-    const apellidoMaterno = document.getElementById('apellidoMaterno').value;
-
-    if (!this.validarNombre(nombre, 'Nombre')) return;
-    if (!this.validarNombre(apellidoPaterno, 'Apellido Paterno')) return;
-    if (apellidoMaterno && !this.validarNombre(apellidoMaterno, 'Apellido Materno')) return;
-
-    // NUEVO: Obtener el correo completo usando el selector
-    const correoCompleto = this.obtenerCorreoCompleto();
-    if (!correoCompleto) {
-        this.showError("Por favor, ingresa un correo válido.");
-        return;
-    }
-
-    const fotoPerfilInput = document.getElementById('fotoPerfil');
-    const file = fotoPerfilInput.files[0];
-    let fotoPerfilBase64 = null;
-
-    // Procesar nueva foto si existe
-    if (file) {
-        if (file.size > 5 * 1024 * 1024) {
-            this.showError("La imagen no puede superar los 5MB");
-            return;
-        }
-        fotoPerfilBase64 = await this.toBase64(file);
-    }
-
-    // Recolectar datos del formulario
-    const userData = {
-        nombre: nombre,
-        apellidoPaterno: apellidoPaterno,
-        apellidoMaterno: apellidoMaterno,
-        correo: correoCompleto, // CAMBIADO: Usar el correo del selector
-        genero: document.getElementById('genero').value,
-        fechaNacimiento: document.getElementById('fechaNacimiento').value || null,
-        nacionalidad: document.getElementById('nacionalidad').value,
-        paisNacimiento: document.getElementById('paisNacimiento').value,
-        fotoPerfil: fotoPerfilBase64
-    };
-
-    // Enviar al backend
-    try {
-        const response = await fetch('index.php?controller=api&action=updateUser', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData)
-        });
-    
-        const data = await response.json();
-
-        if (data.success) {
-            this.showSuccess('¡Perfil actualizado con éxito!');
-            this.closeModal('infoModal');
-            await this.loadUserData();
-        } else {
-            this.showError(data.message || 'Error al actualizar el perfil');
-        }
-    } catch (error) {
-        console.error('Error al guardar:', error);
-        this.showError('Error de conexión al guardar los cambios');
-    }
-}
-
-validarNombre(nombre, campo) {
-    if (!nombre || nombre.trim() === '') {
-        this.showError(`El campo ${campo} es obligatorio.`);
-        return false;
-    }
-
-    const regex = /^[a-záéíóúñüA-ZÁÉÍÓÚÑÜ\s]+$/;
-    if (!regex.test(nombre)) {
-        this.showError(`El campo ${campo} solo puede contener letras.`);
-        return false;
-    }
-
-    return true;
-}
-
-
-    /*handleInfoUpdate(e) {
         e.preventDefault();
         
-        const formData = new FormData(this.infoForm);
-        const userData = {};
-        
-        for (let [key, value] of formData.entries()) {
-            if (key !== 'fotoPerfil' || value.size > 0) {
-                userData[key] = value;
-            }
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            this.showError('Todos los campos son obligatorios');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            this.showError('Las contraseñas no coinciden');
+            return;
         }
 
-        // Aquí enviarías los datos al backend
-        this.simulateRequest(() => {
-            this.showSuccess('Información actualizada exitosamente');
-            this.closeModal('infoModal');
-            // Actualizar la visualización con los nuevos datos
-            this.loadUserData();
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!regex.test(newPassword)) {
+            this.showError('Contraseña insegura. Requiere: 8+ caracteres, mayúscula, minúscula, número y símbolo (@$!%*?&)');
+            return;
+        }
+
+        fetch('index.php?controller=api&action=updatePassword', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                currentPassword: currentPassword,
+                newPassword: newPassword
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.showSuccess('Contraseña actualizada exitosamente');
+                this.closeModal('passwordModal');
+                this.resetPasswordForm();
+            } else {
+                this.showError(data.message || 'Error al actualizar la contraseña');
+            }
+        })
+        .catch(error => {
+            console.error('Error al cambiar contraseña:', error);
+            this.showError('Error de conexión al cambiar la contraseña');
         });
-    }*/
+    }
+
+    async handleInfoUpdate(e) {
+        e.preventDefault();
+
+        const nombre = document.getElementById('nombre').value;
+        const apellidoPaterno = document.getElementById('apellidoPaterno').value;
+        const apellidoMaterno = document.getElementById('apellidoMaterno').value;
+
+        if (!this.validarNombre(nombre, 'Nombre')) return;
+        if (!this.validarNombre(apellidoPaterno, 'Apellido Paterno')) return;
+        if (apellidoMaterno && !this.validarNombre(apellidoMaterno, 'Apellido Materno', true)) return; // true = opcional
+
+        const correoCompleto = this.obtenerCorreoCompleto();
+        if (!correoCompleto) {
+            this.showError("Por favor, ingresa un correo válido.");
+            return;
+        }
+
+        const fotoPerfilInput = document.getElementById('fotoPerfil');
+        const file = fotoPerfilInput.files[0];
+        let fotoPerfilBase64 = null;
+
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                this.showError("La imagen no puede superar los 5MB");
+                return;
+            }
+            // Solo necesitamos la parte Base64, sin el prefijo "data:image/..."
+            fotoPerfilBase64 = (await this.toBase64(file)).split(',')[1];
+        }
+
+        const userData = {
+            nombre: nombre,
+            apellidoPaterno: apellidoPaterno,
+            apellidoMaterno: apellidoMaterno,
+            correo: correoCompleto,
+            genero: document.getElementById('genero').value,
+            fechaNacimiento: document.getElementById('fechaNacimiento').value || null,
+            nacionalidad: document.getElementById('nacionalidad').value,
+            paisNacimiento: document.getElementById('paisNacimiento').value,
+            fotoPerfil: fotoPerfilBase64 // Enviar solo Base64 o null
+        };
+
+        try {
+            const response = await fetch('index.php?controller=api&action=updateUser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData)
+            });
+        
+            const data = await response.json();
+
+            if (data.success) {
+                this.showSuccess('¡Perfil actualizado con éxito!');
+                this.closeModal('infoModal');
+                this.loadUserData(); // Recargar datos
+            } else {
+                this.showError(data.message || 'Error al actualizar el perfil');
+            }
+        } catch (error) {
+            console.error('Error al guardar:', error);
+            this.showError('Error de conexión al guardar los cambios');
+        }
+    }
+
+    validarNombre(nombre, campo, opcional = false) {
+        if (opcional && (!nombre || nombre.trim() === '')) return true;
+
+        if (!opcional && (!nombre || nombre.trim() === '')) {
+            this.showError(`El campo ${campo} es obligatorio.`);
+            return false;
+        }
+
+        const regex = /^[a-záéíóúñüA-ZÁÉÍÓÚÑÜ\s]+$/;
+        if (!regex.test(nombre)) {
+            this.showError(`El campo ${campo} solo puede contener letras y espacios.`);
+            return false;
+        }
+
+        return true;
+    }
 
     async handleCreatePost(e) {
         e.preventDefault();
@@ -1026,25 +843,25 @@ validarNombre(nombre, campo) {
             this.showError('El contenido de la publicación es obligatorio');
             return;
         }
-
         if (!mundialId) {
             this.showError('Debes seleccionar un mundial');
             return;
         }
-
         if (this.selectedCategories.length === 0) {
             this.showError('Debes seleccionar al menos una categoría');
             return;
         }
 
-        // Convertir archivos a Base64
         const multimediaBase64 = [];
         for (const file of this.selectedFiles) {
             try {
-                const base64 = await this.toBase64(file);
-                multimediaBase64.push(base64);
+                // Quitar el prefijo "data:..."
+                const base64String = (await this.toBase64(file)).split(',')[1];
+                multimediaBase64.push(base64String);
             } catch (error) {
                 console.error('Error convirtiendo archivo:', error);
+                this.showError(`Error al procesar el archivo ${file.name}`);
+                return;
             }
         }
 
@@ -1054,6 +871,10 @@ validarNombre(nombre, campo) {
             categorias: this.selectedCategories,
             multimedia: multimediaBase64
         };
+
+        const submitBtn = this.createPostForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
         try {
             const response = await fetch('index.php?controller=api&action=crearPublicacion', {
@@ -1068,18 +889,17 @@ validarNombre(nombre, campo) {
                 this.showSuccess('Publicación enviada para revisión');
                 this.closeModal('createPostModal');
                 this.resetCreatePostForm();
-            
-                // Recargar publicaciones del usuario
-                await this.loadUserPosts();
-            
-                // Cambiar a pestaña de pendientes
-                this.showPosts('pending');
+                await this.loadUserPosts(); // Recargar publicaciones
+                this.showPosts('pending'); // Cambiar a pestaña de pendientes
             } else {
                 this.showError(data.message || 'Error al crear la publicación');
             }
         } catch (error) {
             console.error('Error:', error);
             this.showError('Error de conexión al crear la publicación');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Enviar a Revisión';
         }
     }
 
@@ -1095,7 +915,6 @@ validarNombre(nombre, campo) {
             this.showError('Solo se permiten archivos de imagen');
             return;
         }
-
         if (file.size > 5 * 1024 * 1024) { // 5MB
             this.showError('La imagen no puede superar los 5MB');
             return;
@@ -1108,7 +927,7 @@ validarNombre(nombre, campo) {
                 preview.innerHTML = `
                     <div class="preview-item">
                         <img src="${e.target.result}" alt="Vista previa">
-                        <button type="button" class="preview-remove" onclick="this.parentElement.parentElement.innerHTML=''">
+                        <button type="button" class="preview-remove" onclick="document.getElementById('imagePreview').innerHTML=''; document.getElementById('fotoPerfil').value='';">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -1123,21 +942,17 @@ validarNombre(nombre, campo) {
         let validFiles = [];
 
         newFiles.forEach(file => {
-            // AUMENTADO A 50MB
-            if (file.size > 50 * 1024 * 1024) {
-                this.showError(`El archivo ${file.name} supera los 50MB permitidos`);
+            if (file.size > 50 * 1024 * 1024) { // 50MB
+                this.showError(`El archivo ${file.name} supera los 50MB`);
                 return;
             }
-
             if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
                 this.showError(`El archivo ${file.name} no es un formato válido`);
                 return;
             }
-
             const isDuplicate = this.selectedFiles.some(existingFile => 
                 existingFile.name === file.name && existingFile.size === file.size
             );
-
             if (!isDuplicate) {
                 validFiles.push(file);
             }
@@ -1164,11 +979,11 @@ validarNombre(nombre, campo) {
 
                 const mediaElement = file.type.startsWith('image/') 
                     ? `<img src="${e.target.result}" alt="Vista previa" title="${file.name}">` 
-                    : `<video src="${e.target.result}" controls title="${file.name}"></video>`;
+                    : `<video src="${e.target.result}" muted title="${file.name}"></video>`; // muted para videos
 
                 previewItem.innerHTML = `
                     ${mediaElement}
-                    <button type="button" class="preview-remove" onclick="profileManager.removeFile(${index})" title="Eliminar archivo">
+                    <button type="button" class="preview-remove" data-index="${index}" title="Eliminar archivo">
                         <i class="fas fa-times"></i>
                     </button>
                     <div class="file-info">
@@ -1176,24 +991,28 @@ validarNombre(nombre, campo) {
                         <span class="file-size">${this.formatFileSize(file.size)}</span>
                     </div>
                 `;
-
+                
                 preview.appendChild(previewItem);
+
+                // Añadir evento al botón de eliminar
+                previewItem.querySelector('.preview-remove').addEventListener('click', (event) => {
+                    const idxToRemove = parseInt(event.currentTarget.dataset.index);
+                    this.removeFile(idxToRemove);
+                });
             };
             reader.readAsDataURL(file);
         });
     }
 
-    removeFile(index) {
-        this.selectedFiles.splice(index, 1);
-        this.displayMultimediaPreview();
+    removeFile(indexToRemove) {
+        this.selectedFiles = this.selectedFiles.filter((_, index) => index !== indexToRemove);
+        this.displayMultimediaPreview(); // Re-renderizar la vista previa
         this.updateMultimediaCounter();
     }
 
     clearMultimediaPreview() {
         const preview = document.getElementById('multimediaPreview');
-        if (preview) {
-            preview.innerHTML = '';
-        }
+        if (preview) preview.innerHTML = '';
         this.updateMultimediaCounter();
     }
 
@@ -1202,9 +1021,10 @@ validarNombre(nombre, campo) {
         const fileCount = document.getElementById('fileCount');
         
         if (counter && fileCount) {
-            if (this.selectedFiles.length > 0) {
+            const count = this.selectedFiles.length;
+            if (count > 0) {
                 counter.style.display = 'flex';
-                fileCount.textContent = this.selectedFiles.length;
+                fileCount.textContent = count;
             } else {
                 counter.style.display = 'none';
             }
@@ -1240,69 +1060,76 @@ validarNombre(nombre, campo) {
     // ================================
 
     validatePasswordStrength() {
-    const password = document.getElementById('newPassword').value;
-    const strengthIndicator = document.getElementById('passwordStrength');
-    
-    if (!strengthIndicator) return;
+        const password = document.getElementById('newPassword').value;
+        const strengthIndicator = document.getElementById('passwordStrength');
+        if (!strengthIndicator) return;
 
-    let strength = 'weak';
-    let message = 'Muy débil';
-    let color = '#ff4757';
-    
-    if (password.length === 0) {
-        strengthIndicator.style.display = 'none';
-        return;
-    }
-
-    strengthIndicator.style.display = 'block';
-    
-    if (password.length >= 8) {
-        strength = 'medium';
-        message = 'Media';
-        color = '#ffa502';
+        let strength = 'weak';
+        let message = 'Muy débil';
+        let color = '#ff4757';
         
-        // Validar mayúsculas, minúsculas, números y caracteres especiales
-        if (password.match(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)) {
-            strength = 'strong';
-            message = 'Fuerte';
-            color = '#00ff88';
+        if (password.length === 0) {
+            strengthIndicator.style.display = 'none';
+            return;
         }
+
+        strengthIndicator.style.display = 'block';
+        
+        if (password.length >= 8) {
+            const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            if (regex.test(password)) {
+                strength = 'strong';
+                message = 'Fuerte';
+                color = '#00ff88';
+            } else if (password.length >= 10 && (password.match(/[a-z]/) && password.match(/[A-Z]/) && password.match(/\d/))) {
+                strength = 'medium';
+                message = 'Media (falta símbolo)';
+                color = '#ffa502';
+            } else {
+                strength = 'weak';
+                message = 'Débil';
+                color = '#ff4757';
+            }
+        }
+
+        strengthIndicator.className = `password-strength ${strength}`;
+        strengthIndicator.style.color = color;
+        strengthIndicator.innerHTML = `<i class="fas fa-shield-alt"></i> ${message}`;
     }
 
-    strengthIndicator.className = `password-strength ${strength}`;
-    strengthIndicator.style.color = color;
-    strengthIndicator.innerHTML = `<i class="fas fa-shield-alt"></i> ${message}`;
-}
+    validatePasswordMatch() {
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const matchIndicator = document.getElementById('passwordMatch');
+        
+        if (!matchIndicator) return;
+        if (confirmPassword.length === 0) {
+            matchIndicator.style.display = 'none';
+            return;
+        }
 
-validatePasswordMatch() {
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const matchIndicator = document.getElementById('passwordMatch');
-    
-    if (!matchIndicator || !confirmPassword) return;
-
-    const isMatch = newPassword === confirmPassword;
-    matchIndicator.style.display = confirmPassword.length > 0 ? 'block' : 'none';
-    matchIndicator.className = `password-match ${isMatch ? 'match' : 'no-match'}`;
-    matchIndicator.style.color = isMatch ? '#00ff88' : '#ff4757';
-    matchIndicator.innerHTML = isMatch 
-        ? '<i class="fas fa-check"></i> Las contraseñas coinciden'
-        : '<i class="fas fa-times"></i> Las contraseñas no coinciden';
-}
+        const isMatch = newPassword === confirmPassword;
+        matchIndicator.style.display = 'block';
+        matchIndicator.className = `password-match ${isMatch ? 'match' : 'no-match'}`;
+        matchIndicator.style.color = isMatch ? '#00ff88' : '#ff4757';
+        matchIndicator.innerHTML = isMatch 
+            ? '<i class="fas fa-check"></i> Las contraseñas coinciden'
+            : '<i class="fas fa-times"></i> Las contraseñas no coinciden';
+    }
 
     updateCharCounter() {
         const content = this.postContent?.value || '';
         const counter = this.charCount;
+        const maxLength = 5000;
         
         if (counter) {
             counter.textContent = content.length;
-            
             const counterElement = counter.parentElement;
             counterElement.classList.remove('warning', 'danger');
             
-            if (content.length > 4500) {
+            if (content.length > maxLength) {
                 counterElement.classList.add('danger');
-            } else if (content.length > 4000) {
+            } else if (content.length > maxLength * 0.9) {
                 counterElement.classList.add('warning');
             }
         }
@@ -1322,20 +1149,11 @@ validatePasswordMatch() {
         }
     }
 
-    // logout() {
-    //     if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
-    //         // Aquí redirigirias al logout del backend
-    //         window.location.href = 'index.php?controller=auth&action=logout';
-    //     }
-    // }
-
     formatDate(dateString) {
         if (!dateString) return "Sin fecha";
-
-        // Crear fecha "manual" dividiendo año, mes, día
         const [year, month, day] = dateString.split('-').map(Number);
-        const date = new Date(year, month - 1, day); // <-- aquí NO se usa UTC
-
+        if (isNaN(year) || isNaN(month) || isNaN(day)) return "Fecha inválida";
+        const date = new Date(year, month - 1, day);
         return date.toLocaleDateString('es-ES', {
             year: 'numeric',
             month: 'long',
@@ -1344,6 +1162,7 @@ validatePasswordMatch() {
     }
 
     truncateText(text, maxLength) {
+        if (!text) return '';
         if (text.length <= maxLength) return text;
         return text.substr(0, maxLength) + '...';
     }
@@ -1362,80 +1181,50 @@ validatePasswordMatch() {
 
     openPostStats(postId) {
         const post = this.userPosts.find(p => p.id === postId);
-        if (!post || post.status !== 'approved') {
+        if (!post || post.estatus !== 'approved') {
             this.showError('Solo se pueden ver estadísticas de publicaciones aprobadas');
             return;
         }
-
         this.loadPostStatistics(post);
         this.showModal('postStatsModal');
     }
 
     async loadPostStatistics(post) {
-        // Simular datos de estadísticas - aquí conectarías con tu backend
+        // Simular datos de estadísticas (MOCK)
         const mockStats = {
             views: Math.floor(Math.random() * 1000) + 50,
             likes: post.likes || Math.floor(Math.random() * 200) + 10,
             comments: post.comments || Math.floor(Math.random() * 50) + 5,
             likedBy: [
                 { name: 'Ana García', avatar: 'assets/avatars/user1.jpg', date: '2024-12-10' },
-                { name: 'Luis Martínez', avatar: 'assets/avatars/user2.jpg', date: '2024-12-09' },
-                { name: 'Sofia López', avatar: 'assets/avatars/user3.jpg', date: '2024-12-08' },
-                { name: 'Miguel Torres', avatar: 'assets/avatars/user4.jpg', date: '2024-12-07' }
+                { name: 'Luis Martínez', avatar: 'assets/avatars/user2.jpg', date: '2024-12-09' }
             ],
             recentComments: [
                 {
                     user: 'Ana García',
                     avatar: 'assets/avatars/user1.jpg',
-                    comment: '¡Excelente análisis! Me encantó tu perspectiva sobre este mundial.',
+                    comment: '¡Excelente análisis!',
                     date: '2024-12-10'
-                },
-                {
-                    user: 'Luis Martínez', 
-                    avatar: 'assets/avatars/user2.jpg',
-                    comment: 'Totalmente de acuerdo contigo. Ese mundial fue histórico.',
-                    date: '2024-12-09'
-                },
-                {
-                    user: 'Sofia López',
-                    avatar: 'assets/avatars/user3.jpg', 
-                    comment: 'Muy interesante tu punto de vista. ¿Podrías profundizar más?',
-                    date: '2024-12-08'
                 }
             ]
         };
-
         this.displayPostStatistics(post, mockStats);
     }
 
     displayPostStatistics(post, stats) {
-        // Actualizar información del post
-        document.getElementById('statsPostTitle').textContent = post.title;
-        document.getElementById('statsPostContent').textContent = post.content;
+        document.getElementById('statsPostTitle').textContent = this.truncateText(post.contenido, 50);
+        document.getElementById('statsPostContent').textContent = post.contenido;
         document.getElementById('statsPostDate').textContent = `Publicado el ${this.formatDate(post.fechaCreacion)}`;
-        document.getElementById('statsPostMundial').textContent = post.mundial;
+        document.getElementById('statsPostMundial').textContent = post.mundialAño;
 
-        // Generar carrusel de multimedia para el modal de estadísticas
         const statsMultimediaContainer = document.getElementById('statsPostMultimedia');
         if (statsMultimediaContainer && post.multimedia && post.multimedia.length > 0) {
             const carouselId = `stats-carousel-${post.id}`;
-            
             const slides = post.multimedia.map((item, index) => {
-                if (item.type === 'image') {
-                    return `
-                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <img src="${item.src}" alt="${item.alt}" onerror="this.parentElement.style.display='none'">
-                        </div>
-                    `;
-                } else if (item.type === 'video') {
-                    return `
-                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <video controls poster="${item.poster || ''}" preload="metadata">
-                                <source src="${item.src}" type="video/mp4">
-                                Tu navegador no soporta el elemento video.
-                            </video>
-                        </div>
-                    `;
+                if (item.type.startsWith('image/')) {
+                    return `<div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}"><img src="${item.src}" alt="Multimedia"></div>`;
+                } else if (item.type.startsWith('video/')) {
+                    return `<div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}"><video controls preload="metadata"><source src="${item.src}" type="${item.type}"></video></div>`;
                 }
                 return '';
             }).join('');
@@ -1445,58 +1234,37 @@ validatePasswordMatch() {
             ).join('') : '';
 
             const navigation = post.multimedia.length > 1 ? `
-                <button class="carousel-nav prev" onclick="profileManager.prevSlide('${carouselId}')" aria-label="Anterior">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="carousel-nav next" onclick="profileManager.nextSlide('${carouselId}')" aria-label="Siguiente">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+                <button class="carousel-nav prev" onclick="profileManager.prevSlide('${carouselId}')"><i class="fas fa-chevron-left"></i></button>
+                <button class="carousel-nav next" onclick="profileManager.nextSlide('${carouselId}')"><i class="fas fa-chevron-right"></i></button>
             ` : '';
 
             statsMultimediaContainer.innerHTML = `
                 <div class="multimedia-carousel" id="${carouselId}">
-                    <div class="carousel-container">
-                        ${slides}
-                    </div>
+                    <div class="carousel-container">${slides}</div>
                     ${navigation}
                     ${indicators ? `<div class="carousel-indicators">${indicators}</div>` : ''}
                 </div>
             `;
         } else if (statsMultimediaContainer) {
-            // Limpiar el contenedor si no hay multimedia
             statsMultimediaContainer.innerHTML = '';
         }
 
-        // Actualizar números de estadísticas
         document.getElementById('statsViews').textContent = stats.views.toLocaleString();
         document.getElementById('statsLikes').textContent = stats.likes.toLocaleString();
         document.getElementById('statsComments').textContent = stats.comments.toLocaleString();
 
-        // Mostrar usuarios que dieron like
         this.displayLikesList(stats.likedBy);
-        
-        // Mostrar comentarios recientes
         this.displayCommentsList(stats.recentComments);
-        
-        // Asegurar que el tab de likes esté activo por defecto
         this.showInteractionTab('likes');
     }
 
     displayLikesList(likedBy) {
         const likesList = document.getElementById('likesList');
         if (!likesList) return;
-
         if (likedBy.length === 0) {
-            likesList.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-heart-broken"></i>
-                    <h4>Sin likes aún</h4>
-                    <p>Sé el primero en dar like a esta publicación</p>
-                </div>
-            `;
+            likesList.innerHTML = `<div class="empty-state"><i class="fas fa-heart-broken"></i><h4>Sin likes aún</h4></div>`;
             return;
         }
-
         likesList.innerHTML = likedBy.map(user => `
             <div class="user-item">
                 <img src="${user.avatar}" alt="${user.name}" onerror="this.src='assets/default-avatar.png'">
@@ -1511,18 +1279,10 @@ validatePasswordMatch() {
     displayCommentsList(comments) {
         const commentsList = document.getElementById('commentsList');
         if (!commentsList) return;
-
         if (comments.length === 0) {
-            commentsList.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-comment-slash"></i>
-                    <h4>Sin comentarios aún</h4>
-                    <p>Sé el primero en comentar esta publicación</p>
-                </div>
-            `;
+            commentsList.innerHTML = `<div class="empty-state"><i class="fas fa-comment-slash"></i><h4>Sin comentarios aún</h4></div>`;
             return;
         }
-
         commentsList.innerHTML = comments.map(comment => `
             <div class="comment-item">
                 <div class="comment-header">
@@ -1536,21 +1296,17 @@ validatePasswordMatch() {
     }
 
     showInteractionTab(tabName) {
-        // Remover clase active de todos los tabs
-        document.querySelectorAll('.section-tabs .tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelectorAll('.interaction-tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-
-        // Activar el tab seleccionado
-        document.querySelector(`.section-tabs .tab-btn[onclick*="${tabName}"]`).classList.add('active');
-        document.getElementById(`${tabName}Tab`).classList.add('active');
+        document.querySelectorAll('.section-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.interaction-tab').forEach(tab => tab.classList.remove('active'));
+        
+        const tabButton = document.querySelector(`.section-tabs .tab-btn[onclick*="'${tabName}'"]`);
+        const tabContent = document.getElementById(`${tabName}Tab`);
+        
+        if(tabButton) tabButton.classList.add('active');
+        if(tabContent) tabContent.classList.add('active');
     }
 
     simulateRequest(callback, delay = 1500) {
-        // Simula una petición al servidor
         setTimeout(callback, delay);
     }
 
@@ -1563,7 +1319,6 @@ validatePasswordMatch() {
     }
 
     showNotification(message, type = 'info') {
-        // Crear notificación temporal
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.style.cssText = `
@@ -1586,18 +1341,16 @@ validatePasswordMatch() {
         notification.innerHTML = `
             <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'}"></i>
-                <span>${message}</span>
+                <span>${message.replace(/\n/g, '<br>')}</span>
             </div>
         `;
 
         document.body.appendChild(notification);
 
-        // Animación de entrada
         setTimeout(() => {
             notification.style.transform = 'translateX(0)';
         }, 100);
 
-        // Auto-remove después de 4 segundos
         setTimeout(() => {
             notification.style.transform = 'translateX(400px)';
             setTimeout(() => {
@@ -1607,7 +1360,6 @@ validatePasswordMatch() {
             }, 300);
         }, 4000);
 
-        // Click para cerrar
         notification.addEventListener('click', () => {
             notification.style.transform = 'translateX(400px)';
             setTimeout(() => {
@@ -1618,15 +1370,14 @@ validatePasswordMatch() {
         });
     }
 
-    // Convertir archivo a Base64 (nueva)
     toBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = error => reject(error);
-    });
-}
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
 }
 
 // Funciones utilitarias globales
@@ -1645,7 +1396,13 @@ window.showInteractionTab = function(tabName) {
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    window.profileManager = new ProfileManager();
+    // Solo inicializa ProfileManager si no estamos en la página de admin
+    // Asumimos que la página de admin tiene un body con class="admin-page" o algo así
+    // Una forma más simple: si perfilAdmin.js se carga, él se encargará.
+    // Aquí solo inicializamos el base.
+    if (typeof AdminProfile === 'undefined') {
+        window.profileManager = new ProfileManager();
+    }
 });
 
 // Manejar clicks fuera del menú móvil para cerrarlo

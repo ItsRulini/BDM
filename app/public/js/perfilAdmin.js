@@ -15,8 +15,7 @@ class AdminProfile extends ProfileManager {
 
     initializeAdminFeatures() {
         // Cargar datos específicos del admin
-        this.loadAdminStats();
-        this.loadUserPosts();
+        this.loadUserPosts(); // Esto cargará los posts Y luego actualizará los stats
         
         // Exponer funciones globales específicas del admin
         window.approvePost = this.approvePost.bind(this);
@@ -27,172 +26,60 @@ class AdminProfile extends ProfileManager {
         window.cancelDeleteComment = this.cancelDeleteComment.bind(this);
     }
 
-    // loadUserData() {
-    //     // datos específicos del administrador
-    //     const admindata = {
-    //         nombre: "admin",
-    //         apellidopaterno: "footgg",
-    //         apellidomaterno: "",
-    //         correo: "admin@footgg.com",
-    //         genero: "masculino",
-    //         fechanacimiento: "1990-01-01",
-    //         nacionalidad: "mexicana",
-    //         paisnacimiento: "méxico",
-    //         fotoperfil: "assets/default-avatar.png"
-    //     };
-
-    //     this.displayUserInfo(admindata);
-    // }
+    // loadUserData() {} // Hereda el loadUserData del padre (perfil.js)
 
     async loadUserPosts() {
         try {
-            // Simulación de posts para moderación - aquí conectarías con tu backend
-            this.userPosts = [
-                {
-                    id: 1,
-                    title: "Mi análisis del Mundial de Qatar 2022",
-                    content: "El mundial de Qatar fue espectacular, especialmente la final entre Argentina y Francia. Messi finalmente consiguió su tan ansiado mundial y demostró por qué es considerado el GOAT por muchos. La final fue épica...",
-                    status: "pending",
-                    fechaCreacion: "2024-12-15",
-                    mundial: "Qatar 2022",
-                    categorias: ["Análisis", "Opinión"],
-                    autor: "Villa González",
-                    autorId: 123,
-                    multimedia: [
-                        {
-                            type: 'image',
-                            src: 'assets/posts/qatar-final.jpg',
-                            alt: 'Final de Qatar 2022'
-                        },
-                        {
-                            type: 'image',
-                            src: 'assets/posts/messi-trofeo.jpg',
-                            alt: 'Messi con el trofeo'
-                        },
-                        {
-                            type: 'video',
-                            src: 'assets/posts/highlights-final.mp4',
-                            poster: 'assets/posts/video-poster.jpg'
-                        }
-                    ]
-                },
-                {
-                    id: 2,
-                    title: "Historia de los mundiales mexicanos",
-                    content: "México ha sido sede de dos mundiales increíbles en 1970 y 1986. En 1970 fue el primer mundial transmitido a color y en 1986 vimos la mano de Dios de Maradona...",
-                    status: "pending",
-                    fechaCreacion: "2024-12-14",
-                    mundial: "México 1986",
-                    categorias: ["Historia"],
-                    autor: "Ana García",
-                    autorId: 124,
-                    multimedia: [
-                        {
-                            type: 'image',
-                            src: 'assets/posts/mexico-70.jpg',
-                            alt: 'Mundial México 1970'
-                        },
-                        {
-                            type: 'image',
-                            src: 'assets/posts/maradona-86.jpg',
-                            alt: 'Maradona 1986'
-                        }
-                    ]
-                },
-                {
-                    id: 3,
-                    title: "Predicciones para el Mundial 2026",
-                    content: "Con la expansión a 48 equipos, el próximo mundial será muy diferente. Estados Unidos, México y Canadá serán sedes conjuntas...",
-                    status: "pending",
-                    fechaCreacion: "2024-12-13",
-                    mundial: "Estados Unidos 2026",
-                    categorias: ["Predicciones"],
-                    autor: "Luis Martínez",
-                    autorId: 125,
-                    multimedia: [
-                        {
-                            type: 'image',
-                            src: 'assets/posts/mundial-2026.jpg',
-                            alt: 'Logo Mundial 2026'
-                        }
-                    ]
-                },
-                {
-                    id: 4,
-                    title: "Los mejores goles de Brasil 2014",
-                    content: "El mundial de Brasil nos dejó goles espectaculares. Desde el golazo de James Rodríguez hasta el increíble tanto de Van Persie...",
-                    status: "approved",
-                    fechaCreacion: "2024-12-12",
-                    mundial: "Brasil 2014",
-                    categorias: ["Historia", "Estadísticas"],
-                    autor: "Sofia López",
-                    autorId: 126,
-                    views: 1234,
-                    likes: 89,
-                    comments: 23,
-                    multimedia: [
-                        {
-                            type: 'video',
-                            src: 'assets/posts/goles-brasil-2014.mp4',
-                            poster: 'assets/posts/brasil-2014-poster.jpg'
-                        },
-                        {
-                            type: 'image',
-                            src: 'assets/posts/james-gol.jpg',
-                            alt: 'Gol de James Rodríguez'
-                        },
-                        {
-                            type: 'image',
-                            src: 'assets/posts/van-persie.jpg',
-                            alt: 'Gol de Van Persie'
-                        }
-                    ]
-                },
-                {
-                    id: 5,
-                    title: "El peor mundial de la historia",
-                    content: "En mi opinión, el mundial de Rusia 2018 fue aburrido y sin emociones reales...",
-                    status: "rejected",
-                    fechaCreacion: "2024-12-11",
-                    mundial: "Rusia 2018",
-                    categorias: ["Opinión"],
-                    autor: "Miguel Torres",
-                    autorId: 127,
-                    razonRechazo: "Contenido ofensivo hacia el evento",
-                    multimedia: [
-                        {
-                            type: 'image',
-                            src: 'assets/posts/rusia-2018.jpg',
-                            alt: 'Mundial Rusia 2018'
-                        },
-                        {
-                            type: 'image',
-                            src: 'assets/posts/rusia-2018.jpg',
-                            alt: 'Mundial Rusia 2018'
-                        },
-                        {
-                            type: 'image',
-                            src: 'assets/posts/rusia-2018.jpg',
-                            alt: 'Mundial Rusia 2018'
-                        }
-                    ]
-                }
-            ];
+            // ⭐ AÑADIDA LLAMADA A API
+            const response = await fetch('index.php?controller=api&action=getTodasPublicaciones');
+            if (!response.ok) {
+                throw new Error('Error al cargar las publicaciones');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Normalizar estatus a los valores que usa la UI: 'pending'|'approved'|'rejected'
+                const statusMap = {
+                    'Aprobado': 'approved',
+                    'Aprobada': 'approved',
+                    'Aprobadas': 'approved',
+                    'Pendiente': 'pending',
+                    'Pendientes': 'pending',
+                    'Rechazado': 'rejected',
+                    'Rechazada': 'rejected',
+                    'Rechazadas': 'rejected'
+                };
+
+                this.userPosts = data.data.map(p => {
+                    const raw = p.estatus || p.status || p.EstatusAprobacion || '';
+                    const mapped = statusMap[raw] || (raw.toString ? raw.toString().toLowerCase() : raw);
+                    return Object.assign({}, p, { estatus: mapped });
+                });
+                console.log('[admin] userPosts cargadas:', this.userPosts.length, this.userPosts.slice(0,5));
+            } else {
+                console.error('Error fetching all posts:', data.message);
+                this.userPosts = [];
+            }
 
             this.updatePostsCounts();
-            this.showPosts(this.currentStatus);
-            this.updateAdminStats();
+            this.showPosts(this.currentStatus); // Muestra 'pending' por defecto
+            this.updateAdminStats(); // Actualiza contadores del dashboard de admin
         } catch (error) {
             console.error('Error loading posts for moderation:', error);
+            this.userPosts = [];
+            this.updatePostsCounts();
+            this.showPosts(this.currentStatus);
         }
     }
 
     loadAdminStats() {
-        // Simular estadísticas del admin
+        // Esta función ahora solo actualiza los stats basados en this.userPosts
         const stats = {
-            pending: this.userPosts?.filter(p => p.status === 'pending').length || 0,
-            approvedToday: 12,
-            rejectedToday: 3
+            pending: this.userPosts?.filter(p => p.estatus === 'pending').length || 0,
+            // Podrías necesitar otra llamada a la API para stats más complejos
+            approvedToday: 0, 
+            rejectedToday: 0
         };
 
         this.displayAdminStats(stats);
@@ -209,7 +96,7 @@ class AdminProfile extends ProfileManager {
     }
 
     updateAdminStats() {
-        const pendingCount = this.userPosts.filter(p => p.status === 'pending').length;
+        const pendingCount = this.userPosts.filter(p => p.estatus === 'pending').length;
         const pendingStats = document.getElementById('pendingStats');
         if (pendingStats) pendingStats.textContent = pendingCount;
     }
@@ -228,7 +115,7 @@ class AdminProfile extends ProfileManager {
 
         // Filter and display posts
         const filteredPosts = this.userPosts.filter(post => {
-            return post.status === status;
+            return post.estatus === status;
         });
 
         this.renderPosts(filteredPosts);
@@ -241,13 +128,13 @@ class AdminProfile extends ProfileManager {
             rejected: { icon: 'fas fa-times-circle', text: 'Rechazado', class: 'rejected' }
         };
 
-        const config = statusConfig[post.status];
+        const config = statusConfig[post.estatus];
         const formattedDate = this.formatDate(post.fechaCreacion);
-        const categories = Array.isArray(post.categorias) ? post.categorias.join(', ') : post.categorias;
+        const categories = Array.isArray(post.categorias) ? post.categorias.join(', ') : '';
         
         // Determinar si es clickeable y qué acción tomar
-        const isClickable = post.status === 'approved' || post.status === 'pending';
-        const clickAction = post.status === 'pending' ? 
+        const isClickable = post.estatus === 'approved' || post.estatus === 'pending';
+        const clickAction = post.estatus === 'pending' ? 
             `onclick="adminProfile.moderatePost(${post.id})"` : 
             `onclick="adminProfile.openPostStats(${post.id})"`;
 
@@ -258,17 +145,18 @@ class AdminProfile extends ProfileManager {
             const carouselId = `carousel-${post.id}`;
             
             const slides = multimedia.map((item, index) => {
-                if (item.type === 'image') {
+                // API envía 'type' (MIME) y 'src' (URL Base64)
+                if (item.type.startsWith('image/')) {
                     return `
                         <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <img src="${item.src}" alt="${item.alt}" onerror="this.parentElement.style.display='none'">
+                            <img src="${item.src}" alt="Multimedia de publicación" onerror="this.parentElement.style.display='none'">
                         </div>
                     `;
-                } else if (item.type === 'video') {
+                } else if (item.type.startsWith('video/')) {
                     return `
                         <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <video controls poster="${item.poster || ''}" preload="metadata">
-                                <source src="${item.src}" type="video/mp4">
+                            <video controls poster="" preload="metadata">
+                                <source src="${item.src}" type="${item.type}">
                                 Tu navegador no soporta el elemento video.
                             </video>
                         </div>
@@ -304,7 +192,7 @@ class AdminProfile extends ProfileManager {
         };
 
         // Crear botones de moderación para posts pendientes
-        const moderationButtons = post.status === 'pending' ? `
+        const moderationButtons = post.estatus === 'pending' ? `
             <div class="moderation-buttons">
                 <button class="btn-moderate approve" onclick="event.stopPropagation(); adminProfile.quickApprove(${post.id})">
                     <i class="fas fa-check"></i> Aprobar
@@ -316,28 +204,28 @@ class AdminProfile extends ProfileManager {
         ` : '';
 
         // Clase adicional para posts pendientes
-        const additionalClass = post.status === 'pending' ? 'pending-moderation' : '';
+        const additionalClass = post.estatus === 'pending' ? 'pending-moderation' : '';
         const priorityClass = post.prioridad ? `priority-${post.prioridad}` : '';
 
         return `
             <div class="post-card fade-in ${isClickable ? 'clickable' : ''} ${additionalClass} ${priorityClass}" ${isClickable ? clickAction : ''}>
                 <div class="post-header">
-                    <h4>${post.title}</h4>
+                    <h4>${this.truncateText(post.contenido, 50)}</h4>
                     <div class="post-author-info">
-                        <span><i class="fas fa-user"></i> ${post.autor}</span>
+                        <span><i class="fas fa-user"></i> ${post.autorNombre}</span>
                         <span><i class="fas fa-calendar"></i> ${formattedDate}</span>
                     </div>
                 </div>
                 
                 <div class="post-content">
-                    <p>${this.truncateText(post.content, 150)}</p>
+                    <p>${this.truncateText(post.contenido, 150)}</p>
                     ${createMultimediaCarousel(post.multimedia)}
                 </div>
                 
                 <div class="post-meta">
-                    <small><strong>Mundial:</strong> ${post.mundial}</small>
+                    <small><strong>Mundial:</strong> ${post.mundialAño}</small>
                     <small><strong>Categorías:</strong> ${categories}</small>
-                    ${post.status === 'rejected' && post.razonRechazo ? `<small><strong>Razón:</strong> ${post.razonRechazo}</small>` : ''}
+                    ${post.estatus === 'rejected' && post.razonRechazo ? `<small><strong>Razón:</strong> ${post.razonRechazo}</small>` : ''}
                 </div>
                 
                 <div class="post-status ${config.class}">
@@ -345,8 +233,8 @@ class AdminProfile extends ProfileManager {
                 </div>
                 
                 ${moderationButtons}
-                ${isClickable && post.status === 'approved' ? '<div class="click-hint"><i class="fas fa-chart-line"></i> Click para ver estadísticas</div>' : ''}
-                ${post.status === 'pending' ? '<div class="click-hint"><i class="fas fa-gavel"></i> Click para moderar</div>' : ''}
+                ${isClickable && post.estatus === 'approved' ? '<div class="click-hint"><i class="fas fa-chart-line"></i> Click para ver estadísticas</div>' : ''}
+                ${post.estatus === 'pending' ? '<div class="click-hint"><i class="fas fa-gavel"></i> Click para moderar</div>' : ''}
             </div>
         `;
     }
@@ -422,12 +310,12 @@ class AdminProfile extends ProfileManager {
     // ================================
     openPostStats(postId) {
         const post = this.userPosts.find(p => p.id === postId);
-        if (!post || post.status !== 'approved') {
+        if (!post || post.estatus !== 'approved') {
             this.showError('Solo se pueden ver estadísticas de publicaciones aprobadas');
             return;
         }
 
-        this.loadPostStatistics(post);
+        this.loadPostStatistics(post); // Esta función usa Mocks, la dejamos así por ahora
         this.showModal('postStatsModal');
     }
 
@@ -441,9 +329,9 @@ class AdminProfile extends ProfileManager {
 
     showModerationModal(post) {
         // Llenar datos del modal
-        document.getElementById('moderationPostTitle').textContent = post.title;
-        document.getElementById('moderationPostContent').textContent = post.content;
-        document.getElementById('moderationPostAuthor').textContent = `Por ${post.autor}`;
+        document.getElementById('moderationPostTitle').textContent = this.truncateText(post.contenido, 50);
+        document.getElementById('moderationPostContent').textContent = post.contenido;
+        document.getElementById('moderationPostAuthor').textContent = `Por ${post.autorNombre}`;
         document.getElementById('moderationPostDate').textContent = this.formatDate(post.fechaCreacion);
 
         // Generar carrusel de multimedia para el modal de moderación
@@ -460,17 +348,18 @@ class AdminProfile extends ProfileManager {
             const carouselId = `moderation-carousel-${post.id}`;
             
             const slides = post.multimedia.map((item, index) => {
-                if (item.type === 'image') {
+                // API envía 'type' (MIME) y 'src' (URL Base64)
+                if (item.type.startsWith('image/')) {
                     return `
                         <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <img src="${item.src}" alt="${item.alt}" onerror="this.parentElement.style.display='none'">
+                            <img src="${item.src}" alt="Multimedia de publicación" onerror="this.parentElement.style.display='none'">
                         </div>
                     `;
-                } else if (item.type === 'video') {
+                } else if (item.type.startsWith('video/')) {
                     return `
                         <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <video controls poster="${item.poster || ''}" preload="metadata">
-                                <source src="${item.src}" type="video/mp4">
+                            <video controls poster="" preload="metadata">
+                                <source src="${item.src}" type="${item.type}">
                                 Tu navegador no soporta el elemento video.
                             </video>
                         </div>
@@ -524,58 +413,79 @@ class AdminProfile extends ProfileManager {
         this.rejectPost();
     }
 
-    approvePost() {
+    async approvePost() {
         if (!this.currentPostForModeration) return;
 
-        // Simular aprobación - aquí conectarías con tu backend
-        this.simulateRequest(() => {
-            const postIndex = this.userPosts.findIndex(p => p.id === this.currentPostForModeration.id);
-            if (postIndex !== -1) {
-                this.userPosts[postIndex].status = 'approved';
-                this.userPosts[postIndex].fechaAprobacion = new Date().toISOString().split('T')[0];
-                
-                // Agregar estadísticas mock
-                this.userPosts[postIndex].views = Math.floor(Math.random() * 1000) + 50;
-                this.userPosts[postIndex].likes = Math.floor(Math.random() * 200) + 10;
-                this.userPosts[postIndex].comments = Math.floor(Math.random() * 50) + 5;
-            }
+        const postId = this.currentPostForModeration.id;
+        const postTitle = this.truncateText(this.currentPostForModeration.contenido, 20);
 
-            this.showAdminNotification(`Publicación "${this.currentPostForModeration.title}" aprobada exitosamente`, 'success');
-            this.closeModal('postActionModal');
-            this.updatePostsCounts();
-            this.updateAdminStats();
+        try {
+            const response = await fetch('index.php?controller=api&action=aprobarPublicacion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idPublicacion: postId })
+            });
             
-            if (this.currentTab === 'pending') {
-                this.showPosts('pending');
+            const data = await response.json();
+            
+            if (data.success) {
+                const postIndex = this.userPosts.findIndex(p => p.id === postId);
+                if (postIndex !== -1) {
+                    this.userPosts[postIndex].estatus = 'approved';
+                }
+                
+                this.showAdminNotification(`Publicación "${postTitle}..." aprobada`, 'success');
+                this.closeModal('postActionModal');
+                this.updatePostsCounts();
+                this.updateAdminStats();
+                this.showPosts(this.currentTab); // Re-renderizar vista actual
+            } else {
+                this.showAdminNotification(`Error al aprobar: ${data.message}`, 'error');
             }
-            
+        } catch (error) {
+            console.error('Error approving post:', error);
+            this.showAdminNotification('Error de conexión al aprobar', 'error');
+        } finally {
             this.currentPostForModeration = null;
-        });
+        }
     }
 
-    rejectPost() {
+    async rejectPost() {
         if (!this.currentPostForModeration) return;
 
-        // Simular rechazo - aquí conectarías con tu backend
-        this.simulateRequest(() => {
-            const postIndex = this.userPosts.findIndex(p => p.id === this.currentPostForModeration.id);
-            if (postIndex !== -1) {
-                this.userPosts[postIndex].status = 'rejected';
-                this.userPosts[postIndex].fechaRechazo = new Date().toISOString().split('T')[0];
-                this.userPosts[postIndex].razonRechazo = 'Rechazado por el administrador';
-            }
+        const postId = this.currentPostForModeration.id;
+        const postTitle = this.truncateText(this.currentPostForModeration.contenido, 20);
 
-            this.showAdminNotification(`Publicación "${this.currentPostForModeration.title}" rechazada`, 'warning');
-            this.closeModal('postActionModal');
-            this.updatePostsCounts();
-            this.updateAdminStats();
+        try {
+            const response = await fetch('index.php?controller=api&action=rechazarPublicacion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idPublicacion: postId })
+            });
             
-            if (this.currentTab === 'pending') {
-                this.showPosts('pending');
+            const data = await response.json();
+
+            if (data.success) {
+                const postIndex = this.userPosts.findIndex(p => p.id === postId);
+                if (postIndex !== -1) {
+                    this.userPosts[postIndex].estatus = 'rejected';
+                    this.userPosts[postIndex].razonRechazo = 'Rechazado por el administrador';
+                }
+
+                this.showAdminNotification(`Publicación "${postTitle}..." rechazada`, 'warning');
+                this.closeModal('postActionModal');
+                this.updatePostsCounts();
+                this.updateAdminStats();
+                this.showPosts(this.currentTab); // Re-renderizar vista actual
+            } else {
+                this.showAdminNotification(`Error al rechazar: ${data.message}`, 'error');
             }
-            
+        } catch (error) {
+            console.error('Error rejecting post:', error);
+            this.showAdminNotification('Error de conexión al rechazar', 'error');
+        } finally {
             this.currentPostForModeration = null;
-        });
+        }
     }
 
     // ================================
@@ -776,9 +686,9 @@ class AdminProfile extends ProfileManager {
 
     updatePostsCounts() {
         const counts = {
-            approved: this.userPosts.filter(p => p.status === 'approved').length,
-            pending: this.userPosts.filter(p => p.status === 'pending').length,
-            rejected: this.userPosts.filter(p => p.status === 'rejected').length
+            approved: this.userPosts.filter(p => p.estatus === 'approved').length,
+            pending: this.userPosts.filter(p => p.estatus === 'pending').length,
+            rejected: this.userPosts.filter(p => p.estatus === 'rejected').length
         };
 
         if (this.approvedCount) this.approvedCount.textContent = counts.approved;

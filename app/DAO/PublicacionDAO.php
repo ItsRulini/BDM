@@ -272,68 +272,107 @@ class PublicacionDAO {
 
 
     // Obtener multimedia de una publicación
-public function getMultimediaPublicacion(int $idPublicacion): array {
-    try {
-        $query = "SELECT m.IdMultimedia as id, m.Contenido as contenido
-                  FROM Multimedia m
-                  INNER JOIN Multimedia_Publicacion mp ON m.IdMultimedia = mp.IdMultimedia
-                  WHERE mp.IdPublicacion = ?";
-        
-        $stmt = mysqli_prepare($this->conn, $query);
-        mysqli_stmt_bind_param($stmt, 'i', $idPublicacion);
-        mysqli_stmt_execute($stmt);
-        
-        $result = mysqli_stmt_get_result($stmt);
-        $multimedia = [];
-
-        if ($result) {
-            while ($row = mysqli_fetch_assoc($result)) {
-                $multimedia[] = $row;
+    public function getMultimediaPublicacion(int $idPublicacion): array {
+        try {
+            // ⭐ NUEVO: Limpiar resultados antes de una consulta SELECT
+            while (mysqli_more_results($this->conn)) {
+                mysqli_next_result($this->conn);
+                if ($res = mysqli_store_result($this->conn)) {
+                    mysqli_free_result($res);
+                }
             }
-            mysqli_free_result($result);
+
+            $query = "SELECT m.IdMultimedia as id, m.Contenido as contenido
+                      FROM Multimedia m
+                      INNER JOIN Multimedia_Publicacion mp ON m.IdMultimedia = mp.IdMultimedia
+                      WHERE mp.IdPublicacion = ?";
+            
+            $stmt = mysqli_prepare($this->conn, $query);
+            mysqli_stmt_bind_param($stmt, 'i', $idPublicacion);
+            mysqli_stmt_execute($stmt);
+            
+            $result = mysqli_stmt_get_result($stmt);
+            $multimedia = [];
+
+            if ($result) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $multimedia[] = $row;
+                }
+                mysqli_free_result($result);
+            }
+
+            mysqli_stmt_close($stmt);
+            
+            return $multimedia;
+
+        } catch (Exception $e) {
+            error_log("Error en getMultimediaPublicacion: " . $e->getMessage());
+            return [];
         }
-
-        mysqli_stmt_close($stmt);
-        
-        return $multimedia;
-
-    } catch (Exception $e) {
-        error_log("Error en getMultimediaPublicacion: " . $e->getMessage());
-        return [];
     }
-}
 
 // Obtener categorías de una publicación
-public function getCategoriasPublicacion(int $idPublicacion): array {
-    try {
-        $query = "SELECT c.Nombre
-                  FROM Categoria c
-                  INNER JOIN Publicacion_Categoria pc ON c.IdCategoria = pc.IdCategoria
-                  WHERE pc.IdPublicacion = ?";
-        
-        $stmt = mysqli_prepare($this->conn, $query);
-        mysqli_stmt_bind_param($stmt, 'i', $idPublicacion);
-        mysqli_stmt_execute($stmt);
-        
-        $result = mysqli_stmt_get_result($stmt);
-        $categorias = [];
-
-        if ($result) {
-            while ($row = mysqli_fetch_assoc($result)) {
-                $categorias[] = $row['Nombre'];
+    public function getCategoriasPublicacion(int $idPublicacion): array {
+        try {
+            // ⭐ NUEVO: Limpiar resultados antes de llamar al SP
+            while (mysqli_more_results($this->conn)) {
+                mysqli_next_result($this->conn);
+                if ($res = mysqli_store_result($this->conn)) {
+                    mysqli_free_result($res);
+                }
             }
-            mysqli_free_result($result);
+
+            // ⭐ MODIFICADO: Usar el Stored Procedure
+            $query = "CALL sp_getCategoriasPublicacion(?)";
+            
+            $stmt = mysqli_prepare($this->conn, $query);
+            
+            if (!$stmt) {
+                throw new Exception("Error preparando consulta: " . mysqli_error($this->conn));
+            }
+            
+            mysqli_stmt_bind_param($stmt, 'i', $idPublicacion);
+            
+            if (!mysqli_stmt_execute($stmt)) {
+                throw new Exception("Error ejecutando consulta: ". mysqli_stmt_error($stmt));
+            }
+
+            $result = mysqli_stmt_get_result($stmt);
+            $categorias = [];
+
+            if ($result) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $categorias[] = $row['Nombre']; // El SP devuelve 'Nombre'
+                }
+                mysqli_free_result($result);
+            }
+
+            mysqli_stmt_close($stmt);
+            
+            // ⭐ NUEVO: Limpiar resultados después de llamar al SP
+            while (mysqli_more_results($this->conn)) {
+                mysqli_next_result($this->conn);
+                if ($res = mysqli_store_result($this->conn)) {
+                    mysqli_free_result($res);
+                }
+            }
+
+            return $categorias;
+
+        } catch (Exception $e) {
+            error_log("Error en getCategoriasPublicacion: " . $e->getMessage());
+            
+            // ⭐ NUEVO: Limpiar en caso de error
+            while (mysqli_more_results($this->conn)) {
+                mysqli_next_result($this->conn);
+                if ($res = mysqli_store_result($this->conn)) {
+                    mysqli_free_result($res);
+                }
+            }
+
+            return [];
         }
-
-        mysqli_stmt_close($stmt);
-        
-        return $categorias;
-
-    } catch (Exception $e) {
-        error_log("Error en getCategoriasPublicacion: " . $e->getMessage());
-        return [];
     }
-}
 
 // Obtener todas las publicaciones (para admin)
 public function getTodasPublicaciones(): ?array {
