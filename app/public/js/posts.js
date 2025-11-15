@@ -79,12 +79,24 @@ class PostsManager {
         this.showLoading(true);
         
         try {
-            const mockPosts = this.generateMockPosts();
+            // AÑADIDA LLAMADA A API (nueva endpoint)
+            const response = await fetch('index.php?controller=api&action=getPublicacionesAprobadas');
+            if (!response.ok) {
+                throw new Error('Error al cargar las publicaciones');
+            }
             
-            // Simular delay de red
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const data = await response.json();
+
+            if (data.success) {
+                this.posts = data.data.map(post => ({
+                    ...post,
+                    liked: false // Añadir estado local de like
+                }));
+            } else {
+                console.error('Error fetching approved posts:', data.message);
+                this.posts = [];
+            }
             
-            this.posts = mockPosts;
             this.filteredPosts = [...this.posts];
             this.renderPosts();
             this.updatePostsCounter();
@@ -92,122 +104,33 @@ class PostsManager {
         } catch (error) {
             console.error('Error al cargar posts:', error);
             this.showError('Error al cargar las publicaciones');
+            this.posts = [];
+            this.filteredPosts = [];
+            this.renderPosts();
         } finally {
             this.showLoading(false);
         }
     }
 
-    generateMockPosts() {
-        const categories = ['analisis', 'historia', 'estadisticas', 'curiosidades', 'predicciones'];
-        const mundiales = [
-            { id: 1, name: 'Brasil 2014', country: 'brasil', year: 2014 },
-            { id: 2, name: 'Rusia 2018', country: 'rusia', year: 2018 },
-            { id: 3, name: 'Qatar 2022', country: 'qatar', year: 2022 },
-            { id: 4, name: 'México 1986', country: 'mexico', year: 1986 },
-            { id: 5, name: 'Francia 1998', country: 'francia', year: 1998 },
-            { id: 6, name: 'Alemania 2006', country: 'alemania', year: 2006 },
-            { id: 7, name: 'Sudáfrica 2010', country: 'sudafrica', year: 2010 }
-        ];
-        
-        const users = [
-            { name: 'Carlos Rodríguez', avatar: 'assets/avatars/user1.jpg' },
-            { name: 'María González', avatar: 'assets/avatars/user2.jpg' },
-            { name: 'Diego Martín', avatar: 'assets/avatars/user3.jpg' },
-            { name: 'Ana López', avatar: 'assets/avatars/user4.jpg' },
-            { name: 'Roberto Silva', avatar: 'assets/avatars/user5.jpg' }
-        ];
-
-        const samplePosts = [
-            {
-                id: 1,
-                title: "El gol más importante en la historia de los mundiales",
-                content: "Analizamos los goles que cambiaron el curso de la historia en las Copas del Mundo. Desde el gol de Maradona en 1986 hasta el penal de Messi en 2022.",
-                category: "historia",
-                mundial: mundiales[3],
-                user: users[0],
-                date: "2024-03-15",
-                likes: 234,
-                comments: 45,
-                multimedia: [
-                    { type: 'image', src: 'assets/posts/gol-maradona-1.jpg', alt: 'Gol de Maradona' },
-                    { type: 'video', src: 'assets/posts/gol-maradona.mp4', poster: 'assets/posts/gol-maradona-poster.jpg' },
-                    { type: 'image', src: 'assets/posts/gol-maradona-2.jpg', alt: 'Celebración' }
-                ],
-                liked: false
-            },
-            {
-                id: 2,
-                title: "Estadísticas sorprendentes del Mundial de Qatar 2022",
-                content: "Los números que quizás no conocías del último mundial. Records, datos curiosos y análisis estadístico profundo del torneo más visto de la historia.",
-                category: "estadisticas",
-                mundial: mundiales[2],
-                user: users[1],
-                date: "2024-03-14",
-                likes: 156,
-                comments: 28,
-                multimedia: [
-                    { type: 'image', src: 'assets/posts/estadisticas-qatar-1.jpg', alt: 'Estadísticas Qatar' },
-                    { type: 'image', src: 'assets/posts/estadisticas-qatar-2.jpg', alt: 'Gráficos' }
-                ],
-                liked: true
-            },
-            {
-                id: 3,
-                title: "Predicciones para el próximo Mundial 2026",
-                content: "¿Qué selecciones tienen más posibilidades? Análisis detallado de las selecciones favoritas para el Mundial que se disputará en Estados Unidos, México y Canadá.",
-                category: "predicciones",
-                mundial: mundiales[1],
-                user: users[2],
-                date: "2024-03-13",
-                likes: 189,
-                comments: 67,
-                multimedia: [
-                    { type: 'video', src: 'assets/posts/predicciones-2026.mp4', poster: 'assets/posts/predicciones-poster.jpg' },
-                    { type: 'image', src: 'assets/posts/mundial-2026-1.jpg', alt: 'Logo Mundial 2026' },
-                    { type: 'image', src: 'assets/posts/mundial-2026-2.jpg', alt: 'Sedes' }
-                ],
-                liked: false
-            }
-        ];
-
-        // Generar más posts para pruebas
-        const generatedPosts = [];
-        for (let i = 0; i < 15; i++) {
-            const basePost = samplePosts[i % samplePosts.length];
-            const randomMundial = mundiales[Math.floor(Math.random() * mundiales.length)];
-            generatedPosts.push({
-                ...basePost,
-                id: i + 1,
-                title: `${basePost.title} - Post ${i + 1}`,
-                category: categories[Math.floor(Math.random() * categories.length)],
-                mundial: randomMundial,
-                user: users[Math.floor(Math.random() * users.length)],
-                date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                likes: Math.floor(Math.random() * 500) + 10,
-                comments: Math.floor(Math.random() * 100) + 1,
-                liked: Math.random() > 0.7
-            });
-        }
-
-        return generatedPosts;
-    }
+    // generateMockPosts() { ... } // ELIMINADO
 
     filterAndSearch() {
         const searchTerm = this.searchInput?.value.toLowerCase() || '';
-        const mundialFilter = this.filterCountry?.value || '';
+        const mundialFilter = this.filterCountry?.value || ''; // Filtro por país/sede
         const categoryFilter = this.filterCategory?.value || '';
         const orderValue = this.orderBy?.value || '';
 
         this.filteredPosts = this.posts.filter(post => {
+            // MODIFICADO: para usar datos de la API
             const matchesSearch = searchTerm === '' || 
-                post.title.toLowerCase().includes(searchTerm) ||
-                post.content.toLowerCase().includes(searchTerm) ||
-                post.user.name.toLowerCase().includes(searchTerm) ||
-                post.category.toLowerCase().includes(searchTerm) ||
-                post.mundial.name.toLowerCase().includes(searchTerm);
+                post.contenido.toLowerCase().includes(searchTerm) ||
+                post.autorNombre.toLowerCase().includes(searchTerm) ||
+                (Array.isArray(post.categorias) && post.categorias.some(cat => cat.toLowerCase().includes(searchTerm))) ||
+                post.mundialAño.toLowerCase().includes(searchTerm);
 
-            const matchesMundial = mundialFilter === '' || post.mundial.country.toLowerCase() === mundialFilter;
-            const matchesCategory = categoryFilter === '' || post.category === categoryFilter;
+            // Asumimos que el filtro de país busca en el nombre del mundial (Ej. "Qatar 2022")
+            const matchesMundial = mundialFilter === '' || post.mundialAño.toLowerCase().includes(mundialFilter.toLowerCase());
+            const matchesCategory = categoryFilter === '' || (Array.isArray(post.categorias) && post.categorias.some(cat => cat.toLowerCase() === categoryFilter.toLowerCase()));
 
             return matchesSearch && matchesMundial && matchesCategory;
         });
@@ -232,13 +155,13 @@ class PostsManager {
                 this.filteredPosts.sort((a, b) => a.comments - b.comments);
                 break;
             case 'date_desc':
-                this.filteredPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                this.filteredPosts.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
                 break;
             case 'date_asc':
-                this.filteredPosts.sort((a, b) => new Date(a.date) - new Date(b.date));
+                this.filteredPosts.sort((a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion));
                 break;
             default:
-                this.filteredPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                this.filteredPosts.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
         }
     }
 
@@ -270,28 +193,12 @@ class PostsManager {
     }
 
     createPostHTML(post) {
-        const formatDate = (dateString) => {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('es-ES', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-        };
-
-        const formatCategory = (category) => {
-            const categoryMap = {
-                'analisis': 'Análisis',
-                'historia': 'Historia',
-                'estadisticas': 'Estadísticas',
-                'curiosidades': 'Curiosidades',
-                'predicciones': 'Predicciones'
-            };
-            return categoryMap[category] || category;
-        };
-
-        const formatMundial = (mundial) => {
-            return `${mundial.name}`;
+        const formatCategory = (categorias) => {
+            // MODIFICADO: API envía array de strings
+            if (!Array.isArray(categorias) || categorias.length === 0) return 'General';
+            // Capitalizar la primera letra
+            const cat = categorias[0];
+            return cat.charAt(0).toUpperCase() + cat.slice(1);
         };
 
         const createMultimediaCarousel = (multimedia) => {
@@ -300,17 +207,18 @@ class PostsManager {
             const carouselId = `carousel-${post.id}`;
             
             const slides = multimedia.map((item, index) => {
-                if (item.type === 'image') {
+                // MODIFICADO: La API envía 'type' (MIME) y 'src' (URL Base64)
+                if (item.type.startsWith('image/')) {
                     return `
                         <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <img src="${item.src}" alt="${item.alt}" onerror="this.parentElement.style.display='none'">
+                            <img src="${item.src}" alt="Multimedia de publicación" onerror="this.parentElement.style.display='none'">
                         </div>
                     `;
-                } else if (item.type === 'video') {
+                } else if (item.type.startsWith('video/')) {
                     return `
                         <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <video controls poster="${item.poster || ''}" preload="metadata">
-                                <source src="${item.src}" type="video/mp4">
+                            <video controls poster="" preload="metadata">
+                                <source src="${item.src}" type="${item.type}">
                                 Tu navegador no soporta el elemento video.
                             </video>
                         </div>
@@ -348,30 +256,30 @@ class PostsManager {
         return `
             <article class="post-card" data-post-id="${post.id}">
                 <div class="post-mundial">
-                    <span>${formatMundial(post.mundial)}</span>
+                    <span>${post.mundialAño}</span>
                 </div>
                 
                 <div class="post-category">
-                    <span>${formatCategory(post.category)}</span>
+                    <span>${formatCategory(post.categorias)}</span>
                 </div>
                 
                 <div class="post-header">
-                    <h2 class="post-title">${post.title}</h2>
+                    <h2 class="post-title">${this.truncateText(post.contenido, 70)}</h2>
                     <div class="post-meta">
                         <div class="post-author">
-                            <img src="${post.user.avatar}" alt="${post.user.name}" class="profile-pic" 
+                            <img src="assets/default-avatar.png" alt="${post.autorNombre}" class="profile-pic" 
                                  onerror="this.src='assets/default-avatar.png'">
-                            <span>por ${post.user.name}</span>
+                            <span>por ${post.autorNombre}</span>
                         </div>
                         <div class="post-date">
                             <i class="fas fa-calendar-alt"></i>
-                            <span>${formatDate(post.date)}</span>
+                            <span>${this.formatDate(post.fechaCreacion)}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="post-content">
-                    <p class="post-text">${post.content}</p>
+                    <p class="post-text">${post.contenido}</p>
                     ${createMultimediaCarousel(post.multimedia)}
                 </div>
 
@@ -435,9 +343,9 @@ class PostsManager {
         const author = document.getElementById('commentPostAuthor');
         const date = document.getElementById('commentPostDate');
 
-        if (title) title.textContent = post.title;
-        if (author) author.textContent = `Por ${post.user.name}`;
-        if (date) date.textContent = this.formatDate(post.date);
+        if (title) title.textContent = this.truncateText(post.contenido, 70); // MODIFICADO
+        if (author) author.textContent = `Por ${post.autorNombre}`; // MODIFICADO
+        if (date) date.textContent = this.formatDate(post.fechaCreacion);
     }
 
     async loadPostComments(postId) {
@@ -477,12 +385,7 @@ class PostsManager {
             "Totalmente de acuerdo contigo. Ese mundial fue histórico por muchas razones.",
             "Muy interesante tu punto de vista. ¿Podrías profundizar más en este tema?",
             "No había pensado en eso antes. Gracias por compartir esta información.",
-            "Gran post! Me trae muchos recuerdos de ese mundial.",
-            "Interesante teoría, aunque creo que hay otros factores a considerar.",
-            "¡Qué nostalgia! Recuerdo ver ese mundial con mi familia.",
-            "Datos muy útiles. ¿Tienes alguna fuente para profundizar más?",
-            "Me parece una observación muy acertada sobre el fútbol moderno.",
-            "Gracias por tomarte el tiempo de escribir esto tan detalladamente."
+            "Gran post! Me trae muchos recuerdos de ese mundial."
         ];
 
         const numComments = Math.floor(Math.random() * 8) + 2; // 2-9 comentarios
@@ -509,14 +412,17 @@ class PostsManager {
     renderComments() {
         if (!this.commentsList) return;
 
+        // Actualizar contador
+        this.updateCommentsCount();
+
         if (this.postComments.length === 0) {
             this.commentsList.style.display = 'none';
-            this.noComments.style.display = 'block';
+            if (this.noComments) this.noComments.style.display = 'block';
             return;
         }
 
         this.commentsList.style.display = 'block';
-        this.noComments.style.display = 'none';
+        if (this.noComments) this.noComments.style.display = 'none';
 
         this.commentsList.innerHTML = this.postComments.map(comment => this.createCommentHTML(comment)).join('');
     }
@@ -556,9 +462,9 @@ class PostsManager {
         const counter = this.commentCharCount.parentElement;
         counter.classList.remove('warning', 'danger');
 
-        if (count > maxLength * 0.9) {
+        if (count > maxLength) {
             counter.classList.add('danger');
-        } else if (count > maxLength * 0.8) {
+        } else if (count > maxLength * 0.9) {
             counter.classList.add('warning');
         }
 
@@ -686,11 +592,11 @@ class PostsManager {
         };
 
         // Event listeners
-        nextBtn?.addEventListener('click', nextSlide);
-        prevBtn?.addEventListener('click', prevSlide);
+        nextBtn?.addEventListener('click', (e) => { e.stopPropagation(); nextSlide(); });
+        prevBtn?.addEventListener('click', (e) => { e.stopPropagation(); prevSlide(); });
 
         indicators.forEach((indicator, index) => {
-            indicator.addEventListener('click', () => showSlide(index));
+            indicator.addEventListener('click', (e) => { e.stopPropagation(); showSlide(index); });
         });
 
         // Touch/swipe support
@@ -699,7 +605,7 @@ class PostsManager {
 
         carousel.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
-        });
+        }, { passive: true });
 
         carousel.addEventListener('touchend', (e) => {
             endX = e.changedTouches[0].clientX;
@@ -712,16 +618,7 @@ class PostsManager {
                     prevSlide();
                 }
             }
-        });
-
-        // Keyboard navigation
-        carousel.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') {
-                prevSlide();
-            } else if (e.key === 'ArrowRight') {
-                nextSlide();
-            }
-        });
+        }, { passive: true });
     }
 
     // ================================
@@ -743,8 +640,9 @@ class PostsManager {
     }
 
     handleLike(event) {
+        event.stopPropagation();
         const button = event.currentTarget;
-        const postId = parseInt(button.dataset.postId);
+        const postId = parseInt(button.closest('.post-card').dataset.postId);
         const post = this.posts.find(p => p.id === postId);
         
         if (!post) return;
@@ -759,47 +657,54 @@ class PostsManager {
         countSpan.textContent = post.likes;
 
         // Add animation effect
-        button.style.transform = 'scale(0.95)';
+        button.style.transform = 'scale(1.1)';
         setTimeout(() => {
             button.style.transform = 'scale(1)';
         }, 150);
 
-        // Enviar al backend
+        // Enviar al backend (simulado)
         this.sendLikeToServer(postId, post.liked);
     }
 
     handleComment(event) {
+        event.stopPropagation();
         const button = event.currentTarget;
-        const postId = parseInt(button.dataset.postId);
+        const postId = parseInt(button.closest('.post-card').dataset.postId);
         
         // Abrir modal de comentarios
         this.openCommentsModal(postId);
     }
 
     async sendLikeToServer(postId, liked) {
-        try {
-            // Simulación de petición al servidor
-            const response = await fetch(`/api/posts/${postId}/like`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ liked })
-            });
-            
-            if (!response.ok) {
-                throw new Error('Error al procesar like');
-            }
-            
-            console.log(`Like ${liked ? 'agregado' : 'removido'} para post ${postId}`);
-        } catch (error) {
-            console.error('Error al enviar like:', error);
-        }
+        // Simulación - en un caso real, harías un fetch
+        console.log(`Like ${liked ? 'agregado' : 'removido'} para post ${postId} (simulado)`);
+        
+        // try {
+        //     const response = await fetch(`index.php?controller=api&action=likePost`, {
+        //         method: 'POST',
+        //         headers: { 'Content-Type': 'application/json' },
+        //         body: JSON.stringify({ postId, liked })
+        //     });
+        //     if (!response.ok) {
+        //         throw new Error('Error al procesar like');
+        //     }
+        //     const data = await response.json();
+        //     console.log('Respuesta del servidor (like):', data);
+        // } catch (error) {
+        //     console.error('Error al enviar like:', error);
+        //     // Revertir el like en la UI si falla
+        // }
     }
 
     // ================================
     // UTILITY FUNCTIONS
     // ================================
+    
+    truncateText(text, maxLength) {
+        if (!text) return '';
+        if (text.length <= maxLength) return text;
+        return text.substr(0, maxLength) + '...';
+    }
 
     showLoading(show) {
         if (this.loadingSpinner) {
@@ -831,6 +736,7 @@ class PostsManager {
     }
 
     formatDate(dateString) {
+        if (!dateString) return '';
         const date = new Date(dateString);
         return date.toLocaleDateString('es-ES', { 
             year: 'numeric', 
@@ -840,6 +746,7 @@ class PostsManager {
     }
 
     formatTimeAgo(dateString) {
+        if (!dateString) return 'hace un momento';
         const date = new Date(dateString);
         const now = new Date();
         const diffInSeconds = Math.floor((now - date) / 1000);

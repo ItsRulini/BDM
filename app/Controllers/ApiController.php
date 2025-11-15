@@ -580,8 +580,8 @@ class ApiController {
     }
 
     // @GET /api/getMundial
-    public function getMundial ($id) {
-        if ($_SERVER['REQUEST_METHOD' !== 'GET']) {
+    public function getMundial($id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
             echo json_encode([
                 'success' => false,
                 'message' => 'Método no permitido'
@@ -591,31 +591,85 @@ class ApiController {
 
         try {
             $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            
+            // 1. Obtener el objeto principal del Mundial
+            // Asumimos que la vista vw_info_mundiales ya devuelve los NOMBRES (ej. "Argentina", "Messi")
+            // en lugar de solo los IDs.
             $mundial = $mundialDAO->getMundialPorId($id);
 
             if ($mundial === null) {
                 throw new Exception("No se pudo obtener el mundial desde la base de datos.");
             }
 
-            $sedes = $mundialDAO->getIdSedesMundial($id);
+            // 2. Obtener las sedes (como ya hacías)
+            $sedesString = $mundialDAO->getSedesMundial($id); // Asumimos que esto devuelve "País1, País2"
 
-            if ($sedes === null) {
-                throw new Exception("No se pudieron obtener las sedes del mundial desde la base de datos.");
-            }
+            // 3. Obtener la galería de multimedia (¡NUEVO!)
+            $multimedia = $mundialDAO->getMultimediaMundial($id);
 
-            // Convertir 'sedes' (cadena separada por comas) a un array limpio
-            $sedesArray = [];
-            if (is_string($sedes)) {
-                $sedesArray = array_values(array_filter(
-                    array_map('trim', 
-                    explode(',', $sedes)), 
-                    function($v) { return $v !== ''; }));
-            }
+            // 4. Construir el JSON anidado que espera mundial.js
+            
+            // Convertir logo y mascota a Base64
+            $logoBase64 = $mundial->getLogo() ? 'data:image/png;base64,' . base64_encode($mundial->getLogo()) : null;
+            $mascotaBase64 = $mundial->getImgMascota() ? 'data:image/png;base64,' . base64_encode($mundial->getImgMascota()) : null;
+
+            $datosOrganizados = [
+                'id' => $mundial->getIdMundial(),
+                'año' => $mundial->getAño(),
+                'sedes' => $sedesString,
+                'nombre' => $sedesString . ' ' . $mundial->getAño(),
+                'logo' => $logoBase64,
+                'descripcion' => $mundial->getDescripcion(),
+                
+                // Objeto de Mascota
+                'mascota' => [
+                    'nombre' => $mundial->getNombreMascota(),
+                    'imagen' => $mascotaBase64
+                ],
+                
+                // Galería de Multimedia
+                'multimedia' => $multimedia, // Esto ya viene en el formato correcto [ {id, url, type, size}, ... ]
+
+                // Objeto de Posiciones
+                'posiciones' => [
+                    'campeon'     => ['nombre' => $mundial->getCampeon()],
+                    'subcampeon'  => ['nombre' => $mundial->getSubcampeon()],
+                    'tercerPuesto' => ['nombre' => $mundial->getTercerPuesto()],
+                    'cuartoPuesto' => ['nombre' => $mundial->getCuartoPuesto()]
+                ],
+
+                // Objeto de Resultado de la Final
+                'resultado' => [
+                    'equipo1' => $mundial->getCampeon(),
+                    'equipo2' => $mundial->getSubcampeon(),
+                    'goles1' => $mundial->getMarcador() ? explode('-', $mundial->getMarcador())[0] : '0',
+                    'goles2' => $mundial->getMarcador() ? explode('-', $mundial->getMarcador())[1] : '0',
+                    'tiempoExtra' => $mundial->getTiempoExtra(),
+                    'marcadorTiempoExtra' => $mundial->getMarcadorTiempoExtra(),
+                    'penalties' => $mundial->getPenalties(),
+                    'muerteSubita' => $mundial->getMuerteSubita(),
+                    'marcadorFinal' => $mundial->getMarcadorFinal()
+                ],
+
+                // Objeto de Premios
+                'premios' => [
+                    'balones' => [
+                        'oro'    => ['nombre' => $mundial->getBalonOro(), 'foto' => null], // Asumimos que getBalonOro() devuelve el NOMBRE
+                        'plata'  => ['nombre' => $mundial->getBalonPlata(), 'foto' => null],
+                        'bronce' => ['nombre' => $mundial->getBalonBronce(), 'foto' => null]
+                    ],
+                    'botines' => [
+                        'oro'    => ['nombre' => $mundial->getBotinOro(), 'info' => $mundial->getMaxGoles() . ' goles'],
+                        'plata'  => ['nombre' => $mundial->getBotinPlata(), 'info' => null],
+                        'bronce' => ['nombre' => $mundial->getBotinBronce(), 'info' => null]
+                    ],
+                    'guanteOro' => ['nombre' => $mundial->getGuanteOro(), 'foto' => null]
+                ]
+            ];
 
             echo json_encode([
                 'success' => true,
-                'data' => $mundial->toArray(),
-                'sedes' => $sedesArray,
+                'data' => $datosOrganizados, // ¡Enviamos los datos organizados!
                 'message' => 'Mundial obtenido correctamente'
             ]);
             
@@ -626,7 +680,6 @@ class ApiController {
                 'message' => 'Error del servidor: ' . $e->getMessage()
             ]);
         }
-
     }
 
     // @GET /api/getMundiales
@@ -1146,14 +1199,35 @@ class ApiController {
             }
 
             // Formatear respuesta
-            $publicacionesArray = array_map(function($item) {
+            $publicacionesArray = array_map(function($item) use ($publicacionDAO) { // ⭐ Added use ($publicacionDAO)
                 $pub = $item['publicacion'];
+                $idPublicacion = $pub->getIdPublicacion(); // ⭐ Get ID
+
+                // ⭐ NUEVO: Obtener multimedia
+                $multimedia = $publicacionDAO->getMultimediaPublicacion($idPublicacion);
+                $multimediaArray = array_map(function($media) {
+                    // Detectar tipo MIME
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $mimeType = $finfo->buffer($media['contenido']);
+                    $base64 = base64_encode($media['contenido']);
+                    return [
+                        'id' => $media['id'],
+                        'src' => "data:$mimeType;base64,$base64",
+                        'type' => $mimeType
+                    ];
+                }, $multimedia);
+                
+                // ⭐ NUEVO: Obtener categorías
+                $categorias = $publicacionDAO->getCategoriasPublicacion($idPublicacion);
+
                 return [
-                    'id' => $pub->getIdPublicacion(),
+                    'id' => $idPublicacion,
                     'contenido' => $pub->getContenido(),
                     'fechaCreacion' => $pub->getFechaCreacion(),
                     'estatus' => $pub->getEstatusAprobacion(),
-                    'mundial' => $item['mundialAño']
+                    'mundialAño' => $item['mundialAño'],
+                    'multimedia' => $multimediaArray, // ⭐ NUEVO
+                    'categorias' => $categorias // ⭐ NUEVO
                 ];
             }, $publicaciones);
 
@@ -1170,6 +1244,90 @@ class ApiController {
             ]);
         }
     }
+
+    // ⭐
+    // ⭐ NUEVA FUNCIÓN AÑADIDA
+    // ⭐
+    // @GET /api/getPublicacionesAprobadas (para publico)
+    public function getPublicacionesAprobadas() {
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        try {
+            $publicacionDAO = new PublicacionDAO($GLOBALS['conn']);
+            // Reutilizamos la función de admin, ya que obtiene todo
+            $publicaciones = $publicacionDAO->getTodasPublicaciones(); 
+
+            if ($publicaciones === null) {
+                throw new Exception("Error al obtener publicaciones");
+            }
+
+            $publicacionesAprobadas = [];
+
+            // Formatear respuesta con multimedia y categorías
+            foreach ($publicaciones as $item) {
+                
+                // ⭐ FILTRAR SOLO APROBADAS
+                if ($item['publicacion']->getEstatusAprobacion() !== 'approved') {
+                    continue;
+                }
+                
+                $pub = $item['publicacion'];
+                $idPublicacion = $pub->getIdPublicacion();
+                
+                // Obtener multimedia
+                $multimedia = $publicacionDAO->getMultimediaPublicacion($idPublicacion);
+                $multimediaArray = array_map(function($media) {
+                    // Detectar tipo MIME
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $mimeType = $finfo->buffer($media['contenido']);
+                    $base64 = base64_encode($media['contenido']);
+                    return [
+                        'id' => $media['id'],
+                        'src' => "data:$mimeType;base64,$base64",
+                        'type' => $mimeType // e.g., 'image/jpeg' or 'video/mp4'
+                    ];
+                }, $multimedia);
+                
+                // Obtener categorías
+                $categorias = $publicacionDAO->getCategoriasPublicacion($idPublicacion);
+                
+                $publicacionesAprobadas[] = [
+                    'id' => $idPublicacion,
+                    'contenido' => $pub->getContenido(),
+                    'fechaCreacion' => $pub->getFechaCreacion(),
+                    'estatus' => $pub->getEstatusAprobacion(),
+                    'mundialAño' => $item['mundialAño'],
+                    'autorNombre' => $item['autorNombre'],
+                    'idCreador' => $pub->getIdCreador(),
+                    'multimedia' => $multimediaArray,
+                    'categorias' => $categorias,
+                    'views' => 0, // Mocked for now
+                    'likes' => 0, // Mocked for now
+                    'comments' => 0 // Mocked for now
+                ];
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $publicacionesAprobadas
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Error en getPublicacionesAprobadas: " . $e->getMessage());
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
 
     // @GET /api/getTodasPublicaciones (para admin)
     public function getTodasPublicaciones() {
@@ -1198,21 +1356,27 @@ class ApiController {
             // Formatear respuesta con multimedia y categorías
             $publicacionesArray = array_map(function($item) use ($publicacionDAO) {
                 $pub = $item['publicacion'];
+                $idPublicacion = $pub->getIdPublicacion(); // ⭐ Get ID
                 
                 // Obtener multimedia
-                $multimedia = $publicacionDAO->getMultimediaPublicacion($pub->getIdPublicacion());
+                $multimedia = $publicacionDAO->getMultimediaPublicacion($idPublicacion);
                 $multimediaArray = array_map(function($media) {
+                    // ⭐ Detectar tipo MIME
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $mimeType = $finfo->buffer($media['contenido']);
+                    $base64 = base64_encode($media['contenido']);
                     return [
                         'id' => $media['id'],
-                        'contenido' => base64_encode($media['contenido'])
+                        'src' => "data:$mimeType;base64,$base64",
+                        'type' => $mimeType
                     ];
                 }, $multimedia);
                 
                 // Obtener categorías
-                $categorias = $publicacionDAO->getCategoriasPublicacion($pub->getIdPublicacion());
+                $categorias = $publicacionDAO->getCategoriasPublicacion($idPublicacion);
                 
                 return [
-                    'id' => $pub->getIdPublicacion(),
+                    'id' => $idPublicacion,
                     'contenido' => $pub->getContenido(),
                     'fechaCreacion' => $pub->getFechaCreacion(),
                     'estatus' => $pub->getEstatusAprobacion(),
@@ -1221,9 +1385,9 @@ class ApiController {
                     'idCreador' => $pub->getIdCreador(),
                     'multimedia' => $multimediaArray,
                     'categorias' => $categorias,
-                    'views' => 0,
-                    'likes' => 0,
-                    'comments' => 0
+                    'views' => 0, // Mocked
+                    'likes' => 0, // Mocked
+                    'comments' => 0 // Mocked
                 ];
             }, $publicaciones);
 

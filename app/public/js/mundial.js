@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Cargar datos del mundial desde la API
-    //cargarDatosMundial();
+    cargarDatosMundial();
 });
 
 // Función para cargar los datos del mundial
@@ -307,18 +307,18 @@ function renderizarCategoriaPremio(titulo, icono, jugadores) {
 function renderizarJugadorPremio(jugador) {
     if (!jugador || !jugador.nombre) return '';
 
-    return `
-        <div class="player-award ${jugador.class}">
-            <div class="player-photo">
-                <img src="${jugador.foto || 'assets/default-player.png'}" alt="${escapeHtml(jugador.nombre)}">
+        return `
+            <div class="player-award ${jugador.class}">
+                <div class="player-photo">
+                    <img src="${jugador.foto || 'assets/default-player.png'}" alt="${escapeHtml(jugador.nombre)}">
+                </div>
+                <div class="player-info">
+                    <span class="award-name">${escapeHtml(jugador.award)}</span>
+                    <h4>${escapeHtml(jugador.nombre)}</h4> 
+                    <p>${escapeHtml(jugador.info || '')}</p>
+                </div>
             </div>
-            <div class="player-info">
-                <span class="award-name">${escapeHtml(jugador.award)}</span>
-                <h4>${escapeHtml(jugador.nombre)}</h4>
-                <p>${escapeHtml(jugador.pais || jugador.info || '')}</p>
-            </div>
-        </div>
-    `;
+        `;
 }
 
 // Función para mostrar error
