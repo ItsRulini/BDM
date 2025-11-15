@@ -185,7 +185,7 @@ DELIMITER ;
 -- actualizar perfil
 
 DELIMITER $$
-DROP PROCEDURE IF EXISTS sp_updateUsuario;
+DROP PROCEDURE IF EXISTS sp_updateUsuario$$
 CREATE PROCEDURE sp_updateUsuario(
     IN p_idUsuario INT,
     IN p_nombre VARCHAR(255),
@@ -219,6 +219,7 @@ DELIMITER ;
 DELIMITER $$
 
 -- Crear el nuevo procedimiento
+DROP PROCEDURE IF EXISTS sp_updateContrasena$$
 CREATE PROCEDURE sp_updateContrasena(
     IN p_idUsuario INT,
     IN p_nuevaContrasena VARCHAR(255)
@@ -382,6 +383,81 @@ BEGIN
 END $$
 DELIMITER ;
 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_updateMundial$$
+CREATE PROCEDURE sp_updateMundial(
+    IN p_idMundial INT,
+    IN p_año YEAR,
+    IN p_descripcion TEXT,
+    IN p_logo LONGBLOB,
+    IN p_imgMascota LONGBLOB,
+    IN p_nombreMascota VARCHAR(100),
+    IN p_campeon INT,
+    IN p_subcampeon INT,
+    IN p_tercerPuesto INT,
+    IN p_cuartoPuesto INT,
+    IN p_marcador VARCHAR(10),
+    IN p_tiempoExtra BOOLEAN,
+    IN p_marcadorTiempoExtra VARCHAR(10),
+    IN p_penalties BOOLEAN,
+    IN p_muerteSubita BOOLEAN,
+    IN p_marcadorFinal VARCHAR(20),
+    IN p_balonOro INT,
+    IN p_balonPlata INT,
+    IN p_balonBronce INT,
+    IN p_botinOro INT,
+    IN p_botinPlata INT,
+    IN p_botinBronce INT,
+    IN p_guanteOro INT,
+    IN p_maxGoles INT
+)
+BEGIN
+    UPDATE Mundial
+    SET
+        Año = p_año,
+        Descripcion = p_descripcion,
+        logo = p_logo,
+        img_mascota = p_imgMascota,
+        nombre_mascota = p_nombreMascota,
+        campeon = p_campeon,
+        subcampeon = p_subcampeon,
+        tercer_puesto = p_tercerPuesto,
+        cuarto_puesto = p_cuartoPuesto,
+        marcador = p_marcador,
+        tiempo_extra = p_tiempoExtra,
+        marcador_tiempo_extra = p_marcadorTiempoExtra,
+        penalties = p_penalties,
+        muerte_subita = p_muerteSubita,
+        marcador_final = p_marcadorFinal,
+        balon_oro = p_balonOro,
+        balon_plata = p_balonPlata,
+        balon_bronce = p_balonBronce,
+        botin_oro = p_botinOro,
+        botin_plata = p_botinPlata,
+        botin_bronce = p_botinBronce,
+        guante_oro = p_guanteOro,
+        max_goles = p_maxGoles
+    WHERE IdMundial = p_idMundial;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_replaceSedes$$
+CREATE PROCEDURE sp_replaceSedes(IN p_idMundial INT)
+BEGIN
+    DELETE FROM Sedes WHERE IdMundial = p_idMundial;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_replaceGaleria$$
+CREATE PROCEDURE sp_replaceGaleria(IN p_idMundial INT)
+BEGIN
+    DELETE FROM Galeria_Mundial WHERE IdMundial = p_idMundial;
+END$$
+DELIMITER ;
+
 -- Get multimedia de mundiales
 DELIMITER $$
 DROP PROCEDURE IF EXISTS sp_getGaleriaMundial$$
@@ -392,7 +468,7 @@ BEGIN
 		m.Contenido as contenido
 	FROM Galeria_Mundial gm
 	INNER JOIN Multimedia m ON gm.IdMultimedia = m.IdMultimedia
-	WHERE gm.IdMundial = 
+	WHERE gm.IdMundial = p_id_mundial
 	ORDER BY m.IdMultimedia ASC;
 END$$
 DELIMITER ;
@@ -629,5 +705,9 @@ BEGIN
     VALUES (p_idMultimedia, p_idPublicacion);
 END$$
 DELIMITER ;
+
+
+
+
 
 
