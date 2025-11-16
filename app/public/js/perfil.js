@@ -647,13 +647,18 @@ export default class ProfileManager {
 
         // Crear estructura HTML si no existe
         correoContainer.innerHTML = `
-            <input type="text" id="correoUsuario" placeholder="usuario" required>
-            <span style="font-weight: bold; color: #00ff88; font-size: 1.2rem;">@</span>
-            <select id="correoDominio" required>
-                <option value="gmail.com">gmail.com</option>
-                <option value="outlook.com">outlook.com</option>
-                <option value="hotmail.com">hotmail.com</option>
-            </select>
+            <label for="correoUsuario">
+                <i class="fas fa-envelope"></i> Correo Electrónico
+            </label>
+            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                <input type="text" id="correoUsuario" placeholder="usuario" required style="flex: 1;">
+                <span style="font-weight: bold; color: #00ff88; font-size: 1.2rem; flex-shrink: 0;">@</span>
+                <select id="correoDominio" required style="flex: 1;">
+                    <option value="gmail.com">gmail.com</option>
+                    <option value="outlook.com">outlook.com</option>
+                    <option value="hotmail.com">hotmail.com</option>
+                </select>
+            </div>
         `;
         
         // Asignar valores
