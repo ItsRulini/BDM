@@ -555,6 +555,42 @@ BEGIN
 END**
 DELIMITER ;
 
+DELIMITER **
+DROP PROCEDURE IF EXISTS sp_getPosicionesMundial**
+CREATE PROCEDURE sp_getPosicionesMundial ( IN p_id_mundial INT )
+BEGIN
+	SELECT 
+    IdMundial, campeon, subcampeon, tercer_puesto, cuarto_puesto
+    FROM vw_posicionesMundial
+    WHERE IdMundial = p_id_mundial;
+END**
+DELIMITER ;
+
+DELIMITER **
+DROP PROCEDURE IF EXISTS sp_getPremiosMundial**
+CREATE PROCEDURE sp_getPremiosMundial ( IN p_id_mundial INT )
+BEGIN
+	SELECT
+		IdMundial,
+		balon_oro,
+		balon_oro_foto,
+		balon_plata,
+		balon_plata_foto,
+		balon_bronce,
+		balon_bronce_foto,
+		bota_oro,
+		bota_oro_foto,
+		bota_plata,
+		bota_plata_foto,
+		bota_bronce,
+		bota_bronce_foto,
+		max_goles,
+		guante_oro,
+		guante_oro_foto
+	FROM vw_premios
+    WHERE IdMundial = p_id_mundial;
+END**
+DELIMITER ;
 -- ==========================================
 -- PROCEDIMIENTOS PARA PUBLICACIONES
 -- ==========================================

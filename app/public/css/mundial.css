@@ -695,3 +695,97 @@
         text-align: center;
     }
 }
+
+/* ==========================================
+   ESTILOS PARA VIDEOS EN SWIPER
+   ========================================== */
+
+/* Asegurar que imágenes y videos ocupen todo el espacio disponible */
+.swiper-slide img,
+.swiper-slide video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Mantiene proporción sin recortar */
+    background-color: #000; /* Fondo negro para barras laterales */
+}
+
+/* Estilo específico para videos */
+.swiper-video {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* Controles de video personalizados (opcional) 
+.swiper-video::-webkit-media-controls {
+    /* Personalizar controles de video en Chrome/Safari 
+} */
+
+.swiper-video::-webkit-media-controls-panel {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+}
+
+/* Para que el slide contenga bien el contenido */
+.swiper-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000; /* Fondo negro */
+}
+
+/* Ajuste para pantallas pequeñas */
+@media (max-width: 768px) {
+    .swiper-slide img,
+    .swiper-slide video {
+        object-fit: contain;
+    }
+}
+
+/* Opcional: Indicador de tipo de media */
+.media-type-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 255, 136, 0.9);
+    color: #000;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
+    text-transform: uppercase;
+}
+
+/* Estado de reproducción de video */
+/* .swiper-video.playing {
+    /* Agregar estilos cuando el video está reproduciéndose 
+} */
+
+/* Overlay para cuando el video está pausado (opcional) */
+.video-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: rgba(0, 255, 136, 0.8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.swiper-slide:hover .video-overlay {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.video-overlay i {
+    font-size: 30px;
+    color: #000;
+}

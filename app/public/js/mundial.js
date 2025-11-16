@@ -1,3 +1,6 @@
+let CAMPEON = null;
+let SUBCAMPEON = null;
+
 document.addEventListener('DOMContentLoaded', function () {
     // Inicialización de Swiper para la galería de momentos
     const swiper = new Swiper('.media-swiper', {
@@ -34,7 +37,7 @@ async function cargarDatosMundial() {
     }
 
     try {
-        const response = await fetch(`index.php?controller=api&action=getMundial&id=${mundialId}`, {
+        const response = await fetch(`index.php?controller=api&action=getInfoMundial&id=${mundialId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -56,7 +59,20 @@ async function cargarDatosMundial() {
 }
 
 // Función para renderizar todos los datos del mundial
-function renderizarMundial(mundial) {
+async function renderizarMundial(mundial) {
+    // Si el nombre contiene comas, reemplazar la última coma por " y " (manteniendo el resto igual)
+    const rawName = (typeof mundial.nombre === 'string') ? mundial.nombre.trim() : '';
+    if (rawName.includes(',')) {
+        const parts = rawName.split(',').map(s => s.trim()).filter(Boolean);
+        if (parts.length > 1) {
+            mundial.nombre = parts.slice(0, -1).join(', ') + ' y ' + parts[parts.length - 1];
+        } else {
+            mundial.nombre = rawName;
+        }
+    } else {
+        mundial.nombre = rawName;
+    }
+
     // Título
     document.getElementById('mundial-name').textContent = mundial.nombre || 'Mundial';
 
@@ -75,17 +91,17 @@ function renderizarMundial(mundial) {
 
     // Posiciones
     if (mundial.posiciones) {
-        renderizarPosiciones(mundial.posiciones);
+        await renderizarPosiciones(mundial.id);
     }
 
     // Resultado de la final
     if (mundial.resultado) {
-        renderizarResultadoFinal(mundial.resultado);
+        await renderizarResultadoFinal(mundial.resultado);
     }
 
     // Premios individuales
     if (mundial.premios) {
-        renderizarPremios(mundial.premios);
+        await renderizarPremios(mundial.id);
     }
 }
 
@@ -99,21 +115,47 @@ function renderizarDescripcion(descripcion) {
     }
 }
 
-// Renderizar galería
+// Renderizar galería con soporte para imágenes y videos
 function renderizarGaleria(multimedia) {
     const swiperWrapper = document.querySelector('.swiper-wrapper');
     if (!swiperWrapper) return;
 
-    swiperWrapper.innerHTML = multimedia.map((media, index) => `
-        <div class="swiper-slide">
-            <img src="${media.url}" alt="Momento ${index + 1}">
-        </div>
-    `).join('');
+    swiperWrapper.innerHTML = multimedia.map((media, index) => {
+        // Detectar si es imagen o video por el tipo MIME
+        const isImage = media.type && media.type.startsWith('image');
+        const isVideo = media.type && media.type.startsWith('video');
 
-    // Reinicializar Swiper
+        if (isVideo) {
+            // Renderizar video
+            return `
+                <div class="swiper-slide">
+                    <video 
+                        class="swiper-video" 
+                        controls 
+                        playsinline
+                        preload="metadata"
+                        poster=""
+                    >
+                        <source src="${media.url}" type="${media.type}">
+                        Tu navegador no soporta el elemento de video.
+                    </video>
+                </div>
+            `;
+        } else {
+            // Renderizar imagen (por defecto si no es video)
+            return `
+                <div class="swiper-slide">
+                    <img src="${media.url}" alt="Momento ${index + 1}">
+                </div>
+            `;
+        }
+    }).join('');
+
+    // Reinicializar Swiper con configuración mejorada para videos
     if (window.swiperInstance) {
         window.swiperInstance.destroy();
     }
+    
     window.swiperInstance = new Swiper('.media-swiper', {
         loop: true,
         grabCursor: true,
@@ -130,6 +172,29 @@ function renderizarGaleria(multimedia) {
             crossFade: true
         },
         speed: 800,
+        // Eventos para manejar videos
+        on: {
+            slideChange: function() {
+                // Pausar todos los videos cuando se cambia de slide
+                const videos = document.querySelectorAll('.swiper-video');
+                videos.forEach(video => {
+                    video.pause();
+                    video.currentTime = 0;
+                });
+            },
+            slideChangeTransitionEnd: function() {
+                // Opcional: Auto-reproducir video en el slide actual
+                const activeSlide = this.slides[this.activeIndex];
+                const video = activeSlide?.querySelector('.swiper-video');
+                if (video) {
+                    // Detener autoplay cuando hay video
+                    this.autoplay.stop();
+                    
+                    // Opcional: Auto-play del video
+                    video.play().catch(err => console.log('Autoplay bloqueado:', err));
+                }
+            }
+        }
     });
 }
 
@@ -150,16 +215,42 @@ function renderizarMascota(mascota) {
 }
 
 // Renderizar posiciones
-function renderizarPosiciones(posiciones) {
+async function renderizarPosiciones(mundialId) {
+
+    try {
+        const response = await fetch(`index.php?controller=api&action=getPosicionesMundial&id=${mundialId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            posiciones = data.data;
+        } else {
+            console.error('Error al cargar las posiciones:', data.message);
+            mostrarError('No se pudo cargar la información de posiciones del mundial');
+            return;
+        }
+    } catch (error) {
+        console.error('Error de conexión:', error);
+        mostrarError('Error de conexión al cargar el mundial');
+        return;
+    }
+    
     const container = document.querySelector('.positions-grid');
     if (!container) return;
 
     const medals = {
         campeon: { icon: 'fa-trophy', label: 'Campeón', class: 'champion' },
         subcampeon: { icon: 'fa-medal', label: 'Subcampeón', class: 'runner-up' },
-        tercerPuesto: { icon: 'fa-medal', label: 'Tercer Puesto', class: 'third-place' },
-        cuartoPuesto: { icon: 'fa-award', label: 'Cuarto Puesto', class: 'fourth-place' }
+        tercer_puesto: { icon: 'fa-medal', label: 'Tercer Puesto', class: 'third-place' },
+        cuarto_puesto: { icon: 'fa-award', label: 'Cuarto Puesto', class: 'fourth-place' }
     };
+
+    CAMPEON = posiciones.campeon;
+    SUBCAMPEON = posiciones.subcampeon;
 
     container.innerHTML = Object.keys(medals).map(key => {
         const pais = posiciones[key];
@@ -174,7 +265,7 @@ function renderizarPosiciones(posiciones) {
                 </div>
                 <div class="position-info">
                     <span class="position-label">${medal.label}</span>
-                    <h3>${escapeHtml(pais.nombre)}</h3>
+                    <h3>${escapeHtml(pais)}</h3>
                 </div>
             </div>
         `;
@@ -182,14 +273,14 @@ function renderizarPosiciones(posiciones) {
 }
 
 // Renderizar resultado de la final
-function renderizarResultadoFinal(resultado) {
+async function renderizarResultadoFinal(resultado) {
     const container = document.querySelector('.final-result');
     if (!container) return;
 
     container.innerHTML = `
         <div class="final-teams">
             <div class="team-info">
-                <h3>${escapeHtml(resultado.equipo1)}</h3>
+                <h3>${CAMPEON}</h3>
             </div>
             <div class="score-container">
                 <div class="score-box">
@@ -200,7 +291,7 @@ function renderizarResultadoFinal(resultado) {
                 <span class="score-label">Tiempo Reglamentario</span>
             </div>
             <div class="team-info">
-                <h3>${escapeHtml(resultado.equipo2)}</h3>
+                <h3>${SUBCAMPEON}</h3>
             </div>
         </div>
 
@@ -221,7 +312,7 @@ function renderizarResultadoFinal(resultado) {
             
             ${resultado.muerteSubita ? `
                 <div class="detail-item">
-                    <i class="fas fa-bolt"></i>
+                    <i class="fas fa-skull"></i>
                     <span>Muerte Súbita</span>
                 </div>
             ` : ''}
@@ -235,7 +326,70 @@ function renderizarResultadoFinal(resultado) {
 }
 
 // Renderizar premios
-function renderizarPremios(premios) {
+async function renderizarPremios(mundialId) {
+
+    try {
+        const response = await fetch(`index.php?controller=api&action=getPremiosMundial&id=${mundialId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            premios = data.data;
+
+            // Adaptar estructura al formato requerido por el renderizador
+            premios = {
+                balones: {
+                    oro: premios.balon_oro ? {
+                        nombre: premios.balon_oro,
+                        foto: premios.balon_oro_foto ? `data:image/jpeg;base64,${premios.balon_oro_foto}` : null
+                    } : null,
+                    plata: premios.balon_plata ? {
+                        nombre: premios.balon_plata,
+                        foto: premios.balon_plata_foto ? `data:image/jpeg;base64,${premios.balon_plata_foto}` : null
+                    } : null,
+                    bronce: premios.balon_bronce ? {
+                        nombre: premios.balon_bronce,
+                        foto: premios.balon_bronce_foto ? `data:image/jpeg;base64,${premios.balon_bronce_foto}` : null
+                    } : null
+                },
+                botines: {
+                    oro: premios.bota_oro ? {
+                        nombre: premios.bota_oro,
+                        foto: premios.bota_oro_foto ? `data:image/jpeg;base64,${premios.bota_oro_foto}` : null,
+                        info: `${premios.max_goles || ''} goles`
+                    } : null,
+                    plata: premios.bota_plata ? {
+                        nombre: premios.bota_plata,
+                        foto: premios.bota_plata_foto ? `data:image/jpeg;base64,${premios.bota_plata_foto}` : null
+                    } : null,
+                    bronce: premios.bota_bronce ? {
+                        nombre: premios.bota_bronce,
+                        foto: premios.bota_bronce_foto ? `data:image/jpeg;base64,${premios.bota_bronce_foto}` : null
+                    } : null
+                },
+                guanteOro: premios.guante_oro ? {
+                    nombre: premios.guante_oro,
+                    foto: premios.guante_oro_foto ? `data:image/jpeg;base64,${premios.guante_oro_foto}` : null
+                } : null
+            };
+
+        } else {
+            console.error('Error al cargar los premios:', data.message);
+            mostrarError('No se pudo cargar la información de premios del mundial');
+            return;
+        }
+
+    } catch (error) {
+        console.error('Error de conexión:', error);
+        mostrarError('Error de conexión al cargar los premios del mundial');
+        return;
+    }
+
+    
     const container = document.querySelector('.awards-grid-container');
     if (!container) return;
 

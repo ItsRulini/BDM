@@ -580,7 +580,123 @@ class ApiController {
     }
 
     // @GET /api/getMundial
-    public function getMundial($id) {
+    public function getMundial ($id) {
+        if ($_SERVER['REQUEST_METHOD' !== 'GET']) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $mundial = $mundialDAO->getMundialPorId($id);
+
+            if ($mundial === null) {
+                throw new Exception("No se pudo obtener el mundial desde la base de datos.");
+            }
+
+            $sedes = $mundialDAO->getIdSedesMundial($id);
+
+            if ($sedes === null) {
+                throw new Exception("No se pudieron obtener las sedes del mundial desde la base de datos.");
+            }
+
+            // Convertir 'sedes' (cadena separada por comas) a un array limpio
+            $sedesArray = [];
+            if (is_string($sedes)) {
+                $sedesArray = array_values(array_filter(
+                    array_map('trim', 
+                    explode(',', $sedes)), 
+                    function($v) { return $v !== ''; }));
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $mundial->toArray(),
+                'sedes' => $sedesArray,
+                'message' => 'Mundial obtenido correctamente'
+            ]);
+            
+        } catch(Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+
+    }
+
+    // @GET /api/getPosicionesMundial
+    public function getPosicionesMundial ($id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $posiciones = $mundialDAO->getPosicionesMundial($id);
+
+            if ($posiciones === null) {
+                throw new Exception("No se pudieron obtener las posiciones del mundial desde la base de datos.");
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $posiciones,
+                'message' => 'Posiciones obtenidas correctamente'
+            ]);
+            
+        } catch(Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // @GET /api/getPremiosMundial
+    public function getPremiosMundial ($id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $premios = $mundialDAO->getPremiosMundial($id);
+
+            if ($premios === null) {
+                throw new Exception("No se pudieron obtener los premios del mundial desde la base de datos.");
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $premios,
+                'message' => 'Premios obtenidos correctamente'
+            ]);
+            
+        } catch(Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // @GET /api/getMundialDashboard
+    public function getInfoMundial ($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
             echo json_encode([
                 'success' => false,

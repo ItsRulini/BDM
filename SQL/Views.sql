@@ -35,47 +35,48 @@ INNER JOIN Sedes s ON m.IdMundial = s.IdMundial
 INNER JOIN Pais p ON s.Sede = p.IdPais
 GROUP BY m.IdMundial;
 
--- ALTER
-DROP VIEW vw_multimedia;
+ALTER VIEW vw_posicionesMundial
 AS
-SELECT
-	mul.IdMultimedia,
-	mul.Contenido
-FROM Multimedia mul
-LEFT JOIN Galeria_Mundial gm ON mul.IdMultimedia = gm.IdMultimedia
-INNER JOIN Multimedia_Publicacion mp ON mul.IdMultimedia = mp.IdMultimedia;
-
-
-SELECT * FROM vw_multimedia;
-
-
-
+SELECT 
+	m.IdMundial,
+	pc.Pais AS campeon,
+    psc.Pais AS subcampeon,
+    ptp.Pais AS tercer_puesto,
+    pcp.Pais AS cuarto_puesto
+FROM Mundial m
+LEFT JOIN Pais pc ON m.campeon = pc.idPais
+LEFT JOIN Pais psc ON m.subcampeon = psc.idPais
+LEFT JOIN Pais ptp ON m.tercer_puesto = ptp.idPais
+LEFT JOIN Pais pcp ON m.cuarto_puesto = pcp.idPais;
 
 -- views nuevas
-
-
-
 -- 2. Vista para premios individuales (Balón de Oro, Plata, Bronce)
-CREATE VIEW vvw_premios_balon AS
+ALTER VIEW vw_premios_balon AS
 SELECT 
     m.IdMundial,
     m.Año,
     jo.Nombre as BalonOro,
+    jo.Foto as oroImg,
     jp.Nombre as BalonPlata,
-    jb.Nombre as BalonBronce
+    jp.Foto as plataImg,
+    jb.Nombre as BalonBronce,
+    jb.Foto as bronceImg
 FROM Mundial m
 LEFT JOIN Jugador jo ON m.balon_oro = jo.IdJugador
 LEFT JOIN Jugador jp ON m.balon_plata = jp.IdJugador
 LEFT JOIN Jugador jb ON m.balon_bronce = jb.IdJugador;
 
 -- 3. Vista para botines (Máximos goleadores)
-CREATE VIEW vvw_premios_botin AS
+ALTER VIEW vw_premios_botin AS
 SELECT 
     m.IdMundial,
     m.Año,
     jo.Nombre as BotinOro,
+    jo.Foto as oroImg,
     jp.Nombre as BotinPlata,
+    jp.Foto as plataImg,
     jb.Nombre as BotinBronce,
+    jb.Foto as bronceImg,
     m.max_goles as GolesMaximo
 FROM Mundial m
 LEFT JOIN Jugador jo ON m.botin_oro = jo.IdJugador
@@ -83,18 +84,19 @@ LEFT JOIN Jugador jp ON m.botin_plata = jp.IdJugador
 LEFT JOIN Jugador jb ON m.botin_bronce = jb.IdJugador;
 
 -- 4. Vista para guantes de oro (Mejores porteros)
-CREATE VIEW vvw_premios_guante AS
+CREATE VIEW vw_premios_guante AS
 SELECT 
     m.IdMundial,
     m.Año,
     j.Nombre as GuanteOro,
+    j.Foto as foto,
     p.Pais as PaisPortero
 FROM Mundial m
 LEFT JOIN Jugador j ON m.guante_oro = j.IdJugador
 LEFT JOIN Pais p ON j.Nacionalidad = p.IdPais;
 
 -- 5. Vista de publicaciones con información completa
-CREATE VIEW vvw_publicaciones_completas AS
+CREATE VIEW vw_publicaciones_completas AS
 SELECT 
     p.IdPublicacion,
     p.Contenido,
@@ -113,7 +115,7 @@ LEFT JOIN Categoria c ON pc.IdCategoria = c.IdCategoria
 GROUP BY p.IdPublicacion;
 
 -- 6. Vista de estadísticas de publicaciones por usuario
-CREATE VIEW vvw_stats_usuario AS
+CREATE VIEW vw_stats_usuario AS
 SELECT 
     u.IdUsuario,
     u.Nombre,
@@ -126,7 +128,7 @@ LEFT JOIN Publicacion p ON u.IdUsuario = p.IdCreador
 GROUP BY u.IdUsuario;
 
 -- 7. Vista de comentarios por publicación
-CREATE VIEW vvw_comentarios_publicacion AS
+CREATE VIEW vw_comentarios_publicacion AS
 SELECT 
     c.IdComentario,
     c.Comentario,
@@ -140,7 +142,7 @@ INNER JOIN Publicacion p ON c.IdPublicacion = p.IdPublicacion
 WHERE c.Estatus = 1;
 
 -- 8. Vista de mundiales con conteo de publicaciones
-CREATE VIEW vvw_mundiales_stats AS
+CREATE VIEW vw_mundiales_stats AS
 SELECT 
     m.IdMundial,
     m.Año,

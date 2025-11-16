@@ -110,6 +110,18 @@ async function loadWorldCups() {
 
 
 function createWorldCupCard(worldCup) {
+    // Si el nombre contiene comas, reemplazar la última coma por " y " (manteniendo el resto igual)
+    const rawName = (typeof worldCup.name === 'string') ? worldCup.name.trim() : '';
+    if (rawName.includes(',')) {
+        const parts = rawName.split(',').map(s => s.trim()).filter(Boolean);
+        if (parts.length > 1) {
+            worldCup.name = parts.slice(0, -1).join(', ') + ' y ' + parts[parts.length - 1];
+        } else {
+            worldCup.name = rawName;
+        }
+    } else {
+        worldCup.name = rawName;
+    }
     // La API ya manda 'image' (Base64), 'name' (Sede + Año) y 'description'
     return `
         <div class="world-cup-card" onclick="goToWorldCupPage(${worldCup.id})">
