@@ -660,5 +660,57 @@ class MundialDAO {
         }
     }
 
+    public function añosFiltros(): ?array {
+        $query = "CALL sp_filtros_años()";
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $años = [];
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $años[] = $row['Año'];
+            }
+        }
+        return $años;
+    }
+
+    public function sedesFiltro(): ?array {
+        $query = "CALL sp_filtros_sedes()";
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $sedes = [];
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $sedes[] = $row['Pais'];
+            }
+        }
+        return $sedes;
+    }
+
+    public function getFiltros(): ?array {
+        try {
+            // Array para almacenar filtros
+            $filtros = [];
+
+            // Obtener años
+            $años = $this->añosFiltros();
+
+            // Obtener sedes
+            $sedes = $this->sedesFiltro();
+
+            // Asignar al array de filtros
+            $filtros = [
+                'años' => $años,
+                'sedes' => $sedes
+            ];
+
+            return $filtros;
+        } catch (Exception $e) {
+            error_log("Error en MundialDAO::getFiltros: " . $e->getMessage());
+            return null;
+        }
+    }
+
 
 }

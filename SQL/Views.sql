@@ -51,12 +51,13 @@ LEFT JOIN Pais pcp ON m.cuarto_puesto = pcp.idPais;
 
 -- views nuevas
 -- 2. Vista para premios individuales (Balón de Oro, Plata, Bronce)
-ALTER VIEW vw_premios_balon AS
+CREATE OR REPLACE VIEW vw_premios_balon AS
 SELECT 
     m.IdMundial,
     m.Año,
     jo.Nombre as BalonOro,
     jo.Foto as oroImg,
+    p.Pais as nacionalidadOro,
     jp.Nombre as BalonPlata,
     jp.Foto as plataImg,
     jb.Nombre as BalonBronce,
@@ -64,15 +65,17 @@ SELECT
 FROM Mundial m
 LEFT JOIN Jugador jo ON m.balon_oro = jo.IdJugador
 LEFT JOIN Jugador jp ON m.balon_plata = jp.IdJugador
-LEFT JOIN Jugador jb ON m.balon_bronce = jb.IdJugador;
+LEFT JOIN Jugador jb ON m.balon_bronce = jb.IdJugador
+INNER JOIN Pais p ON jo.Nacionalidad = p.IdPais;
 
 -- 3. Vista para botines (Máximos goleadores)
-ALTER VIEW vw_premios_botin AS
+CREATE OR REPLACE VIEW vw_premios_botin AS
 SELECT 
     m.IdMundial,
     m.Año,
     jo.Nombre as BotinOro,
     jo.Foto as oroImg,
+    p.Pais as nacionalidadOro,
     jp.Nombre as BotinPlata,
     jp.Foto as plataImg,
     jb.Nombre as BotinBronce,
@@ -81,19 +84,50 @@ SELECT
 FROM Mundial m
 LEFT JOIN Jugador jo ON m.botin_oro = jo.IdJugador
 LEFT JOIN Jugador jp ON m.botin_plata = jp.IdJugador
-LEFT JOIN Jugador jb ON m.botin_bronce = jb.IdJugador;
+LEFT JOIN Jugador jb ON m.botin_bronce = jb.IdJugador
+INNER JOIN Pais p ON jo.Nacionalidad = p.IdPais;
 
 -- 4. Vista para guantes de oro (Mejores porteros)
-CREATE VIEW vw_premios_guante AS
+CREATE OR REPLACE VIEW vw_premios_guante AS
 SELECT 
     m.IdMundial,
     m.Año,
     j.Nombre as GuanteOro,
     j.Foto as foto,
-    p.Pais as PaisPortero
+    p.Pais as nacionalidadOro
 FROM Mundial m
 LEFT JOIN Jugador j ON m.guante_oro = j.IdJugador
 LEFT JOIN Pais p ON j.Nacionalidad = p.IdPais;
+
+-- Vista de todos los premios individuales por mundial
+CREATE OR REPLACE VIEW vw_premios
+AS
+SELECT
+m.IdMundial, m.Año,
+balon.BalonOro AS balon_oro, balon.oroImg AS balon_oro_foto, balon.nacionalidadOro AS balon_oro_pais,
+balon.BalonPlata AS balon_plata, balon.plataImg AS balon_plata_foto,
+balon.BalonBronce AS balon_bronce, balon.bronceImg AS balon_bronce_foto,
+bota.BotinOro AS bota_oro, bota.oroImg AS bota_oro_foto, bota.nacionalidadOro AS bota_oro_pais,
+bota.BotinPlata AS bota_plata, bota.plataImg AS bota_plata_foto,
+bota.BotinBronce AS bota_bronce, bota.bronceImg AS bota_bronce_foto,
+bota.GolesMaximo AS max_goles,
+guante.GuanteOro AS guante_oro, guante.foto AS guante_oro_foto, guante.nacionalidadOro AS guante_oro_pais
+FROM Mundial m
+LEFT JOIN vw_premios_balon balon ON m.IdMundial = balon.IdMundial
+LEFT JOIN vw_premios_botin bota ON m.IdMundial = bota.IdMundial
+LEFT JOIN vw_premios_guante guante ON m.IdMundial = guante.IdMundial;
+
+-- Vista de filtros
+CREATE OR REPLACE VIEW vw_filtros
+AS
+SELECT 
+	p.Pais,
+    m.Año
+FROM Pais p 
+LEFT JOIN Sedes s ON p.IdPais = s.Sede
+INNER JOIN Mundial m ON m.IdMundial = s.IdMundial
+ORDER BY Año DESC;
+
 
 -- 5. Vista de publicaciones con información completa
 CREATE VIEW vw_publicaciones_completas AS

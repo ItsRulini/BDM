@@ -201,7 +201,7 @@ class ApiController {
 
             // 3. Si había una foto, SOBREESCRIBIMOS el dato binario con su versión en texto (Base64)
             if ($fotoPerfilBinaria !== null) {
-            $fullUser['usuario']['fotoPerfil'] = 'data:image/jpeg;base64,' . base64_encode($fotoPerfilBinaria);
+                $fullUser['usuario']['fotoPerfil'] = 'data:image/jpeg;base64,' . base64_encode($fotoPerfilBinaria);
             }
 
 
@@ -1394,9 +1394,6 @@ class ApiController {
         }
     }
 
-    // ⭐
-    // ⭐ NUEVA FUNCIÓN AÑADIDA
-    // ⭐
     // @GET /api/getPublicacionesAprobadas (para publico)
     public function getPublicacionesAprobadas() {
         if (ob_get_level()) {
@@ -1642,7 +1639,73 @@ class ApiController {
         }
     }
 
+    public function getCategoriaFiltros() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
 
+        try {
+            $categoriaDAO = new CategoriaDAO($GLOBALS['conn']);
+            $categorias = $categoriaDAO->getFiltros();
+
+            if ($categorias === null) {
+                throw new Exception("No se pudieron obtener las categorías desde la base de datos.");
+            }
+
+            // Convertir el array de objetos a un array asociativo para el JSON
+            $categoriasArray = array_map(function($categoria) {
+                return [
+                    'id' => $categoria->getIdCategoria(),
+                    'nombre' => $categoria->getNombre()
+                ];
+            }, $categorias);
+
+            echo json_encode([
+                'success' => true,
+                'data' => $categoriasArray
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getMundialesFiltros() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $filtros = $mundialDAO->getFiltros();
+
+            if ($filtros === null) {
+                throw new Exception("No se pudieron obtener las categorías desde la base de datos.");
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $filtros
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
     
 
 }

@@ -591,6 +591,28 @@ BEGIN
     WHERE IdMundial = p_id_mundial;
 END**
 DELIMITER ;
+-- DROP PROCEDURE sp_getAllPremiosMundial;
+DELIMITER **
+DROP PROCEDURE IF EXISTS sp_getPremiosOroMundial**
+CREATE PROCEDURE sp_getPremiosOroMundial ()
+BEGIN
+	SELECT
+		IdMundial,
+        Año,
+		balon_oro,
+		balon_oro_foto,
+        balon_oro_pais,
+		bota_oro,
+		bota_oro_foto,
+        bota_oro_pais,
+		max_goles,
+		guante_oro,
+		guante_oro_foto,
+        guante_oro_pais
+	FROM vw_premios
+    ORDER BY Año DESC;
+END**
+DELIMITER ;
 -- ==========================================
 -- PROCEDIMIENTOS PARA PUBLICACIONES
 -- ==========================================
@@ -742,8 +764,30 @@ BEGIN
 END$$
 DELIMITER ;
 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_filtros_sedes$$
+CREATE PROCEDURE sp_filtros_sedes()
+BEGIN
+	SELECT DISTINCT Pais FROM vw_filtros
+    ORDER BY Pais;
+END $$
+DELIMITER ;
 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_filtros_años$$
+CREATE PROCEDURE sp_filtros_años()
+BEGIN
+	SELECT DISTINCT Año FROM vw_filtros
+    ORDER BY Año DESC;
+END $$
+DELIMITER ;
 
-
-
-
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_filtros_categorias$$
+CREATE PROCEDURE sp_filtros_categorias()
+BEGIN
+	SELECT DISTINCT c.IdCategoria, c.Nombre FROM Categoria c
+	JOIN Publicacion_Categoria pc ON c.IdCategoria = pc.IdCategoria
+    ORDER BY c.Nombre;
+END $$
+DELIMITER ;

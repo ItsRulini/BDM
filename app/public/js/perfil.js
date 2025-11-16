@@ -596,6 +596,7 @@ export default class ProfileManager {
         document.getElementById('nombre').value = usuario.nombre || '';
         document.getElementById('apellidoPaterno').value = usuario.apellidoPaterno || '';
         document.getElementById('apellidoMaterno').value = usuario.apellidoMaterno || '';
+        document.getElementById('correo').value = usuario.correo || '';
         document.getElementById('genero').value = usuario.genero || '';
 
         const fechaValida = (usuario.fechaNacimiento && usuario.fechaNacimiento !== '0000-00-00') ? usuario.fechaNacimiento : '';
@@ -646,9 +647,9 @@ export default class ProfileManager {
 
         // Crear estructura HTML si no existe
         correoContainer.innerHTML = `
-            <input type="text" id="correoUsuario" placeholder="usuario" style="flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: white;" required>
+            <input type="text" id="correoUsuario" placeholder="usuario" required>
             <span style="font-weight: bold; color: #00ff88; font-size: 1.2rem;">@</span>
-            <select id="correoDominio" style="flex: 1; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: white;">
+            <select id="correoDominio" required>
                 <option value="gmail.com">gmail.com</option>
                 <option value="outlook.com">outlook.com</option>
                 <option value="hotmail.com">hotmail.com</option>

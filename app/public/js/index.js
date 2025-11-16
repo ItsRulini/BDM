@@ -29,8 +29,42 @@ document.addEventListener('click', function(e) {
 });
 
 // ==========================================
-// DATOS DE MUNDIALES
+// FUNCTIONES PARA FILTROS DINÁMICOS
 // ==========================================
+
+async function populateFilterOptions() {
+    try {
+        const response = await fetch('index.php?controller=api&action=getMundialesFiltros');
+        const data = await response.json();
+
+        if (data.success) {
+            const filtros = data.data;
+            await fillOutFilterOptions('filterCountry', filtros.sedes, 'Filtrar por país sede');
+            await fillOutFilterOptions('filterYear', filtros.años, 'Filtrar por año');
+        } else {
+            console.error('Error en los datos recibidos para filtros:', data.message);
+            return;
+        }
+
+    } catch (error) {
+        console.error('Error al cargar opciones de filtro:', error);
+    }
+}
+
+async function fillOutFilterOptions(selectElementId, optionsArray, placeholder) {
+    const selectElement = document.getElementById(selectElementId);
+    if (!selectElement) return;
+
+    // Convertir cualquier valor simple (string, número) a { value, label }
+    const normalized = optionsArray.map(opt => ({
+        value: opt,
+        label: opt
+    }));
+
+    selectElement.innerHTML = `<option value="">${placeholder}</option>` +
+        normalized.map(option => `<option value="${option.value}">${option.label}</option>`).join('');
+}
+
 
 // ELIMINAMOS LA VARIABLE allWorldCups
 let fetchedWorldCups = []; // AÑADIDO: para guardar los mundiales de la API
