@@ -37,6 +37,61 @@ class PostsManager {
         this.commentsList = document.getElementById('commentsList');
         this.noComments = document.getElementById('noComments');
         this.loadingComments = document.getElementById('loadingComments');
+
+        // Elementos de select (filtros)
+        this.filtroMundial = document.getElementById('filterCountry');
+        this.filtroCategoria = document.getElementById('filterCategory');
+        this.loadDropdownOptions();
+    }
+
+    mundialNameFormat(stringToFormat) {
+        // Si el nombre contiene comas, reemplazar la última coma por " y " (manteniendo el resto igual)
+        const rawName = (typeof stringToFormat === 'string') ? stringToFormat.trim() : '';
+        if (rawName.includes(',')) {
+            const parts = rawName.split(',').map(s => s.trim()).filter(Boolean);
+            if (parts.length > 1) {
+                stringToFormat = parts.slice(0, -1).join(', ') + ' y ' + parts[parts.length - 1];
+            } else {
+                stringToFormat = rawName;
+            }
+        } else {
+            stringToFormat = rawName;
+        }
+
+        return stringToFormat;
+    }
+
+    async fillOutFilterOptions(selectElementId, optionsArray, placeholder) {
+        const selectElement = selectElementId
+        if (!selectElement) return;
+
+        // Convertir cualquier valor simple (string, número) a { value, label }
+        const normalized = optionsArray.map(opt => ({
+            value: opt,
+            label: opt
+        }));
+
+        selectElement.innerHTML = `<option value="">${placeholder}</option>` +
+            normalized.map(option => `<option value="${option.value}">${option.label}</option>`).join('');
+    }
+
+    async loadDropdownOptions() {
+        try {
+            const response = await fetch('index.php?controller=api&action=getMundialesFiltros');
+            const data = await response.json();
+
+            if (data.success) {
+                const filtros = data.data;
+                await fillOutFilterOptions(this.filtroMundial, filtros.sedes, 'Filtrar por país sede');
+            } else {
+                console.error('Error en los datos recibidos para filtros:', data.message);
+                return;
+            }
+
+        } catch (error) {
+            console.error('Error al cargar opciones de filtro:', error);
+        }
+        
     }
 
     bindEvents() {
@@ -193,117 +248,119 @@ class PostsManager {
     }
 
     createPostHTML(post) {
-        const formatCategory = (categorias) => {
-            // MODIFICADO: API envía array de strings
-            if (!Array.isArray(categorias) || categorias.length === 0) return 'General';
-            // Capitalizar la primera letra
-            const cat = categorias[0];
-            return cat.charAt(0).toUpperCase() + cat.slice(1);
-        };
+    const formatCategories = (categorias) => {
+        if (!Array.isArray(categorias) || categorias.length === 0) return '<span>General</span>';
+        
+        return categorias.map(cat => {
+            const formatted = cat.charAt(0).toUpperCase() + cat.slice(1);
+            return `<span>${formatted}</span>`;
+        }).join('');
+    };
 
-        const createMultimediaCarousel = (multimedia) => {
-            if (!multimedia || multimedia.length === 0) return '';
-            
-            const carouselId = `carousel-${post.id}`;
-            
-            const slides = multimedia.map((item, index) => {
-                // MODIFICADO: La API envía 'type' (MIME) y 'src' (URL Base64)
-                if (item.type.startsWith('image/')) {
-                    return `
-                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <img src="${item.src}" alt="Multimedia de publicación" onerror="this.parentElement.style.display='none'">
-                        </div>
-                    `;
-                } else if (item.type.startsWith('video/')) {
-                    return `
-                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <video controls poster="" preload="metadata">
-                                <source src="${item.src}" type="${item.type}">
-                                Tu navegador no soporta el elemento video.
-                            </video>
-                        </div>
-                    `;
-                }
-                return '';
-            }).join('');
-
-            const indicators = multimedia.length > 1 ? multimedia.map((_, index) => 
-                `<button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-slide="${index}"></button>`
-            ).join('') : '';
-
-            const navigation = multimedia.length > 1 ? `
-                <button class="carousel-nav prev" aria-label="Anterior">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="carousel-nav next" aria-label="Siguiente">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            ` : '';
-
-            return `
-                <div class="post-multimedia">
-                    <div class="multimedia-carousel" id="${carouselId}">
-                        <div class="carousel-container">
-                            ${slides}
-                        </div>
-                        ${navigation}
-                        ${indicators ? `<div class="carousel-indicators">${indicators}</div>` : ''}
+    const createMultimediaCarousel = (multimedia) => {
+        if (!multimedia || multimedia.length === 0) return '';
+        
+        const carouselId = `carousel-${post.id}`;
+        
+        const slides = multimedia.map((item, index) => {
+            if (item.type.startsWith('image/')) {
+                return `
+                    <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                        <img src="${item.src}" alt="Multimedia de publicación" onerror="this.parentElement.style.display='none'">
                     </div>
-                </div>
-            `;
-        };
+                `;
+            } else if (item.type.startsWith('video/')) {
+                return `
+                    <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                        <video controls preload="metadata" playsinline>
+                            <source src="${item.src}" type="${item.type}">
+                            Tu navegador no soporta el elemento video.
+                        </video>
+                    </div>
+                `;
+            }
+            return '';
+        }).join('');
+
+        const indicators = multimedia.length > 1 ? multimedia.map((_, index) => 
+            `<button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-slide="${index}"></button>`
+        ).join('') : '';
+
+        const navigation = multimedia.length > 1 ? `
+            <button class="carousel-nav prev" aria-label="Anterior">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="carousel-nav next" aria-label="Siguiente">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        ` : '';
 
         return `
-            <article class="post-card" data-post-id="${post.id}">
-                <div class="post-mundial">
-                    <span>${post.mundialAño}</span>
-                </div>
-                
-                <div class="post-category">
-                    <span>${formatCategory(post.categorias)}</span>
-                </div>
-                
-                <div class="post-header">
-                    <h2 class="post-title">${this.truncateText(post.contenido, 70)}</h2>
-                    <div class="post-meta">
-                        <div class="post-author">
-                            <img src="assets/default-avatar.png" alt="${post.autorNombre}" class="profile-pic" 
-                                 onerror="this.src='assets/default-avatar.png'">
-                            <span>por ${post.autorNombre}</span>
-                        </div>
-                        <div class="post-date">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>${this.formatDate(post.fechaCreacion)}</span>
-                        </div>
+            <div class="post-multimedia">
+                <div class="multimedia-carousel" id="${carouselId}">
+                    <div class="carousel-container">
+                        ${slides}
                     </div>
+                    ${navigation}
+                    ${indicators ? `<div class="carousel-indicators">${indicators}</div>` : ''}
                 </div>
-
-                <div class="post-content">
-                    <p class="post-text">${post.contenido}</p>
-                    ${createMultimediaCarousel(post.multimedia)}
-                </div>
-
-                <div class="post-interactions">
-                    <div class="interaction-buttons">
-                        <button class="like-btn ${post.liked ? 'liked' : ''}" 
-                                data-post-id="${post.id}" 
-                                aria-label="Dar like a esta publicación">
-                            <i class="fas fa-heart"></i>
-                            Like
-                            <span class="interaction-count">${post.likes}</span>
-                        </button>
-                        <button class="comment-btn" 
-                                data-post-id="${post.id}"
-                                aria-label="Ver comentarios">
-                            <i class="fas fa-comment"></i>
-                            Comentar
-                            <span class="interaction-count">${post.comments}</span>
-                        </button>
-                    </div>
-                </div>
-            </article>
+            </div>
         `;
-    }
+    };
+
+    const sedes = this.mundialNameFormat(post.sedes);
+
+    return `
+        <article class="post-card" data-post-id="${post.id}">
+            <div class="post-mundial">
+                <span>${sedes + ' ' + post.mundialAño}</span>
+            </div>
+            
+            <div class="post-category">
+                ${formatCategories(post.categorias)}
+            </div>
+            
+            <div class="post-header">
+                <h2 class="post-title">${this.truncateText(post.contenido, 70)}</h2>
+                <div class="post-meta">
+                    <div class="post-author">
+                        <img src="assets/default-avatar.png" alt="${post.autorNombre}" class="profile-pic" 
+                             onerror="this.src='assets/default-avatar.png'">
+                        <span>por ${post.autorNombre}</span>
+                    </div>
+                    <div class="post-date">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>${this.formatDate(post.fechaCreacion)}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="post-content">
+                <p class="post-text">${post.contenido}</p>
+                ${createMultimediaCarousel(post.multimedia)}
+            </div>
+
+            <div class="post-interactions">
+                <div class="interaction-buttons">
+                    <button class="like-btn ${post.liked ? 'liked' : ''}" 
+                            data-post-id="${post.id}" 
+                            aria-label="Dar like a esta publicación">
+                        <i class="fas fa-heart"></i>
+                        Like
+                        <span class="interaction-count">${post.likes}</span>
+                    </button>
+                    <button class="comment-btn" 
+                            data-post-id="${post.id}"
+                            aria-label="Ver comentarios">
+                        <i class="fas fa-comment"></i>
+                        Comentar
+                        <span class="interaction-count">${post.comments}</span>
+                    </button>
+                </div>
+            </div>
+        </article>
+    `;
+}
 
     // ================================
     // COMMENTS FUNCTIONALITY

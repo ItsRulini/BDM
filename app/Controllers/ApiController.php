@@ -1420,7 +1420,7 @@ class ApiController {
             foreach ($publicaciones as $item) {
                 
                 // ⭐ FILTRAR SOLO APROBADAS
-                if ($item['publicacion']->getEstatusAprobacion() !== 'approved') {
+                if ($item['publicacion']->getEstatusAprobacion() !== 'Aprobado') {
                     continue;
                 }
                 
@@ -1446,6 +1446,7 @@ class ApiController {
                 
                 $publicacionesAprobadas[] = [
                     'id' => $idPublicacion,
+                    'sedes' => $item['sedes'],
                     'contenido' => $pub->getContenido(),
                     'fechaCreacion' => $pub->getFechaCreacion(),
                     'estatus' => $pub->getEstatusAprobacion(),

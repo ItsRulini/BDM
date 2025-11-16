@@ -672,20 +672,19 @@ DROP PROCEDURE IF EXISTS sp_getTodasPublicaciones$$
 CREATE PROCEDURE sp_getTodasPublicaciones()
 BEGIN
     SELECT 
-        p.IdPublicacion,
-        p.Contenido,
-        p.FechaCreacion,
-        p.FechaAprobacion,
-        p.EstatusAprobacion,
-        p.IdCreador,
-        u.Nombre AS UsuarioNombre,
-        u.ApellidoPaterno AS UsuarioApellido,
-        p.IdMundial,
-        m.Año AS MundialAño
-    FROM Publicacion p
-    INNER JOIN Usuario u ON p.IdCreador = u.IdUsuario
-    INNER JOIN Mundial m ON p.IdMundial = m.IdMundial
-    ORDER BY p.FechaCreacion DESC;
+        IdPublicacion,
+        Contenido,
+        FechaCreacion,
+        FechaAprobacion,
+        EstatusAprobacion,
+        IdCreador,
+        UsuarioNombre,
+        UsuarioApellido,
+        IdMundial,
+        MundialAño,
+        Sedes
+    FROM vw_info_pub
+    ORDER BY FechaCreacion DESC;
 END$$
 DELIMITER ;
 

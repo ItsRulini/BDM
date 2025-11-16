@@ -129,6 +129,28 @@ INNER JOIN Mundial m ON m.IdMundial = s.IdMundial
 ORDER BY Año DESC;
 
 
+CREATE OR REPLACE VIEW vw_info_pub
+AS
+SELECT 
+	p.IdPublicacion,
+	p.Contenido,
+	p.FechaCreacion,
+	p.FechaAprobacion,
+	p.EstatusAprobacion,
+	p.IdCreador,
+	u.Nombre AS UsuarioNombre,
+	u.ApellidoPaterno AS UsuarioApellido,
+	p.IdMundial,
+	m.Año AS MundialAño,
+    v.Sedes
+FROM Publicacion p
+INNER JOIN Usuario u ON p.IdCreador = u.IdUsuario
+INNER JOIN Mundial m ON p.IdMundial = m.IdMundial
+INNER JOIN vw_info_mundiales v ON m.IdMundial = v.IdMundial;
+
+
+-- OTRAS VISTAS QUE AÚN NO SE UTILIZAN -------------
+
 -- 5. Vista de publicaciones con información completa
 CREATE VIEW vw_publicaciones_completas AS
 SELECT 
