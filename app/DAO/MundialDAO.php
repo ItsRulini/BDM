@@ -465,6 +465,48 @@ class MundialDAO {
         }
     }
 
+    public function getAllPremiosMundial(): ?array {
+        try {
+            $query = "CALL sp_getPremiosOroMundial()";
+            $stmt = mysqli_prepare($this->conn, $query);
+            //mysqli_stmt_bind_param($stmt, 'i', $idMundial);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            
+            $premios = [];
+            if ($result) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $premios[] = [
+                        'idMundial' => $row['IdMundial'],
+                        'año' => $row['Año'],
+
+                        'balon_oro' => $row['balon_oro'],
+                        'balon_oro_foto' => base64_encode($row['balon_oro_foto']),
+                        'balon_oro_pais' => $row['balon_oro_pais'],
+
+                        'bota_oro' => $row['bota_oro'],
+                        'bota_oro_foto' => base64_encode($row['bota_oro_foto']),
+                        'bota_oro_pais' => $row['bota_oro_pais'],
+
+                        'guante_oro' => $row['guante_oro'],
+                        'guante_oro_foto' => base64_encode($row['guante_oro_foto']),
+                        'guante_oro_pais' => $row['guante_oro_pais'],
+
+                        'max_goles' => $row['max_goles']
+                    ];
+
+                }
+            }
+
+            mysqli_stmt_close($stmt);
+            mysqli_next_result($this->conn);
+
+            return $premios;
+        } catch (Exception $e) {
+            error_log("Error en MundialDAO::getPremiosMundial: " . $e->getMessage());
+            return null;
+        }
+    }
     public function getPremiosMundial(int $idMundial): ?array {
         try {
             $query = "CALL sp_getPremiosMundial(?)";

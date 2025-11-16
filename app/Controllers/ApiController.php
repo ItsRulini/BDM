@@ -695,6 +695,39 @@ class ApiController {
         }
     }
 
+    // @GET /api/getAllPremios
+    public function getAllPremios () {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $premios = $mundialDAO->getAllPremiosMundial();
+
+            if ($premios === null) {
+                throw new Exception("No se pudieron obtener los premios del mundial desde la base de datos.");
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $premios,
+                'message' => 'Premios obtenidos correctamente'
+            ]);
+            
+        } catch(Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
+
     // @GET /api/getMundialDashboard
     public function getInfoMundial ($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
