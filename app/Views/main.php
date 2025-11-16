@@ -76,19 +76,9 @@
         <div class="search-filters">
             <select id="filterCountry">
                 <option value="">Filtrar por país sede</option>
-                <option value="brasil">Brasil</option>
-                <option value="argentina">Argentina</option>
-                <option value="alemania">Alemania</option>
-                <option value="francia">Francia</option>
-                <option value="mexico">México</option>
             </select>
             <select id="filterYear">
                 <option value="">Filtrar por año</option>
-                <option value="2022">2022</option>
-                <option value="2018">2018</option>
-                <option value="2014">2014</option>
-                <option value="2010">2010</option>
-                <option value="2006">2006</option>
             </select>
         </div>
     </section>

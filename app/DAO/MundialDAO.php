@@ -427,6 +427,136 @@ class MundialDAO {
             return [];
         }
     }
+
+    public function getPosicionesMundial(int $idMundial): ?array {
+        try {
+            $query = "CALL sp_getPosicionesMundial(?)";
+            $stmt = mysqli_prepare($this->conn, $query);
+            mysqli_stmt_bind_param($stmt, 'i', $idMundial);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            
+            $posiciones = [];
+            if ($result) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $idMundial = $row['IdMundial'];
+                    $campeon = $row['campeon'];
+                    $subcampeon = $row['subcampeon'];
+                    $tercerPuesto = $row['tercer_puesto'];
+                    $cuartoPuesto = $row['cuarto_puesto'];
+
+                    $posiciones = [
+                        'idMundial' => $idMundial,
+                        'campeon' => $campeon,
+                        'subcampeon' => $subcampeon,
+                        'tercer_puesto' => $tercerPuesto,
+                        'cuarto_puesto' => $cuartoPuesto
+                    ];
+                }
+            }
+
+            mysqli_stmt_close($stmt);
+            mysqli_next_result($this->conn);
+
+            return $posiciones;
+        } catch (Exception $e) {
+            error_log("Error en MundialDAO::getPosicionesMundial: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function getAllPremiosMundial(): ?array {
+        try {
+            $query = "CALL sp_getPremiosOroMundial()";
+            $stmt = mysqli_prepare($this->conn, $query);
+            //mysqli_stmt_bind_param($stmt, 'i', $idMundial);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            
+            $premios = [];
+            if ($result) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $premios[] = [
+                        'idMundial' => $row['IdMundial'],
+                        'año' => $row['Año'],
+
+                        'balon_oro' => $row['balon_oro'],
+                        'balon_oro_foto' => base64_encode($row['balon_oro_foto']),
+                        'balon_oro_pais' => $row['balon_oro_pais'],
+
+                        'bota_oro' => $row['bota_oro'],
+                        'bota_oro_foto' => base64_encode($row['bota_oro_foto']),
+                        'bota_oro_pais' => $row['bota_oro_pais'],
+
+                        'guante_oro' => $row['guante_oro'],
+                        'guante_oro_foto' => base64_encode($row['guante_oro_foto']),
+                        'guante_oro_pais' => $row['guante_oro_pais'],
+
+                        'max_goles' => $row['max_goles']
+                    ];
+
+                }
+            }
+
+            mysqli_stmt_close($stmt);
+            mysqli_next_result($this->conn);
+
+            return $premios;
+        } catch (Exception $e) {
+            error_log("Error en MundialDAO::getPremiosMundial: " . $e->getMessage());
+            return null;
+        }
+    }
+    public function getPremiosMundial(int $idMundial): ?array {
+        try {
+            $query = "CALL sp_getPremiosMundial(?)";
+            $stmt = mysqli_prepare($this->conn, $query);
+            mysqli_stmt_bind_param($stmt, 'i', $idMundial);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            
+            $premios = [];
+            if ($result) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $premios = [
+                        'idMundial' => $row['IdMundial'],
+
+                        'balon_oro' => $row['balon_oro'],
+                        'balon_oro_foto' => base64_encode($row['balon_oro_foto']),
+
+                        'balon_plata' => $row['balon_plata'],
+                        'balon_plata_foto' => base64_encode($row['balon_plata_foto']),
+
+                        'balon_bronce' => $row['balon_bronce'],
+                        'balon_bronce_foto' => base64_encode($row['balon_bronce_foto']),
+
+                        'bota_oro' => $row['bota_oro'],
+                        'bota_oro_foto' => base64_encode($row['bota_oro_foto']),
+
+                        'bota_plata' => $row['bota_plata'],
+                        'bota_plata_foto' => base64_encode($row['bota_plata_foto']),
+
+                        'bota_bronce' => $row['bota_bronce'],
+                        'bota_bronce_foto' => base64_encode($row['bota_bronce_foto']),
+
+                        'guante_oro' => $row['guante_oro'],
+                        'guante_oro_foto' => base64_encode($row['guante_oro_foto']),
+
+                        'max_goles' => $row['max_goles']
+                    ];
+
+                }
+            }
+
+            mysqli_stmt_close($stmt);
+            mysqli_next_result($this->conn);
+
+            return $premios;
+        } catch (Exception $e) {
+            error_log("Error en MundialDAO::getPremiosMundial: " . $e->getMessage());
+            return null;
+        }
+    }
     
     public function updateMundial(Mundial $mundial, array $sedes, array $multimedia): bool {
         try {
@@ -527,6 +657,58 @@ class MundialDAO {
         } catch (Exception $e) {
             error_log("Error en MundialDAO::updateMundial: " . $e->getMessage());
             return false;
+        }
+    }
+
+    public function añosFiltros(): ?array {
+        $query = "CALL sp_filtros_años()";
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $años = [];
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $años[] = $row['Año'];
+            }
+        }
+        return $años;
+    }
+
+    public function sedesFiltro(): ?array {
+        $query = "CALL sp_filtros_sedes()";
+        $stmt = mysqli_prepare($this->conn, $query);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $sedes = [];
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $sedes[] = $row['Pais'];
+            }
+        }
+        return $sedes;
+    }
+
+    public function getFiltros(): ?array {
+        try {
+            // Array para almacenar filtros
+            $filtros = [];
+
+            // Obtener años
+            $años = $this->añosFiltros();
+
+            // Obtener sedes
+            $sedes = $this->sedesFiltro();
+
+            // Asignar al array de filtros
+            $filtros = [
+                'años' => $años,
+                'sedes' => $sedes
+            ];
+
+            return $filtros;
+        } catch (Exception $e) {
+            error_log("Error en MundialDAO::getFiltros: " . $e->getMessage());
+            return null;
         }
     }
 

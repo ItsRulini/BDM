@@ -73,22 +73,9 @@
         <div class="search-filters">
             <select id="filterCountry">
                 <option value="">Filtrar por Mundial</option>
-                <option value="brasil">Brasil 2014</option>
-                <option value="argentina">Argentina 1978</option>
-                <option value="alemania">Alemania 2006</option>
-                <option value="francia">Francia 1998</option>
-                <option value="mexico">México 1986</option>
-                <option value="rusia">Rusia 2018</option>
-                <option value="qatar">Qatar 2022</option>
-                <option value="sudafrica">Sudáfrica 2010</option>
             </select>
             <select id="filterCategory">
                 <option value="">Filtrar por Categoría</option>
-                <option value="analisis">Análisis</option>
-                <option value="historia">Historia</option>
-                <option value="estadisticas">Estadísticas</option>
-                <option value="curiosidades">Curiosidades</option>
-                <option value="predicciones">Predicciones</option>
             </select>
             <select id="orderBy">
                 <option value="">Ordenar por</option>

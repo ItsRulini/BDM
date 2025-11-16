@@ -120,4 +120,38 @@ class CategoriaDAO {
         }
     }
 
+    public function getFiltros(): ?array {
+
+        try {
+            $query = "CALL sp_filtros_categorias()";
+            $stmt = mysqli_prepare($this->conn, $query);
+
+            if (!$stmt) {
+                throw new Exception("Error al preparar la consulta: " . mysqli_error($this->conn));
+            }
+
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+
+            $filtros = [];
+            if ($result) {
+                // Itera sobre cada fila del resultado
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $categoria = new Categoria();
+                    $categoria->setIdCategoria($row['IdCategoria']);
+                    $categoria->setNombre($row['Nombre']);
+
+                    $filtros[] = $categoria;
+                }
+            }
+
+            mysqli_stmt_close($stmt);
+            return $filtros;
+
+        } catch (mysqli_sql_exception $e) {
+            error_log("Error en CategoriaDAO::getFiltros(): " . $e->getMessage());
+            return null;
+        }
+    }
+
 }

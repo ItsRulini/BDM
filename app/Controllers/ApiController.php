@@ -201,7 +201,7 @@ class ApiController {
 
             // 3. Si había una foto, SOBREESCRIBIMOS el dato binario con su versión en texto (Base64)
             if ($fotoPerfilBinaria !== null) {
-            $fullUser['usuario']['fotoPerfil'] = 'data:image/jpeg;base64,' . base64_encode($fotoPerfilBinaria);
+                $fullUser['usuario']['fotoPerfil'] = 'data:image/jpeg;base64,' . base64_encode($fotoPerfilBinaria);
             }
 
 
@@ -580,7 +580,156 @@ class ApiController {
     }
 
     // @GET /api/getMundial
-    public function getMundial($id) {
+    public function getMundial ($id) {
+        if ($_SERVER['REQUEST_METHOD' !== 'GET']) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $mundial = $mundialDAO->getMundialPorId($id);
+
+            if ($mundial === null) {
+                throw new Exception("No se pudo obtener el mundial desde la base de datos.");
+            }
+
+            $sedes = $mundialDAO->getIdSedesMundial($id);
+
+            if ($sedes === null) {
+                throw new Exception("No se pudieron obtener las sedes del mundial desde la base de datos.");
+            }
+
+            // Convertir 'sedes' (cadena separada por comas) a un array limpio
+            $sedesArray = [];
+            if (is_string($sedes)) {
+                $sedesArray = array_values(array_filter(
+                    array_map('trim', 
+                    explode(',', $sedes)), 
+                    function($v) { return $v !== ''; }));
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $mundial->toArray(),
+                'sedes' => $sedesArray,
+                'message' => 'Mundial obtenido correctamente'
+            ]);
+            
+        } catch(Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+
+    }
+
+    // @GET /api/getPosicionesMundial
+    public function getPosicionesMundial ($id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $posiciones = $mundialDAO->getPosicionesMundial($id);
+
+            if ($posiciones === null) {
+                throw new Exception("No se pudieron obtener las posiciones del mundial desde la base de datos.");
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $posiciones,
+                'message' => 'Posiciones obtenidas correctamente'
+            ]);
+            
+        } catch(Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // @GET /api/getPremiosMundial
+    public function getPremiosMundial ($id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $premios = $mundialDAO->getPremiosMundial($id);
+
+            if ($premios === null) {
+                throw new Exception("No se pudieron obtener los premios del mundial desde la base de datos.");
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $premios,
+                'message' => 'Premios obtenidos correctamente'
+            ]);
+            
+        } catch(Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // @GET /api/getAllPremios
+    public function getAllPremios () {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Método no permitido'
+            ]);
+            return;
+        }
+
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $premios = $mundialDAO->getAllPremiosMundial();
+
+            if ($premios === null) {
+                throw new Exception("No se pudieron obtener los premios del mundial desde la base de datos.");
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $premios,
+                'message' => 'Premios obtenidos correctamente'
+            ]);
+            
+        } catch(Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // @GET /api/getMundialDashboard
+    public function getInfoMundial ($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
             echo json_encode([
                 'success' => false,
@@ -1245,9 +1394,6 @@ class ApiController {
         }
     }
 
-    // ⭐
-    // ⭐ NUEVA FUNCIÓN AÑADIDA
-    // ⭐
     // @GET /api/getPublicacionesAprobadas (para publico)
     public function getPublicacionesAprobadas() {
         if (ob_get_level()) {
@@ -1274,7 +1420,7 @@ class ApiController {
             foreach ($publicaciones as $item) {
                 
                 // ⭐ FILTRAR SOLO APROBADAS
-                if ($item['publicacion']->getEstatusAprobacion() !== 'approved') {
+                if ($item['publicacion']->getEstatusAprobacion() !== 'Aprobado') {
                     continue;
                 }
                 
@@ -1300,6 +1446,7 @@ class ApiController {
                 
                 $publicacionesAprobadas[] = [
                     'id' => $idPublicacion,
+                    'sedes' => $item['sedes'],
                     'contenido' => $pub->getContenido(),
                     'fechaCreacion' => $pub->getFechaCreacion(),
                     'estatus' => $pub->getEstatusAprobacion(),
@@ -1493,7 +1640,73 @@ class ApiController {
         }
     }
 
+    public function getCategoriaFiltros() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
 
+        try {
+            $categoriaDAO = new CategoriaDAO($GLOBALS['conn']);
+            $categorias = $categoriaDAO->getFiltros();
+
+            if ($categorias === null) {
+                throw new Exception("No se pudieron obtener las categorías desde la base de datos.");
+            }
+
+            // Convertir el array de objetos a un array asociativo para el JSON
+            $categoriasArray = array_map(function($categoria) {
+                return [
+                    'id' => $categoria->getIdCategoria(),
+                    'nombre' => $categoria->getNombre()
+                ];
+            }, $categorias);
+
+            echo json_encode([
+                'success' => true,
+                'data' => $categoriasArray
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getMundialesFiltros() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        try {
+            $mundialDAO = new MundialDAO($GLOBALS['conn']);
+            $filtros = $mundialDAO->getFiltros();
+
+            if ($filtros === null) {
+                throw new Exception("No se pudieron obtener las categorías desde la base de datos.");
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => $filtros
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500); // Error interno del servidor
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error del servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
     
 
 }

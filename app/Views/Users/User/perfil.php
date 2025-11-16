@@ -256,7 +256,7 @@
                         </label>
                         <input type="text" id="apellidoMaterno" name="apellidoMaterno">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="correoContainer">
                         <label for="correo">
                             <i class="fas fa-envelope"></i> Correo Electrónico
                         </label>

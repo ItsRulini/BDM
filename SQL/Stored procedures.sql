@@ -555,6 +555,64 @@ BEGIN
 END**
 DELIMITER ;
 
+DELIMITER **
+DROP PROCEDURE IF EXISTS sp_getPosicionesMundial**
+CREATE PROCEDURE sp_getPosicionesMundial ( IN p_id_mundial INT )
+BEGIN
+	SELECT 
+    IdMundial, campeon, subcampeon, tercer_puesto, cuarto_puesto
+    FROM vw_posicionesMundial
+    WHERE IdMundial = p_id_mundial;
+END**
+DELIMITER ;
+
+DELIMITER **
+DROP PROCEDURE IF EXISTS sp_getPremiosMundial**
+CREATE PROCEDURE sp_getPremiosMundial ( IN p_id_mundial INT )
+BEGIN
+	SELECT
+		IdMundial,
+		balon_oro,
+		balon_oro_foto,
+		balon_plata,
+		balon_plata_foto,
+		balon_bronce,
+		balon_bronce_foto,
+		bota_oro,
+		bota_oro_foto,
+		bota_plata,
+		bota_plata_foto,
+		bota_bronce,
+		bota_bronce_foto,
+		max_goles,
+		guante_oro,
+		guante_oro_foto
+	FROM vw_premios
+    WHERE IdMundial = p_id_mundial;
+END**
+DELIMITER ;
+-- DROP PROCEDURE sp_getAllPremiosMundial;
+DELIMITER **
+DROP PROCEDURE IF EXISTS sp_getPremiosOroMundial**
+CREATE PROCEDURE sp_getPremiosOroMundial ()
+BEGIN
+	SELECT
+		IdMundial,
+        Año,
+		balon_oro,
+		balon_oro_foto,
+        balon_oro_pais,
+		bota_oro,
+		bota_oro_foto,
+        bota_oro_pais,
+		max_goles,
+		guante_oro,
+		guante_oro_foto,
+        guante_oro_pais
+	FROM vw_premios
+    ORDER BY Año DESC;
+END**
+DELIMITER ;
 -- ==========================================
 -- PROCEDIMIENTOS PARA PUBLICACIONES
 -- ==========================================
@@ -614,20 +672,19 @@ DROP PROCEDURE IF EXISTS sp_getTodasPublicaciones$$
 CREATE PROCEDURE sp_getTodasPublicaciones()
 BEGIN
     SELECT 
-        p.IdPublicacion,
-        p.Contenido,
-        p.FechaCreacion,
-        p.FechaAprobacion,
-        p.EstatusAprobacion,
-        p.IdCreador,
-        u.Nombre AS UsuarioNombre,
-        u.ApellidoPaterno AS UsuarioApellido,
-        p.IdMundial,
-        m.Año AS MundialAño
-    FROM Publicacion p
-    INNER JOIN Usuario u ON p.IdCreador = u.IdUsuario
-    INNER JOIN Mundial m ON p.IdMundial = m.IdMundial
-    ORDER BY p.FechaCreacion DESC;
+        IdPublicacion,
+        Contenido,
+        FechaCreacion,
+        FechaAprobacion,
+        EstatusAprobacion,
+        IdCreador,
+        UsuarioNombre,
+        UsuarioApellido,
+        IdMundial,
+        MundialAño,
+        Sedes
+    FROM vw_info_pub
+    ORDER BY FechaCreacion DESC;
 END$$
 DELIMITER ;
 
@@ -706,8 +763,30 @@ BEGIN
 END$$
 DELIMITER ;
 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_filtros_sedes$$
+CREATE PROCEDURE sp_filtros_sedes()
+BEGIN
+	SELECT DISTINCT Pais FROM vw_filtros
+    ORDER BY Pais;
+END $$
+DELIMITER ;
 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_filtros_años$$
+CREATE PROCEDURE sp_filtros_años()
+BEGIN
+	SELECT DISTINCT Año FROM vw_filtros
+    ORDER BY Año DESC;
+END $$
+DELIMITER ;
 
-
-
-
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_filtros_categorias$$
+CREATE PROCEDURE sp_filtros_categorias()
+BEGIN
+	SELECT DISTINCT c.IdCategoria, c.Nombre FROM Categoria c
+	JOIN Publicacion_Categoria pc ON c.IdCategoria = pc.IdCategoria
+    ORDER BY c.Nombre;
+END $$
+DELIMITER ;
