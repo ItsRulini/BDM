@@ -319,7 +319,7 @@
             <div class="posts-link-section">
                 <h3>¿Quieres saber qué opina la comunidad?</h3>
                 <p>Explora las publicaciones, análisis y debates sobre este increíble torneo.</p>
-                <a href="index.php?controller=home&action=posts" class="btn-ver-posts">
+                <a id="btnVerPosts" href="index.php?controller=home&action=posts<?php echo isset($_GET['id']) ? '&mundial=' . (int)$_GET['id'] : ''; ?>" class="btn-ver-posts">
                     Ver Publicaciones Relacionadas <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
