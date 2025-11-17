@@ -88,21 +88,35 @@ class PostsManager {
 
     async loadDropdownOptions() {
         try {
-            const response = await fetch('index.php?controller=api&action=getMundialesFiltros');
-            const data = await response.json();
+            // Cargar mundiales reales
+            const mundialesResponse = await fetch('index.php?controller=api&action=getMundiales');
+            const mundialesData = await mundialesResponse.json();
 
-            if (data.success) {
-                const filtros = data.data;
-                await this.fillOutFilterOptions(this.filtroMundial, filtros.sedes, 'Filtrar por país sede');
-            } else {
-                console.error('Error en los datos recibidos para filtros:', data.message);
-                return;
+            if (mundialesData.success && Array.isArray(mundialesData.data)) {
+                const mundiales = mundialesData.data.sort((a, b) => b.year - a.year);
+                if (this.filtroMundial) {
+                    const options = ['<option value="">Todos los mundiales</option>']
+                        .concat(mundiales.map(m => `<option value="${m.name}">${m.name}</option>`));
+                    this.filtroMundial.innerHTML = options.join('');
+                }
+            }
+
+            // Cargar categorías reales
+            const categoriasResponse = await fetch('index.php?controller=api&action=getCategorias');
+            const categoriasData = await categoriasResponse.json();
+
+            if (categoriasData.success && Array.isArray(categoriasData.data)) {
+                const categorias = categoriasData.data.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                if (this.filtroCategoria) {
+                    const options = ['<option value="">Todas las categorías</option>']
+                        .concat(categorias.map(c => `<option value="${c.nombre.toLowerCase()}">${c.nombre}</option>`));
+                    this.filtroCategoria.innerHTML = options.join('');
+                }
             }
 
         } catch (error) {
             console.error('Error al cargar opciones de filtro:', error);
         }
-        
     }
 
     async loadCurrentUser() {
@@ -211,21 +225,34 @@ class PostsManager {
 
     filterAndSearch() {
         const searchTerm = this.searchInput?.value.toLowerCase() || '';
-        const mundialFilter = this.filterCountry?.value || ''; // Filtro por país/sede
+        const mundialFilter = this.filterCountry?.value || '';
         const categoryFilter = this.filterCategory?.value || '';
         const orderValue = this.orderBy?.value || '';
 
         this.filteredPosts = this.posts.filter(post => {
-            // MODIFICADO: para usar datos de la API
-            const matchesSearch = searchTerm === '' || 
-                post.contenido.toLowerCase().includes(searchTerm) ||
-                post.autorNombre.toLowerCase().includes(searchTerm) ||
-                (Array.isArray(post.categorias) && post.categorias.some(cat => cat.toLowerCase().includes(searchTerm))) ||
-                post.mundialAño.toLowerCase().includes(searchTerm);
+            const contenido = (post.contenido || '').toLowerCase();
+            const autor = (post.autorNombre || '').toLowerCase();
+            const mundialNombre = (post.sedes && post.mundialAño) ? 
+                `${post.sedes} ${post.mundialAño}`.toLowerCase() : 
+                (post.mundialAño || '').toLowerCase();
+            const categorias = Array.isArray(post.categorias) ? 
+                post.categorias.map(c => c.toLowerCase()) : [];
 
-            // Asumimos que el filtro de país busca en el nombre del mundial (Ej. "Qatar 2022")
-            const matchesMundial = mundialFilter === '' || post.mundialAño.toLowerCase().includes(mundialFilter.toLowerCase());
-            const matchesCategory = categoryFilter === '' || (Array.isArray(post.categorias) && post.categorias.some(cat => cat.toLowerCase() === categoryFilter.toLowerCase()));
+            // Búsqueda por texto en contenido, autor, mundial o categorías
+            const matchesSearch = searchTerm === '' ||
+                contenido.includes(searchTerm) ||
+                autor.includes(searchTerm) ||
+                mundialNombre.includes(searchTerm) ||
+                categorias.some(cat => cat.includes(searchTerm));
+
+            // Filtro por mundial (comparación exacta con el nombre completo)
+            const matchesMundial = mundialFilter === '' || 
+                mundialNombre === mundialFilter.toLowerCase() ||
+                mundialNombre.includes(mundialFilter.toLowerCase());
+
+            // Filtro por categoría (coincidencia exacta)
+            const matchesCategory = categoryFilter === '' || 
+                categorias.some(cat => cat === categoryFilter);
 
             return matchesSearch && matchesMundial && matchesCategory;
         });
@@ -348,12 +375,10 @@ class PostsManager {
         `;
     };
 
-    const sedes = this.mundialNameFormat(post.sedes);
-
     return `
         <article class="post-card" data-post-id="${post.id}">
             <div class="post-mundial">
-                <span>${sedes + ' ' + post.mundialAño}</span>
+                <span>${post.sedes && post.mundialAño ? `${post.sedes} ${post.mundialAño}` : (post.mundialAño || 'Sin mundial')}</span>
             </div>
             
             <div class="post-category">

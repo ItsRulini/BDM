@@ -1788,6 +1788,7 @@ class ApiController {
                     'fechaCreacion' => $pub->getFechaCreacion(),
                     'estatus' => $pub->getEstatusAprobacion(),
                     'mundialAño' => $item['mundialAño'],
+                    'sedes' => $item['sedes'],
                     'autorNombre' => $item['autorNombre'],
                     'idCreador' => $pub->getIdCreador(),
                     'multimedia' => $multimediaArray,

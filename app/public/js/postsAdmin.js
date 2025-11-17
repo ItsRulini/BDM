@@ -46,6 +46,42 @@ class PostsAdminManager {
         
         // Overlay
         this.modalOverlay = document.getElementById('modalOverlay');
+
+        // Cargar opciones de filtros
+        this.loadDropdownOptions();
+    }
+
+    async loadDropdownOptions() {
+        try {
+            // Cargar mundiales reales
+            const mundialesResponse = await fetch('index.php?controller=api&action=getMundiales');
+            const mundialesData = await mundialesResponse.json();
+
+            if (mundialesData.success && Array.isArray(mundialesData.data)) {
+                const mundiales = mundialesData.data.sort((a, b) => b.year - a.year);
+                if (this.filterCountry) {
+                    const options = ['<option value="">Todos los mundiales</option>']
+                        .concat(mundiales.map(m => `<option value="${m.name}">${m.name}</option>`));
+                    this.filterCountry.innerHTML = options.join('');
+                }
+            }
+
+            // Cargar categorías reales
+            const categoriasResponse = await fetch('index.php?controller=api&action=getCategorias');
+            const categoriasData = await categoriasResponse.json();
+
+            if (categoriasData.success && Array.isArray(categoriasData.data)) {
+                const categorias = categoriasData.data.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                if (this.filterCategory) {
+                    const options = ['<option value="">Todas las categorías</option>']
+                        .concat(categorias.map(c => `<option value="${c.nombre.toLowerCase()}">${c.nombre}</option>`));
+                    this.filterCategory.innerHTML = options.join('');
+                }
+            }
+
+        } catch (error) {
+            console.error('Error al cargar opciones de filtro:', error);
+        }
     }
 
     bindEvents() {
@@ -106,11 +142,14 @@ class PostsAdminManager {
                     estatus: post.estatus,
                     autorNombre: post.autorNombre,
                     idCreador: post.idCreador,
+                    mundialAño: post.mundialAño || 'Sin mundial',
+                    sedes: post.sedes || '',
+                    categorias: Array.isArray(post.categorias) ? post.categorias : [],
                     mundial: {
-                        name: post.mundialAño || 'Sin mundial',
+                        name: (post.sedes && post.mundialAño) ? `${post.sedes} ${post.mundialAño}` : (post.mundialAño || 'Sin mundial'),
                         year: post.mundialAño ? parseInt(post.mundialAño.split(' ')[0]) : 0
                     },
-                    category: 'general',
+                    category: Array.isArray(post.categorias) && post.categorias.length > 0 ? post.categorias[0].toLowerCase() : 'general',
                     user: {
                         name: post.autorNombre,
                         avatar: 'assets/default-avatar.png'
@@ -234,17 +273,29 @@ class PostsAdminManager {
         const orderValue = this.orderBy?.value || '';
 
         this.filteredPosts = this.posts.filter(post => {
-            const matchesSearch = searchTerm === '' || 
-                post.title.toLowerCase().includes(searchTerm) ||
-                post.content.toLowerCase().includes(searchTerm) ||
-                post.user.name.toLowerCase().includes(searchTerm) ||
-                post.category.toLowerCase().includes(searchTerm) ||
-                post.mundial.name.toLowerCase().includes(searchTerm);
+            const contenido = (post.content || '').toLowerCase();
+            const autor = (post.autorNombre || '').toLowerCase();
+            const mundialNombre = (post.sedes && post.mundialAño) ? 
+                `${post.sedes} ${post.mundialAño}`.toLowerCase() : 
+                (post.mundialAño || '').toLowerCase();
+            const categorias = Array.isArray(post.categorias) ? 
+                post.categorias.map(c => c.toLowerCase()) : [];
 
-            // Comparar por nombre del mundial en lugar de country
+            // Búsqueda por texto en contenido, autor, mundial o categorías
+            const matchesSearch = searchTerm === '' ||
+                contenido.includes(searchTerm) ||
+                autor.includes(searchTerm) ||
+                mundialNombre.includes(searchTerm) ||
+                categorias.some(cat => cat.includes(searchTerm));
+
+            // Filtro por mundial (comparación exacta con el nombre completo)
             const matchesMundial = mundialFilter === '' || 
-                post.mundial.name.toLowerCase().includes(mundialFilter.toLowerCase());
-            const matchesCategory = categoryFilter === '' || post.category === categoryFilter;
+                mundialNombre === mundialFilter.toLowerCase() ||
+                mundialNombre.includes(mundialFilter.toLowerCase());
+
+            // Filtro por categoría (coincidencia exacta)
+            const matchesCategory = categoryFilter === '' || 
+                categorias.some(cat => cat === categoryFilter);
 
             return matchesSearch && matchesMundial && matchesCategory;
         });
