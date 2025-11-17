@@ -1236,14 +1236,16 @@ export default class ProfileManager {
             // Mapear likedBy y recentComments al formato que esperan las funciones de render
             const likedBy = (d.likedBy || []).map(u => ({
                 name: u.name || 'Usuario',
-                avatar: u.fotoPerfil || 'assets/default-avatar.png',
+                fotoPerfil: u.fotoPerfil || 'assets/default-avatar.png',
                 date: u.date || null
             }));
 
             const recentComments = (d.recentComments || []).map(c => ({
-                user: c.user.name || c.userName || 'Usuario',
-                avatar: c.user.fotoPerfil || 'assets/default-avatar.png',
-                comment: c.text || c.Comentario || '',
+                user: {
+                    name: c.user.name || 'Usuario',
+                    fotoPerfil: c.user.fotoPerfil || 'assets/default-avatar.png'
+                },
+                text: c.text || c.Comentario || '',
                 date: c.date || c.FechaComentario || null
             }));
 
