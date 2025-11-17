@@ -1157,14 +1157,43 @@ export default class ProfileManager {
 
     formatDate(dateString) {
         if (!dateString) return "Sin fecha";
-        const [year, month, day] = dateString.split('-').map(Number);
-        if (isNaN(year) || isNaN(month) || isNaN(day)) return "Fecha inválida";
-        const date = new Date(year, month - 1, day);
-        return date.toLocaleDateString('es-ES', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+        // Handle MySQL DATETIME like 'YYYY-MM-DD HH:MM:SS' or ISO strings
+        // Treat '0000-00-00' and '0000-00-00 00:00:00' as no date
+        const trimmed = ('' + dateString).trim();
+        if (trimmed === '' || trimmed.startsWith('0000-00-00')) return 'Sin fecha';
+
+        // If contains space (datetime) or 'T' (ISO), take the date part first
+        let candidate = trimmed;
+        if (candidate.indexOf(' ') >= 0) candidate = candidate.split(' ')[0];
+        if (candidate.indexOf('T') >= 0) candidate = candidate.split('T')[0];
+
+        // If still like YYYY-MM-DD, parse components
+        const parts = candidate.split('-');
+        if (parts.length === 3) {
+            const [y, m, d] = parts.map(Number);
+            if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+                const date = new Date(y, m - 1, d);
+                if (!isNaN(date.getTime())) {
+                    return date.toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+            }
+        }
+
+        // Fallback: try Date constructor on the original string
+        const parsed = new Date(trimmed);
+        if (!isNaN(parsed.getTime())) {
+            return parsed.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        return "Fecha inválida";
     }
 
     truncateText(text, maxLength) {
@@ -1196,25 +1225,43 @@ export default class ProfileManager {
     }
 
     async loadPostStatistics(post) {
-        // Simular datos de estadísticas (MOCK)
-        const mockStats = {
-            views: Math.floor(Math.random() * 1000) + 50,
-            likes: post.likes || Math.floor(Math.random() * 200) + 10,
-            comments: post.comments || Math.floor(Math.random() * 50) + 5,
-            likedBy: [
-                { name: 'Ana García', avatar: 'assets/avatars/user1.jpg', date: '2024-12-10' },
-                { name: 'Luis Martínez', avatar: 'assets/avatars/user2.jpg', date: '2024-12-09' }
-            ],
-            recentComments: [
-                {
-                    user: 'Ana García',
-                    avatar: 'assets/avatars/user1.jpg',
-                    comment: '¡Excelente análisis!',
-                    date: '2024-12-10'
-                }
-            ]
-        };
-        this.displayPostStatistics(post, mockStats);
+        try {
+            const resp = await fetch(`index.php?controller=api&action=getPostStats&id=${post.id}`);
+            if (!resp.ok) throw new Error('Error al obtener estadísticas');
+            const data = await resp.json();
+            if (!data.success) throw new Error(data.message || 'Respuesta inválida');
+
+            const d = data.data;
+
+            // Mapear likedBy y recentComments al formato que esperan las funciones de render
+            const likedBy = (d.likedBy || []).map(u => ({
+                name: u.name || 'Usuario',
+                avatar: u.fotoPerfil || 'assets/default-avatar.png',
+                date: u.date || null
+            }));
+
+            const recentComments = (d.recentComments || []).map(c => ({
+                user: c.user.name || c.userName || 'Usuario',
+                avatar: c.user.fotoPerfil || 'assets/default-avatar.png',
+                comment: c.text || c.Comentario || '',
+                date: c.date || c.FechaComentario || null
+            }));
+
+            const stats = {
+                views: d.views || 0,
+                likes: d.likes || 0,
+                comments: d.comments || 0,
+                likedBy: likedBy,
+                recentComments: recentComments
+            };
+
+            this.displayPostStatistics(post, stats);
+        } catch (error) {
+            console.error('Error cargando estadísticas reales:', error);
+            // Fallback: mostrar algo mínimo en caso de error
+            const fallback = { views: 0, likes: 0, comments: 0, likedBy: [], recentComments: [] };
+            this.displayPostStatistics(post, fallback);
+        }
     }
 
     displayPostStatistics(post, stats) {
@@ -1273,7 +1320,7 @@ export default class ProfileManager {
         }
         likesList.innerHTML = likedBy.map(user => `
             <div class="user-item">
-                <img src="${user.avatar}" alt="${user.name}" onerror="this.src='assets/default-avatar.png'">
+                <img src="${user.fotoPerfil || 'assets/default-avatar.png'}" alt="${user.name}" onerror="this.src='assets/default-avatar.png'">
                 <div class="user-info">
                     <div class="user-name">${user.name}</div>
                     <div class="user-date">Le gustó el ${this.formatDate(user.date)}</div>
@@ -1292,11 +1339,11 @@ export default class ProfileManager {
         commentsList.innerHTML = comments.map(comment => `
             <div class="comment-item">
                 <div class="comment-header">
-                    <img src="${comment.avatar}" alt="${comment.user}" onerror="this.src='assets/default-avatar.png'">
-                    <span class="comment-user">${comment.user}</span>
+                    <img src="${comment.user.fotoPerfil || 'assets/default-avatar.png'}" alt="${comment.user.name}" onerror="this.src='assets/default-avatar.png'">
+                    <span class="comment-user">${comment.user.name}</span>
                     <span class="comment-date">${this.formatDate(comment.date)}</span>
                 </div>
-                <div class="comment-text">${comment.comment}</div>
+                <div class="comment-text">${comment.text}</div>
             </div>
         `).join('');
     }

@@ -4,7 +4,8 @@ CREATE DATABASE BDM;
 USE BDM;
 
 DESCRIBE Mundial;
-
+select *from usuario;
+select *from vista;
 CREATE TABLE Pais(
   IdPais INT PRIMARY KEY AUTO_INCREMENT,
   Pais VARCHAR(255),
@@ -257,5 +258,6 @@ CREATE TABLE Multimedia_Publicacion (
 );
 
 
-
+ALTER TABLE Reaccion
+  ADD COLUMN FechaReaccion TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP AFTER IdPublicacion;
 

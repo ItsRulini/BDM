@@ -89,23 +89,60 @@ class PostsAdminManager {
         this.showLoading(true);
         
         try {
-            const mockPosts = this.generateMockPosts();
+            // Obtener posts reales desde la API
+            const response = await fetch('index.php?controller=api&action=getTodasPublicaciones');
+            if (!response.ok) throw new Error('Error al cargar las publicaciones');
             
-            // Simular delay de red
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const data = await response.json();
+            if (!data.success) throw new Error(data.message || 'Error al obtener posts');
+
+            // Filtrar solo posts APROBADOS y mapear datos reales
+            this.posts = (data.data || [])
+                .filter(post => post.estatus === 'Aprobado' || post.estatus === 'Aprobada' || post.estatus === 'approved')
+                .map(post => ({
+                    id: post.id,
+                    title: post.contenido.substring(0, 50),
+                    content: post.contenido,
+                    estatus: post.estatus,
+                    autorNombre: post.autorNombre,
+                    idCreador: post.idCreador,
+                    mundial: {
+                        name: post.mundialAño || 'Sin mundial',
+                        year: post.mundialAño ? parseInt(post.mundialAño.split(' ')[0]) : 0
+                    },
+                    category: 'general',
+                    user: {
+                        name: post.autorNombre,
+                        avatar: 'assets/default-avatar.png'
+                    },
+                    date: post.fechaCreacion,
+                    multimedia: (post.multimedia || []).map(media => ({
+                        id: media.id,
+                        src: media.src,
+                        type: media.type.startsWith('image/') ? 'image' : 
+                              media.type.startsWith('video/') ? 'video' : 'file',
+                        alt: 'Media'
+                    })),
+                    views: post.views || 0,
+                    likes: post.likes || 0,
+                    comments: post.comments || 0
+                }));
             
-            this.posts = mockPosts;
             this.filteredPosts = [...this.posts];
             this.renderPosts();
             this.updatePostsCounter();
             
         } catch (error) {
             console.error('Error al cargar posts:', error);
-            this.showError('Error al cargar las publicaciones');
+            this.showError('Error al cargar las publicaciones: ' + error.message);
+            this.posts = [];
+            this.filteredPosts = [];
+            this.renderPosts();
         } finally {
             this.showLoading(false);
         }
     }
+
 
     generateMockPosts() {
         const categories = ['analisis', 'historia', 'estadisticas', 'curiosidades', 'predicciones'];
@@ -204,7 +241,9 @@ class PostsAdminManager {
                 post.category.toLowerCase().includes(searchTerm) ||
                 post.mundial.name.toLowerCase().includes(searchTerm);
 
-            const matchesMundial = mundialFilter === '' || post.mundial.country.toLowerCase() === mundialFilter;
+            // Comparar por nombre del mundial en lugar de country
+            const matchesMundial = mundialFilter === '' || 
+                post.mundial.name.toLowerCase().includes(mundialFilter.toLowerCase());
             const matchesCategory = categoryFilter === '' || post.category === categoryFilter;
 
             return matchesSearch && matchesMundial && matchesCategory;
@@ -252,6 +291,11 @@ class PostsAdminManager {
         this.showNoResults(false);
         this.postsContainer.innerHTML = this.filteredPosts.map(post => this.createPostCardHTML(post)).join('');
         
+        // Cargar estadísticas reales para cada post
+        this.filteredPosts.forEach(post => {
+            this.loadPostStatsForCard(post.id);
+        });
+        
         // Añadir animación de fade-in
         this.postsContainer.querySelectorAll('.admin-post-card').forEach((card, index) => {
             card.style.opacity = '0';
@@ -262,6 +306,35 @@ class PostsAdminManager {
                 card.style.transform = 'translateY(0)';
             }, index * 50);
         });
+    }
+
+    async loadPostStatsForCard(postId) {
+        try {
+            const response = await fetch(`index.php?controller=api&action=getPostStats&id=${postId}`);
+            if (!response.ok) throw new Error('Error al cargar estadísticas');
+            
+            const data = await response.json();
+            if (data.success) {
+                const stats = data.data || {};
+                // Actualizar el post en memoria
+                const post = this.posts.find(p => p.id === postId);
+                if (post) {
+                    post.likes = stats.likes || 0;
+                    post.comments = stats.comments || 0;
+                    
+                    // Actualizar en el DOM
+                    const card = this.postsContainer.querySelector(`[data-post-id="${postId}"]`);
+                    if (card) {
+                        const likesSpan = card.querySelector('.post-card-stats .stat:nth-child(1) span');
+                        const commentsSpan = card.querySelector('.post-card-stats .stat:nth-child(2) span');
+                        if (likesSpan) likesSpan.textContent = stats.likes || 0;
+                        if (commentsSpan) commentsSpan.textContent = stats.comments || 0;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error al cargar estadísticas:', error);
+        }
     }
 
     createPostCardHTML(post) {
@@ -315,7 +388,7 @@ class PostsAdminManager {
         };
 
         return `
-            <div class="admin-post-card" onclick="openPostDetail(${post.id})">
+            <div class="admin-post-card" data-post-id="${post.id}" onclick="openPostDetail(${post.id})">
                 <div class="post-card-header">
                     <div class="post-card-badges">
                         <span class="post-card-mundial">${post.mundial.name}</span>
@@ -363,7 +436,24 @@ class PostsAdminManager {
 
         this.currentPostId = postId;
         this.populatePostDetail(post);
+        this.loadPostStatsForDetail(postId);  // Cargar estadísticas reales
         this.showModal('postDetailModal');
+    }
+
+    async loadPostStatsForDetail(postId) {
+        try {
+            const response = await fetch(`index.php?controller=api&action=getPostStats&id=${postId}`);
+            if (!response.ok) throw new Error('Error al cargar estadísticas');
+            
+            const data = await response.json();
+            if (data.success) {
+                const stats = data.data || {};
+                document.getElementById('postDetailLikes').textContent = stats.likes || 0;
+                document.getElementById('postDetailCommentsCount').textContent = stats.comments || 0;
+            }
+        } catch (error) {
+            console.error('Error al cargar estadísticas:', error);
+        }
     }
 
     populatePostDetail(post) {
@@ -641,16 +731,33 @@ class PostsAdminManager {
         }
         
         try {
-            // Simular carga de comentarios desde el backend
-            const mockComments = this.generateMockComments(postId);
+            // Cargar comentarios reales desde la API
+            const response = await fetch(`index.php?controller=api&action=getComments&id=${postId}&limit=50`);
+            if (!response.ok) throw new Error('Error al cargar comentarios');
             
-            await new Promise(resolve => setTimeout(resolve, 800));
+            const data = await response.json();
             
-            this.postComments = mockComments;
+            if (data.success) {
+                this.postComments = (data.data || []).map(comment => ({
+                    id: comment.id,
+                    user: {
+                        name: comment.user.name,
+                        avatar: comment.user.fotoPerfil || 'assets/default-avatar.png'
+                    },
+                    comment: comment.text,
+                    date: comment.date,
+                    timestamp: comment.date
+                }));
+            } else {
+                this.postComments = [];
+            }
+            
             this.renderComments();
         } catch (error) {
             console.error('Error al cargar comentarios:', error);
             this.showError('Error al cargar los comentarios');
+            this.postComments = [];
+            this.renderComments();
         } finally {
             if (this.loadingComments) {
                 this.loadingComments.style.display = 'none';
@@ -812,25 +919,35 @@ class PostsAdminManager {
         this.hideModal('confirmDeleteModal');
         
         try {
-            // Simular llamada a la API
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            // Remover del array de comentarios
-            this.postComments = this.postComments.filter(c => c.id !== commentId);
-            
-            // Actualizar contador en el post original
-            const post = this.posts.find(p => p.id === this.currentPostId);
-            if (post) {
-                post.comments--;
+            // Llamar a la API para eliminar el comentario
+            const response = await fetch('index.php?controller=api&action=deleteComentario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idComentario: commentId })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Remover del array de comentarios
+                this.postComments = this.postComments.filter(c => c.id !== commentId);
+                
+                // Actualizar contador en el post original
+                const post = this.posts.find(p => p.id === this.currentPostId);
+                if (post) {
+                    post.comments--;
+                }
+                
+                // Re-renderizar comentarios
+                this.renderComments();
+                
+                // Actualizar vista de posts si es necesaria
+                this.renderPosts();
+                
+                this.showSuccess('Comentario eliminado exitosamente');
+            } else {
+                this.showError(data.message || 'Error al eliminar el comentario');
             }
-            
-            // Re-renderizar comentarios
-            this.renderComments();
-            
-            // Actualizar vista de posts si es necesaria
-            this.renderPosts();
-            
-            this.showSuccess('Comentario eliminado exitosamente');
             
         } catch (error) {
             console.error('Error al eliminar comentario:', error);

@@ -493,49 +493,48 @@ class AdminProfile extends ProfileManager {
     // ================================
 
     async loadPostStatistics(post) {
-        // Simular datos de estadísticas - aquí conectarías con tu backend
-        const mockStats = {
-            views: post.views || Math.floor(Math.random() * 1000) + 50,
-            likes: post.likes || Math.floor(Math.random() * 200) + 10,
-            comments: post.comments || Math.floor(Math.random() * 50) + 5,
-            likedBy: [
-                { name: 'Ana García', avatar: 'assets/avatars/user1.jpg', date: '2024-12-10' },
-                { name: 'Luis Martínez', avatar: 'assets/avatars/user2.jpg', date: '2024-12-09' },
-                { name: 'Sofia López', avatar: 'assets/avatars/user3.jpg', date: '2024-12-08' },
-                { name: 'Miguel Torres', avatar: 'assets/avatars/user4.jpg', date: '2024-12-07' }
-            ],
-            recentComments: [
-                {
-                    id: 1,
-                    user: 'Ana García',
-                    avatar: 'assets/avatars/user1.jpg',
-                    comment: '¡Excelente análisis! Me encantó tu perspectiva sobre este mundial.',
-                    date: '2024-12-10'
-                },
-                {
-                    id: 2,
-                    user: 'Luis Martínez', 
-                    avatar: 'assets/avatars/user2.jpg',
-                    comment: 'Totalmente de acuerdo contigo. Ese mundial fue histórico.',
-                    date: '2024-12-09'
-                },
-                {
-                    id: 3,
-                    user: 'Sofia López',
-                    avatar: 'assets/avatars/user3.jpg', 
-                    comment: 'Muy interesante tu punto de vista. ¿Podrías profundizar más?',
-                    date: '2024-12-08'
-                },
-                {
-                    id: 4,
-                    user: 'Usuario Problemático',
-                    avatar: 'assets/avatars/user5.jpg',
-                    comment: 'Este comentario es inapropiado y debería ser eliminado por el admin.',
-                    date: '2024-12-07'
-                }
-            ]
-        };
+        try {
+            // Obtener estadísticas reales del servidor
+            const response = await fetch(`index.php?controller=api&action=getPostStats&id=${post.id}`);
+            if (!response.ok) throw new Error('Error al cargar estadísticas');
 
+            const data = await response.json();
+            if (!data.success) throw new Error(data.message || 'Error');
+
+            const stats = data.data || {};
+
+            // Obtener comentarios reales
+            const commentsResponse = await fetch(`index.php?controller=api&action=getComments&id=${post.id}&limit=50`);
+            if (!commentsResponse.ok) throw new Error('Error al cargar comentarios');
+
+            const commentsData = await commentsResponse.json();
+            const comments = commentsData.data || [];
+
+            // Preparar estructura de estadísticas
+            const realStats = {
+                views: stats.views || 0,
+                likes: stats.likes || 0,
+                comments: stats.comments || 0,
+                likedBy: (stats.likedBy && Array.isArray(stats.likedBy)) ? stats.likedBy : [],
+                recentComments: comments
+            };
+
+            this.displayPostStatistics(post, realStats);
+        } catch (error) {
+            console.error('Error cargando estadísticas:', error);
+            // Fallback a mock si hay error
+            this.loadPostStatisticsWithMock(post);
+        }
+    }
+
+    loadPostStatisticsWithMock(post) {
+        const mockStats = {
+            views: post.views || 0,
+            likes: post.likes || 0,
+            comments: post.comments || 0,
+            likedBy: [],
+            recentComments: []
+        };
         this.displayPostStatistics(post, mockStats);
     }
 
@@ -557,11 +556,11 @@ class AdminProfile extends ProfileManager {
         commentsList.innerHTML = comments.map(comment => `
             <div class="comment-item admin-view" id="comment-${comment.id}">
                 <div class="comment-header">
-                    <img src="${comment.avatar}" alt="${comment.user}" onerror="this.src='assets/default-avatar.png'">
-                    <span class="comment-user">${comment.user}</span>
+                    <img src="${comment.user.fotoPerfil || 'assets/default-avatar.png'}" alt="${comment.user.name}" onerror="this.src='assets/default-avatar.png'">
+                    <span class="comment-user">${comment.user.name}</span>
                     <span class="comment-date">${this.formatDate(comment.date)}</span>
                 </div>
-                <div class="comment-text">${comment.comment}</div>
+                <div class="comment-text">${comment.text}</div>
                 <div class="comment-actions">
                     <button class="btn-delete-comment" onclick="adminProfile.deleteComment(${comment.id})">
                         <i class="fas fa-trash"></i> Eliminar
@@ -593,28 +592,42 @@ class AdminProfile extends ProfileManager {
         }
     }
 
-    confirmDeleteComment(commentId) {
-        // Simular eliminación de comentario - aquí conectarías con tu backend
-        this.simulateRequest(() => {
-            const commentElement = document.getElementById(`comment-${commentId}`);
-            if (commentElement) {
-                commentElement.style.opacity = '0';
-                commentElement.style.transform = 'translateX(-100%)';
-                
-                setTimeout(() => {
-                    commentElement.remove();
+    async confirmDeleteComment(commentId) {
+        try {
+            const response = await fetch('index.php?controller=api&action=deleteComentario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idComentario: commentId })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const commentElement = document.getElementById(`comment-${commentId}`);
+                if (commentElement) {
+                    commentElement.style.opacity = '0';
+                    commentElement.style.transform = 'translateX(-100%)';
                     
-                    // Actualizar contador de comentarios
-                    const commentsCount = document.getElementById('statsComments');
-                    if (commentsCount) {
-                        const currentCount = parseInt(commentsCount.textContent);
-                        commentsCount.textContent = Math.max(0, currentCount - 1);
-                    }
-                    
-                    this.showAdminNotification('Comentario eliminado exitosamente', 'success');
-                }, 300);
+                    setTimeout(() => {
+                        commentElement.remove();
+                        
+                        // Actualizar contador de comentarios
+                        const commentsCount = document.getElementById('statsComments');
+                        if (commentsCount) {
+                            const currentCount = parseInt(commentsCount.textContent);
+                            commentsCount.textContent = Math.max(0, currentCount - 1);
+                        }
+                        
+                        this.showAdminNotification('Comentario eliminado exitosamente', 'success');
+                    }, 300);
+                }
+            } else {
+                this.showAdminNotification(data.message || 'Error al eliminar comentario', 'error');
             }
-        }, 500);
+        } catch (error) {
+            console.error('Error al eliminar comentario:', error);
+            this.showAdminNotification('Error al eliminar comentario', 'error');
+        }
     }
 
     cancelDeleteComment(commentId) {

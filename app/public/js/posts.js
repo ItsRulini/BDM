@@ -10,9 +10,20 @@ class PostsManager {
         this.isLoading = false;
         this.currentPostId = null;
         this.postComments = [];
+        this.currentUser = null;
+        this.initialMundialFilter = null;
         
         this.initializeElements();
         this.bindEvents();
+        this.loadCurrentUser();
+        // Leer parámetro 'mundial' si viene en la URL (ej. ?mundial=123)
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const m = params.get('mundial');
+            if (m) this.initialMundialFilter = parseInt(m, 10);
+        } catch (e) {
+            this.initialMundialFilter = null;
+        }
         this.loadPosts();
     }
 
@@ -82,7 +93,7 @@ class PostsManager {
 
             if (data.success) {
                 const filtros = data.data;
-                await fillOutFilterOptions(this.filtroMundial, filtros.sedes, 'Filtrar por país sede');
+                await this.fillOutFilterOptions(this.filtroMundial, filtros.sedes, 'Filtrar por país sede');
             } else {
                 console.error('Error en los datos recibidos para filtros:', data.message);
                 return;
@@ -92,6 +103,29 @@ class PostsManager {
             console.error('Error al cargar opciones de filtro:', error);
         }
         
+    }
+
+    async loadCurrentUser() {
+        try {
+            const response = await fetch('index.php?controller=api&action=getCurrentUser');
+            const data = await response.json();
+            if (data.success && data.data && data.data.usuario) {
+                this.currentUser = data.data.usuario;
+                this.updateCommentFormAvatar();
+            }
+        } catch (error) {
+            console.error('Error al cargar usuario actual:', error);
+        }
+    }
+
+    updateCommentFormAvatar() {
+        if (!this.currentUser) return;
+        const avatar = this.currentUser.fotoPerfil || 'assets/default-avatar.png';
+        const avatarImg = document.querySelector('.comment-avatar');
+        if (avatarImg) {
+            avatarImg.src = avatar;
+            avatarImg.onerror = () => { avatarImg.src = 'assets/default-avatar.png'; };
+        }
     }
 
     bindEvents() {
@@ -145,8 +179,14 @@ class PostsManager {
             if (data.success) {
                 this.posts = data.data.map(post => ({
                     ...post,
-                    liked: false // Añadir estado local de like
+                    liked: post.userHasLiked || false, // Inicializar liked según servidor
+                    likes: post.likes || 0,
+                    comments: post.comments || 0
                 }));
+                // Si se abrió la página desde una vista de Mundial, filtrar por ese Id
+                if (this.initialMundialFilter) {
+                    this.posts = this.posts.filter(p => Number(p.idMundial) === this.initialMundialFilter);
+                }
             } else {
                 console.error('Error fetching approved posts:', data.message);
                 this.posts = [];
@@ -373,6 +413,17 @@ class PostsManager {
         this.currentPostId = postId;
         this.showCommentsModal();
         this.populatePostSummary(post);
+        // Registrar vista en el servidor (no bloquear errores)
+        try {
+            fetch('index.php?controller=api&action=addView', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idPublicacion: postId })
+            }).catch(e => console.warn('No se pudo registrar la vista:', e));
+        } catch (e) {
+            console.warn('Error enviando vista:', e);
+        }
+
         await this.loadPostComments(postId);
     }
 
@@ -411,12 +462,14 @@ class PostsManager {
         }
         
         try {
-            // Simular carga de comentarios desde el backend
-            const mockComments = this.generateMockComments(postId);
-            
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            this.postComments = mockComments;
+            // Cargar comentarios reales desde el backend
+            const resp = await fetch(`index.php?controller=api&action=getComments&id=${postId}`);
+            if (!resp.ok) throw new Error('Error al obtener comentarios');
+            const data = await resp.json();
+            if (!data.success) throw new Error(data.message || 'Respuesta inválida');
+
+            // API devuelve array de comentarios en data.data
+            this.postComments = Array.isArray(data.data) ? data.data : [];
             this.renderComments();
         } catch (error) {
             console.error('Error al cargar comentarios:', error);
@@ -485,16 +538,20 @@ class PostsManager {
     }
 
     createCommentHTML(comment) {
+        const avatar = (comment.user && (comment.user.fotoPerfil || comment.user.avatar)) || 'assets/default-avatar.png';
+        const userName = (comment.user && (comment.user.name || comment.user.UsuarioNombre)) || 'Usuario';
+        const text = comment.text || comment.comment || '';
+        const dateStr = comment.date || comment.FechaComentario || new Date().toISOString();
+
         return `
             <div class="comment-item fade-in">
-                <img src="${comment.user.avatar}" alt="${comment.user.name}" class="comment-avatar" 
-                     onerror="this.src='assets/default-avatar.png'">
+                <img src="${avatar}" alt="${userName}" class="comment-avatar" onerror="this.src='assets/default-avatar.png'">
                 <div class="comment-content">
                     <div class="comment-header">
-                        <span class="comment-user">${comment.user.name}</span>
-                        <span class="comment-date">${this.formatTimeAgo(comment.timestamp)}</span>
+                        <span class="comment-user">${userName}</span>
+                        <span class="comment-date">${this.formatTimeAgo(dateStr)}</span>
                     </div>
-                    <p class="comment-text">${comment.comment}</p>
+                    <p class="comment-text">${text}</p>
                 </div>
             </div>
         `;
@@ -561,17 +618,18 @@ class PostsManager {
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
-            // Simular envío al backend
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const response = await fetch('index.php?controller=api&action=createComentario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idPublicacion: this.currentPostId, comentario: commentText })
+            });
 
-            // Crear nuevo comentario
-            const newComment = {
-                id: this.postComments.length + 1,
-                user: { name: 'Tú', avatar: 'assets/default-avatar.png' },
-                comment: commentText,
-                date: new Date().toISOString().split('T')[0],
-                timestamp: new Date().toISOString()
-            };
+            if (!response.ok) throw new Error('Error al enviar comentario');
+            const respData = await response.json();
+            if (!respData.success) throw new Error(respData.message || 'No se pudo crear el comentario');
+
+            // API returns the created comment object
+            const newComment = respData.data;
 
             // Agregar al principio de la lista
             this.postComments.unshift(newComment);
@@ -579,7 +637,7 @@ class PostsManager {
             // Actualizar contador en el post original
             const post = this.posts.find(p => p.id === this.currentPostId);
             if (post) {
-                post.comments++;
+                post.comments = (post.comments || 0) + 1;
                 // Actualizar el contador en la interfaz del post
                 const postCard = document.querySelector(`[data-post-id="${this.currentPostId}"]`);
                 if (postCard) {
@@ -703,24 +761,48 @@ class PostsManager {
         const post = this.posts.find(p => p.id === postId);
         
         if (!post) return;
+        // Optimistic UI: toggle immediately then confirm with backend
+        const previousLiked = !!post.liked;
+        const previousLikes = post.likes || 0;
 
-        // Toggle like status
-        post.liked = !post.liked;
-        post.likes += post.liked ? 1 : -1;
-
-        // Update button UI
+        // Optimistically toggle
+        post.liked = !previousLiked;
+        post.likes = previousLiked ? Math.max(0, previousLikes - 1) : (previousLikes + 1);
         button.classList.toggle('liked', post.liked);
         const countSpan = button.querySelector('.interaction-count');
-        countSpan.textContent = post.likes;
+        if (countSpan) countSpan.textContent = post.likes;
 
         // Add animation effect
         button.style.transform = 'scale(1.1)';
-        setTimeout(() => {
-            button.style.transform = 'scale(1)';
-        }, 150);
+        setTimeout(() => { button.style.transform = 'scale(1)'; }, 150);
 
-        // Enviar al backend (simulado)
-        this.sendLikeToServer(postId, post.liked);
+        // Enviar al backend para confirmar
+        (async () => {
+            try {
+                const resp = await fetch('index.php?controller=api&action=toggleLike', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idPublicacion: postId })
+                });
+                if (!resp.ok) throw new Error('Error en servidor');
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.message || 'Error al procesar like');
+
+                // Server returns the authoritative state
+                post.liked = !!data.data.liked;
+                post.likes = data.data.likes || 0;
+                button.classList.toggle('liked', post.liked);
+                if (countSpan) countSpan.textContent = post.likes;
+            } catch (err) {
+                console.error('Error al toggle like:', err);
+                // Revert optimistic update
+                post.liked = previousLiked;
+                post.likes = previousLikes;
+                button.classList.toggle('liked', post.liked);
+                if (countSpan) countSpan.textContent = post.likes;
+                this.showError('No se pudo actualizar el like');
+            }
+        })();
     }
 
     handleComment(event) {

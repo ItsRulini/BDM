@@ -413,6 +413,246 @@ class ApiController {
         }
     }
 
+    // @GET /api/getPostStats&id={idPublicacion}
+    public function getPostStats() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Id de publicación inválido']);
+            return;
+        }
+
+        try {
+            include_once '../DAO/ReaccionDAO.php';
+            include_once '../DAO/ComentarioDAO.php';
+            include_once '../DAO/VistaDAO.php';
+
+            $reaccionDAO = new ReaccionDAO($GLOBALS['conn']);
+            $comentarioDAO = new ComentarioDAO($GLOBALS['conn']);
+            $vistaDAO = new VistaDAO($GLOBALS['conn']);
+
+            $views = $vistaDAO->getViewsCountByPublicacion($id);
+            $likes = $reaccionDAO->getLikesCountByPublicacion($id);
+            $likedBy = $reaccionDAO->getUsersWhoLikedByPublicacion($id, 50);
+            $commentsCount = $comentarioDAO->getCommentsCountByPublicacion($id);
+            $recentComments = $comentarioDAO->getRecentCommentsByPublicacion($id, 10);
+
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'views' => $views,
+                    'likes' => $likes,
+                    'comments' => $commentsCount,
+                    'likedBy' => $likedBy,
+                    'recentComments' => $recentComments
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
+        }
+    }
+
+    // @POST /api/createComentario
+    public function createComentario() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Acceso no autorizado']);
+            return;
+        }
+
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $idPublicacion = isset($data['idPublicacion']) ? (int)$data['idPublicacion'] : 0;
+            $texto = trim($data['comentario'] ?? '');
+
+            if ($idPublicacion <= 0 || $texto === '') {
+                echo json_encode(['success' => false, 'message' => 'Datos inválidos']);
+                return;
+            }
+
+            include_once '../DAO/ComentarioDAO.php';
+            $comentarioDAO = new ComentarioDAO($GLOBALS['conn']);
+            $sessionUser = Auth::user();
+            $newComment = $comentarioDAO->addComment($idPublicacion, $sessionUser['id'], $texto);
+
+            if ($newComment === null) {
+                echo json_encode(['success' => false, 'message' => 'No se pudo crear el comentario']);
+                return;
+            }
+
+            echo json_encode(['success' => true, 'data' => $newComment]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
+        }
+    }
+
+    // @POST /api/deleteComentario
+    public function deleteComentario() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Acceso no autorizado']);
+            return;
+        }
+
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $idComentario = isset($data['idComentario']) ? (int)$data['idComentario'] : 0;
+
+            if ($idComentario <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Id de comentario inválido']);
+                return;
+            }
+
+            include_once '../DAO/ComentarioDAO.php';
+            $comentarioDAO = new ComentarioDAO($GLOBALS['conn']);
+
+            // Verificar que el usuario sea admin
+            if (!Auth::isAdmin()) {
+                echo json_encode(['success' => false, 'message' => 'No tienes permiso para eliminar comentarios']);
+                return;
+            }
+
+            // Eliminar el comentario
+            $ok = $comentarioDAO->deleteComment($idComentario);
+
+            if (!$ok) {
+                echo json_encode(['success' => false, 'message' => 'No se pudo eliminar el comentario']);
+                return;
+            }
+
+            echo json_encode(['success' => true, 'message' => 'Comentario eliminado correctamente']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
+        }
+    }
+
+    // @POST /api/toggleLike
+    public function toggleLike() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Acceso no autorizado']);
+            return;
+        }
+
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $idPublicacion = isset($data['idPublicacion']) ? (int)$data['idPublicacion'] : 0;
+            if ($idPublicacion <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Id inválido']);
+                return;
+            }
+
+            include_once '../DAO/ReaccionDAO.php';
+            $reaccionDAO = new ReaccionDAO($GLOBALS['conn']);
+            $sessionUser = Auth::user();
+            $userId = $sessionUser['id'];
+
+            $has = $reaccionDAO->userHasLiked($idPublicacion, $userId);
+            if ($has) {
+                $ok = $reaccionDAO->removeLike($idPublicacion, $userId);
+                $liked = false;
+            } else {
+                $ok = $reaccionDAO->addLike($idPublicacion, $userId);
+                $liked = true;
+            }
+
+            if (!$ok) {
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar like']);
+                return;
+            }
+
+            $count = $reaccionDAO->getLikesCountByPublicacion($idPublicacion);
+            echo json_encode(['success' => true, 'data' => ['liked' => $liked, 'likes' => $count]]);
+
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
+        }
+    }
+
+    // @GET /api/getComments&id={idPublicacion}
+    public function getComments() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Id inválido']);
+            return;
+        }
+
+        try {
+            include_once '../DAO/ComentarioDAO.php';
+            $comentarioDAO = new ComentarioDAO($GLOBALS['conn']);
+            $comments = $comentarioDAO->getRecentCommentsByPublicacion($id, $limit);
+            echo json_encode(['success' => true, 'data' => $comments]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
+        }
+    }
+
+    // @POST /api/addView
+    public function addView() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            return;
+        }
+
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $idPublicacion = isset($data['idPublicacion']) ? (int)$data['idPublicacion'] : 0;
+            if ($idPublicacion <= 0) {
+                echo json_encode(['success' => false, 'message' => 'Id inválido']);
+                return;
+            }
+
+            include_once '../DAO/VistaDAO.php';
+            $vistaDAO = new VistaDAO($GLOBALS['conn']);
+
+            $userId = null;
+            if (Auth::check()) {
+                $sessionUser = Auth::user();
+                $userId = $sessionUser['id'];
+            }
+
+            $ok = $vistaDAO->addView($idPublicacion, $userId);
+
+            if (!$ok) {
+                echo json_encode(['success' => false, 'message' => 'No se pudo registrar la vista']);
+                return;
+            }
+
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error del servidor: ' . $e->getMessage()]);
+        }
+    }
+
     // @POST /api/crearCategoria
     public function crearCategoria() {
 
@@ -1443,9 +1683,28 @@ class ApiController {
                 
                 // Obtener categorías
                 $categorias = $publicacionDAO->getCategoriasPublicacion($idPublicacion);
-                
+                // Obtener estadísticas reales
+                include_once '../DAO/ReaccionDAO.php';
+                include_once '../DAO/ComentarioDAO.php';
+                include_once '../DAO/VistaDAO.php';
+
+                $reaccionDAO = new ReaccionDAO($GLOBALS['conn']);
+                $comentarioDAO = new ComentarioDAO($GLOBALS['conn']);
+                $vistaDAO = new VistaDAO($GLOBALS['conn']);
+
+                $likesCount = $reaccionDAO->getLikesCountByPublicacion($idPublicacion);
+                $commentsCount = $comentarioDAO->getCommentsCountByPublicacion($idPublicacion);
+                $viewsCount = $vistaDAO->getViewsCountByPublicacion($idPublicacion);
+
+                $userHasLiked = false;
+                if (Auth::check()) {
+                    $sessionUser = Auth::user();
+                    $userHasLiked = $reaccionDAO->userHasLiked($idPublicacion, $sessionUser['id']);
+                }
+
                 $publicacionesAprobadas[] = [
                     'id' => $idPublicacion,
+                    'idMundial' => $pub->getIdMundial(),
                     'sedes' => $item['sedes'],
                     'contenido' => $pub->getContenido(),
                     'fechaCreacion' => $pub->getFechaCreacion(),
@@ -1455,9 +1714,10 @@ class ApiController {
                     'idCreador' => $pub->getIdCreador(),
                     'multimedia' => $multimediaArray,
                     'categorias' => $categorias,
-                    'views' => 0, // Mocked for now
-                    'likes' => 0, // Mocked for now
-                    'comments' => 0 // Mocked for now
+                    'views' => $viewsCount,
+                    'likes' => $likesCount,
+                    'comments' => $commentsCount,
+                    'userHasLiked' => $userHasLiked
                 ];
             }
 

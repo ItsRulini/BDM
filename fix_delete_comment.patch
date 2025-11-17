@@ -1,0 +1,17 @@
+*** Begin Patch
+*** Update File: c:\xampp\htdocs\BDM\app\Controllers\ApiController.php
+@@            include_once '../DAO/ComentarioDAO.php';
+@@            $comentarioDAO = new ComentarioDAO($GLOBALS['conn']);
+@@            
+-            // Verificar que el usuario sea admin o dueño del comentario
+-            $sessionUser = Auth::user();
+-            $isAdmin = $sessionUser['tipo'] === 'Administrador';
+-            
+-            if (!$isAdmin) {
++            // Verificar que el usuario sea admin
++            if (!Auth::isAdmin()) {
+@@                echo json_encode(['success' => false, 'message' => 'No tienes permiso para eliminar comentarios']);
+@@                return;
+@@            }
+
+*** End Patch
