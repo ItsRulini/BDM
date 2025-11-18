@@ -370,14 +370,16 @@ export default class ProfileManager {
                         </div>
                     `;
                 } else if (item.type.startsWith('video/')) {
+                    const videoId = `video-${post.id}-${index}`;
                     return `
                         <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
                             <video 
+                                id="${videoId}"
                                 controls 
                                 preload="metadata" 
                                 playsinline
                                 onclick="event.stopPropagation()"
-                                onplay="this.showSuccess('Reproduciendo video'); event.stopPropagation()"
+                                onplay="event.stopPropagation()"
                                 onpause="event.stopPropagation()"
                                 onvolumechange="event.stopPropagation()"
                                 ontimeupdate="event.stopPropagation()"
@@ -1307,9 +1309,11 @@ export default class ProfileManager {
                 if (item.type.startsWith('image/')) {
                     return `<div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}"><img src="${item.src}" alt="Multimedia"></div>`;
                 } else if (item.type.startsWith('video/')) {
+                    const videoId = `video-${post.id}-${index}`;
                     return `
                         <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <video 
+                            <video
+                                id="${videoId}"
                                 controls 
                                 preload="metadata"
                                 playsinline
