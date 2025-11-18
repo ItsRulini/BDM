@@ -240,8 +240,6 @@
             <div class="footer-social">
                 <h4>Síguenos</h4>
                 <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
             </div>
         </div>
         <div class="footer-bottom">

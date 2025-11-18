@@ -213,8 +213,6 @@ class PostsManager {
         }
     }
 
-    // generateMockPosts() { ... } // ELIMINADO
-
     filterAndSearch() {
         const searchTerm = this.searchInput?.value.toLowerCase() || '';
         const mundialFilter = this.filterCountry?.value || ''; // Filtro por país/sede
@@ -342,7 +340,7 @@ class PostsManager {
             ` : '';
 
             return `
-                <div class="post-multimedia">
+                <div class="post-multimedia" onclick="event.stopPropagation()">
                     <div class="multimedia-carousel" id="${carouselId}">
                         <div class="carousel-container">
                             ${slides}
@@ -485,44 +483,6 @@ class PostsManager {
                 this.loadingComments.style.display = 'none';
             }
         }
-    }
-
-    generateMockComments(postId) {
-        const users = [
-            { name: 'Ana García', avatar: 'assets/avatars/user1.jpg' },
-            { name: 'Luis Martínez', avatar: 'assets/avatars/user2.jpg' },
-            { name: 'Sofia López', avatar: 'assets/avatars/user3.jpg' },
-            { name: 'Miguel Torres', avatar: 'assets/avatars/user4.jpg' },
-            { name: 'Carmen Ruiz', avatar: 'assets/avatars/user5.jpg' }
-        ];
-
-        const sampleComments = [
-            "¡Excelente análisis! Me encantó tu perspectiva sobre este mundial.",
-            "Totalmente de acuerdo contigo. Ese mundial fue histórico por muchas razones.",
-            "Muy interesante tu punto de vista. ¿Podrías profundizar más en este tema?",
-            "No había pensado en eso antes. Gracias por compartir esta información.",
-            "Gran post! Me trae muchos recuerdos de ese mundial."
-        ];
-
-        const numComments = Math.floor(Math.random() * 8) + 2; // 2-9 comentarios
-        const comments = [];
-
-        for (let i = 0; i < numComments; i++) {
-            const randomUser = users[Math.floor(Math.random() * users.length)];
-            const randomComment = sampleComments[Math.floor(Math.random() * sampleComments.length)];
-            const randomDate = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
-
-            comments.push({
-                id: i + 1,
-                user: randomUser,
-                comment: randomComment,
-                date: randomDate.toISOString().split('T')[0],
-                timestamp: randomDate.toISOString()
-            });
-        }
-
-        // Ordenar por fecha más reciente primero
-        return comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     }
 
     renderComments() {
@@ -833,27 +793,6 @@ class PostsManager {
         
         // Abrir modal de comentarios
         this.openCommentsModal(postId);
-    }
-
-    async sendLikeToServer(postId, liked) {
-        // Simulación - en un caso real, harías un fetch
-        console.log(`Like ${liked ? 'agregado' : 'removido'} para post ${postId} (simulado)`);
-        
-        // try {
-        //     const response = await fetch(`index.php?controller=api&action=likePost`, {
-        //         method: 'POST',
-        //         headers: { 'Content-Type': 'application/json' },
-        //         body: JSON.stringify({ postId, liked })
-        //     });
-        //     if (!response.ok) {
-        //         throw new Error('Error al procesar like');
-        //     }
-        //     const data = await response.json();
-        //     console.log('Respuesta del servidor (like):', data);
-        // } catch (error) {
-        //     console.error('Error al enviar like:', error);
-        //     // Revertir el like en la UI si falla
-        // }
     }
 
     // ================================

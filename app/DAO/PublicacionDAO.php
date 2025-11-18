@@ -170,7 +170,8 @@ class PublicacionDAO {
                     
                     $publicaciones[] = [
                         'publicacion' => $pub,
-                        'mundialAño' => $row['MundialAño']
+                        'mundialAño' => $row['MundialAño'],
+                        'sedes' => $row['Sedes']
                     ];
                 }
                 mysqli_free_result($result);

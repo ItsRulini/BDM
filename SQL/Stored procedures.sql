@@ -658,9 +658,11 @@ BEGIN
         p.EstatusAprobacion,
         p.IdCreador,
         p.IdMundial,
-        m.Año AS MundialAño
+        m.Año AS MundialAño,
+        vw.Sedes
     FROM Publicacion p
     INNER JOIN Mundial m ON p.IdMundial = m.IdMundial
+    INNER JOIN vw_info_mundiales vw ON vw.IdMundial = m.IdMundial
     WHERE p.IdCreador = p_idUsuario
     ORDER BY p.FechaCreacion DESC;
 END$$

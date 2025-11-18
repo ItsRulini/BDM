@@ -1613,8 +1613,9 @@ class ApiController {
                     'fechaCreacion' => $pub->getFechaCreacion(),
                     'estatus' => $pub->getEstatusAprobacion(),
                     'mundialAño' => $item['mundialAño'],
-                    'multimedia' => $multimediaArray, // ⭐ NUEVO
-                    'categorias' => $categorias // ⭐ NUEVO
+                    'multimedia' => $multimediaArray, 
+                    'categorias' => $categorias, 
+                    'sedes' => $item['sedes']
                 ];
             }, $publicaciones);
 
