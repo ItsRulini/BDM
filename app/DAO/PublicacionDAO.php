@@ -413,7 +413,6 @@ public function getTodasPublicaciones(): ?array {
                 
                 $publicaciones[] = [
                     'publicacion' => $pub,
-                    'sedes' => $row['Sedes'],
                     'mundialAño' => $row['MundialAño'],
                     'autorNombre' => $row['UsuarioNombre'] . ' ' . $row['UsuarioApellido']
                 ];
