@@ -108,7 +108,7 @@ class PostsAdminManager {
                     idCreador: post.idCreador,
                     mundial: {
                         name: post.mundialAño || 'Sin mundial',
-                        year: post.mundialAño ? parseInt(post.mundialAño.split(' ')[0]) : 0
+                        year: post.mundialAño ? parseInt(post.mundialAño) : 0
                     },
                     category: 'general',
                     user: {

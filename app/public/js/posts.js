@@ -108,6 +108,12 @@ class PostsManager {
     async loadCurrentUser() {
         try {
             const response = await fetch('index.php?controller=api&action=getCurrentUser');
+
+            if (!response.ok && response.status === 401) {
+                this.currentUser = null;
+                throw new Error('No hay sesión activa');
+            }
+
             const data = await response.json();
             if (data.success && data.data && data.data.usuario) {
                 this.currentUser = data.data.usuario;
@@ -288,119 +294,119 @@ class PostsManager {
     }
 
     createPostHTML(post) {
-    const formatCategories = (categorias) => {
-        if (!Array.isArray(categorias) || categorias.length === 0) return '<span>General</span>';
-        
-        return categorias.map(cat => {
-            const formatted = cat.charAt(0).toUpperCase() + cat.slice(1);
-            return `<span>${formatted}</span>`;
-        }).join('');
-    };
+        const formatCategories = (categorias) => {
+            if (!Array.isArray(categorias) || categorias.length === 0) return '<span>General</span>';
+            
+            return categorias.map(cat => {
+                const formatted = cat.charAt(0).toUpperCase() + cat.slice(1);
+                return `<span>${formatted}</span>`;
+            }).join('');
+        };
 
-    const createMultimediaCarousel = (multimedia) => {
-        if (!multimedia || multimedia.length === 0) return '';
-        
-        const carouselId = `carousel-${post.id}`;
-        
-        const slides = multimedia.map((item, index) => {
-            if (item.type.startsWith('image/')) {
-                return `
-                    <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                        <img src="${item.src}" alt="Multimedia de publicación" onerror="this.parentElement.style.display='none'">
+        const createMultimediaCarousel = (multimedia) => {
+            if (!multimedia || multimedia.length === 0) return '';
+            
+            const carouselId = `carousel-${post.id}`;
+            
+            const slides = multimedia.map((item, index) => {
+                if (item.type.startsWith('image/')) {
+                    return `
+                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <img src="${item.src}" alt="Multimedia de publicación" onerror="this.parentElement.style.display='none'">
+                        </div>
+                    `;
+                } else if (item.type.startsWith('video/')) {
+                    return `
+                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <video controls preload="metadata" playsinline>
+                                <source src="${item.src}" type="${item.type}">
+                                Tu navegador no soporta el elemento video.
+                            </video>
+                        </div>
+                    `;
+                }
+                return '';
+            }).join('');
+
+            const indicators = multimedia.length > 1 ? multimedia.map((_, index) => 
+                `<button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-slide="${index}"></button>`
+            ).join('') : '';
+
+            const navigation = multimedia.length > 1 ? `
+                <button class="carousel-nav prev" aria-label="Anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-nav next" aria-label="Siguiente">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            ` : '';
+
+            return `
+                <div class="post-multimedia">
+                    <div class="multimedia-carousel" id="${carouselId}">
+                        <div class="carousel-container">
+                            ${slides}
+                        </div>
+                        ${navigation}
+                        ${indicators ? `<div class="carousel-indicators">${indicators}</div>` : ''}
                     </div>
-                `;
-            } else if (item.type.startsWith('video/')) {
-                return `
-                    <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                        <video controls preload="metadata" playsinline>
-                            <source src="${item.src}" type="${item.type}">
-                            Tu navegador no soporta el elemento video.
-                        </video>
-                    </div>
-                `;
-            }
-            return '';
-        }).join('');
+                </div>
+            `;
+        };
 
-        const indicators = multimedia.length > 1 ? multimedia.map((_, index) => 
-            `<button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-slide="${index}"></button>`
-        ).join('') : '';
-
-        const navigation = multimedia.length > 1 ? `
-            <button class="carousel-nav prev" aria-label="Anterior">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="carousel-nav next" aria-label="Siguiente">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        ` : '';
+        const sedes = this.mundialNameFormat(post.sedes);
 
         return `
-            <div class="post-multimedia">
-                <div class="multimedia-carousel" id="${carouselId}">
-                    <div class="carousel-container">
-                        ${slides}
-                    </div>
-                    ${navigation}
-                    ${indicators ? `<div class="carousel-indicators">${indicators}</div>` : ''}
+            <article class="post-card" data-post-id="${post.id}">
+                <div class="post-mundial">
+                    <span>${sedes + ' ' + post.mundialAño}</span>
                 </div>
-            </div>
+                
+                <div class="post-category">
+                    ${formatCategories(post.categorias)}
+                </div>
+                
+                <div class="post-header">
+                    <h2 class="post-title">${this.truncateText(post.contenido, 70)}</h2>
+                    <div class="post-meta">
+                        <div class="post-author">
+                            <img src="assets/default-avatar.png" alt="${post.autorNombre}" class="profile-pic" 
+                                onerror="this.src='assets/default-avatar.png'">
+                            <span>por ${post.autorNombre}</span>
+                        </div>
+                        <div class="post-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>${this.formatDate(post.fechaCreacion)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="post-content">
+                    <p class="post-text">${post.contenido}</p>
+                    ${createMultimediaCarousel(post.multimedia)}
+                </div>
+
+                <div class="post-interactions">
+                    <div class="interaction-buttons">
+                        <button class="like-btn ${post.liked ? 'liked' : ''}" 
+                                data-post-id="${post.id}" 
+                                aria-label="Dar like a esta publicación">
+                            <i class="fas fa-heart"></i>
+                            Like
+                            <span class="interaction-count">${post.likes}</span>
+                        </button>
+                        <button class="comment-btn" 
+                                data-post-id="${post.id}"
+                                aria-label="Ver comentarios">
+                            <i class="fas fa-comment"></i>
+                            Comentar
+                            <span class="interaction-count">${post.comments}</span>
+                        </button>
+                    </div>
+                </div>
+            </article>
         `;
-    };
-
-    const sedes = this.mundialNameFormat(post.sedes);
-
-    return `
-        <article class="post-card" data-post-id="${post.id}">
-            <div class="post-mundial">
-                <span>${sedes + ' ' + post.mundialAño}</span>
-            </div>
-            
-            <div class="post-category">
-                ${formatCategories(post.categorias)}
-            </div>
-            
-            <div class="post-header">
-                <h2 class="post-title">${this.truncateText(post.contenido, 70)}</h2>
-                <div class="post-meta">
-                    <div class="post-author">
-                        <img src="assets/default-avatar.png" alt="${post.autorNombre}" class="profile-pic" 
-                             onerror="this.src='assets/default-avatar.png'">
-                        <span>por ${post.autorNombre}</span>
-                    </div>
-                    <div class="post-date">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>${this.formatDate(post.fechaCreacion)}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="post-content">
-                <p class="post-text">${post.contenido}</p>
-                ${createMultimediaCarousel(post.multimedia)}
-            </div>
-
-            <div class="post-interactions">
-                <div class="interaction-buttons">
-                    <button class="like-btn ${post.liked ? 'liked' : ''}" 
-                            data-post-id="${post.id}" 
-                            aria-label="Dar like a esta publicación">
-                        <i class="fas fa-heart"></i>
-                        Like
-                        <span class="interaction-count">${post.likes}</span>
-                    </button>
-                    <button class="comment-btn" 
-                            data-post-id="${post.id}"
-                            aria-label="Ver comentarios">
-                        <i class="fas fa-comment"></i>
-                        Comentar
-                        <span class="interaction-count">${post.comments}</span>
-                    </button>
-                </div>
-            </div>
-        </article>
-    `;
-}
+    }
 
     // ================================
     // COMMENTS FUNCTIONALITY
@@ -599,6 +605,11 @@ class PostsManager {
     async submitComment() {
         if (!this.newCommentText || !this.currentPostId) return;
 
+        if (!this.currentUser) {
+            this.showError('Debes iniciar sesión para realizar esta acción');
+            return;
+        }
+
         const commentText = this.newCommentText.value.trim();
         if (!commentText) {
             this.showError('Por favor escribe un comentario');
@@ -744,13 +755,23 @@ class PostsManager {
         // Eventos para botones de like
         const likeButtons = this.postsContainer.querySelectorAll('.like-btn');
         likeButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => this.handleLike(e));
+            btn.addEventListener('click', (e) => {
+                if (!this.currentUser) {
+                    this.showError('Debes iniciar sesión para realizar esta acción');
+                    e.stopPropagation();
+                    return;
+                }
+
+                this.handleLike(e);
+            });
         });
 
         // Eventos para botones de comentarios
         const commentButtons = this.postsContainer.querySelectorAll('.comment-btn');
         commentButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => this.handleComment(e));
+            btn.addEventListener('click', (e) => {
+                this.handleComment(e);
+            });
         });
     }
 
