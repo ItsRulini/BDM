@@ -370,9 +370,20 @@ export default class ProfileManager {
                         </div>
                     `;
                 } else if (item.type.startsWith('video/')) {
+                    const videoId = `video-${post.id}-${index}`;
                     return `
                         <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                            <video controls preload="metadata">
+                            <video 
+                                id="${videoId}"
+                                controls 
+                                preload="metadata" 
+                                playsinline
+                                onclick="event.stopPropagation()"
+                                onplay="event.stopPropagation()"
+                                onpause="event.stopPropagation()"
+                                onvolumechange="event.stopPropagation()"
+                                ontimeupdate="event.stopPropagation()"
+                            >
                                 <source src="${item.src}" type="${item.type}">
                                 Tu navegador no soporta el elemento video.
                             </video>
@@ -396,7 +407,7 @@ export default class ProfileManager {
             ` : '';
 
             return `
-                <div class="post-multimedia">
+                <div class="post-multimedia" onclick="event.stopPropagation()">
                     <div class="multimedia-carousel" id="${carouselId}">
                         <div class="carousel-container">
                             ${slides}
@@ -407,6 +418,8 @@ export default class ProfileManager {
                 </div>
             `;
         };
+
+        const sedes = this.mundialNameFormat(post.sedes);
 
         return `
             <div class="post-card fade-in ${isClickable ? 'clickable' : ''}" ${isClickable ? `onclick="profileManager.openPostStats(${post.id})"` : ''}>
@@ -423,7 +436,7 @@ export default class ProfileManager {
                 </div>
                 
                 <div class="post-meta">
-                    <small><strong>Mundial:</strong> ${post.mundialAño}</small>
+                    <small><strong>Mundial:</strong> ${sedes + ' ' + post.mundialAño}</small>
                     <small><strong>Categorías:</strong> ${categories}</small>
                 </div>
                 
@@ -434,6 +447,23 @@ export default class ProfileManager {
                 ${isClickable ? '<div class="click-hint"><i class="fas fa-chart-line"></i> Click para ver estadísticas</div>' : ''}
             </div>
         `;
+    }
+
+    mundialNameFormat(stringToFormat) {
+        // Si el nombre contiene comas, reemplazar la última coma por " y " (manteniendo el resto igual)
+        const rawName = (typeof stringToFormat === 'string') ? stringToFormat.trim() : '';
+        if (rawName.includes(',')) {
+            const parts = rawName.split(',').map(s => s.trim()).filter(Boolean);
+            if (parts.length > 1) {
+                stringToFormat = parts.slice(0, -1).join(', ') + ' y ' + parts[parts.length - 1];
+            } else {
+                stringToFormat = rawName;
+            }
+        } else {
+            stringToFormat = rawName;
+        }
+
+        return stringToFormat;
     }
 
     // ================================
@@ -1279,7 +1309,24 @@ export default class ProfileManager {
                 if (item.type.startsWith('image/')) {
                     return `<div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}"><img src="${item.src}" alt="Multimedia"></div>`;
                 } else if (item.type.startsWith('video/')) {
-                    return `<div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}"><video controls preload="metadata"><source src="${item.src}" type="${item.type}"></video></div>`;
+                    const videoId = `video-${post.id}-${index}`;
+                    return `
+                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <video
+                                id="${videoId}"
+                                controls 
+                                preload="metadata"
+                                playsinline
+                                onclick="event.stopPropagation()"
+                                onplay="event.stopPropagation()"
+                                onpause="event.stopPropagation()"
+                                onvolumechange="event.stopPropagation()"
+                            >
+                                <source src="${item.src}" type="${item.type}">
+                                Tu navegador no soporta el elemento video.
+                            </video>
+                        </div>
+                    `;
                 }
                 return '';
             }).join('');

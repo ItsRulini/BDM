@@ -170,7 +170,8 @@ class PublicacionDAO {
                     
                     $publicaciones[] = [
                         'publicacion' => $pub,
-                        'mundialAño' => $row['MundialAño']
+                        'mundialAño' => $row['MundialAño'],
+                        'sedes' => $row['Sedes']
                     ];
                 }
                 mysqli_free_result($result);
@@ -413,6 +414,7 @@ public function getTodasPublicaciones(): ?array {
                 $publicaciones[] = [
                     'publicacion' => $pub,
                     'sedes' => $row['Sedes'],
+                    'avatar' => $row['FotoPerfil'] ? 'data:image/jpeg;base64,' . base64_encode($row['FotoPerfil']) : null,
                     'mundialAño' => $row['MundialAño'],
                     'autorNombre' => $row['UsuarioNombre'] . ' ' . $row['UsuarioApellido']
                 ];

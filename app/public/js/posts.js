@@ -88,26 +88,46 @@ class PostsManager {
 
     async loadDropdownOptions() {
         try {
-            const response = await fetch('index.php?controller=api&action=getMundialesFiltros');
-            const data = await response.json();
+            // Cargar mundiales reales
+            const mundialesResponse = await fetch('index.php?controller=api&action=getMundiales');
+            const mundialesData = await mundialesResponse.json();
 
-            if (data.success) {
-                const filtros = data.data;
-                await this.fillOutFilterOptions(this.filtroMundial, filtros.sedes, 'Filtrar por país sede');
-            } else {
-                console.error('Error en los datos recibidos para filtros:', data.message);
-                return;
+            if (mundialesData.success && Array.isArray(mundialesData.data)) {
+                const mundiales = mundialesData.data.sort((a, b) => b.year - a.year);
+                if (this.filtroMundial) {
+                    const options = ['<option value="">Todos los mundiales</option>']
+                        .concat(mundiales.map(m => `<option value="${m.name}">${m.name}</option>`));
+                    this.filtroMundial.innerHTML = options.join('');
+                }
+            }
+
+            // Cargar categorías reales
+            const categoriasResponse = await fetch('index.php?controller=api&action=getCategorias');
+            const categoriasData = await categoriasResponse.json();
+
+            if (categoriasData.success && Array.isArray(categoriasData.data)) {
+                const categorias = categoriasData.data.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                if (this.filtroCategoria) {
+                    const options = ['<option value="">Todas las categorías</option>']
+                        .concat(categorias.map(c => `<option value="${c.nombre.toLowerCase()}">${c.nombre}</option>`));
+                    this.filtroCategoria.innerHTML = options.join('');
+                }
             }
 
         } catch (error) {
             console.error('Error al cargar opciones de filtro:', error);
         }
-        
     }
 
     async loadCurrentUser() {
         try {
             const response = await fetch('index.php?controller=api&action=getCurrentUser');
+
+            if (!response.ok && response.status === 401) {
+                this.currentUser = null;
+                throw new Error('No hay sesión activa');
+            }
+
             const data = await response.json();
             if (data.success && data.data && data.data.usuario) {
                 this.currentUser = data.data.usuario;
@@ -207,25 +227,36 @@ class PostsManager {
         }
     }
 
-    // generateMockPosts() { ... } // ELIMINADO
-
     filterAndSearch() {
         const searchTerm = this.searchInput?.value.toLowerCase() || '';
-        const mundialFilter = this.filterCountry?.value || ''; // Filtro por país/sede
+        const mundialFilter = this.filterCountry?.value || '';
         const categoryFilter = this.filterCategory?.value || '';
         const orderValue = this.orderBy?.value || '';
 
         this.filteredPosts = this.posts.filter(post => {
-            // MODIFICADO: para usar datos de la API
-            const matchesSearch = searchTerm === '' || 
-                post.contenido.toLowerCase().includes(searchTerm) ||
-                post.autorNombre.toLowerCase().includes(searchTerm) ||
-                (Array.isArray(post.categorias) && post.categorias.some(cat => cat.toLowerCase().includes(searchTerm))) ||
-                post.mundialAño.toLowerCase().includes(searchTerm);
+            const contenido = (post.contenido || '').toLowerCase();
+            const autor = (post.autorNombre || '').toLowerCase();
+            const mundialNombre = (post.sedes && post.mundialAño) ? 
+                `${post.sedes} ${post.mundialAño}`.toLowerCase() : 
+                (post.mundialAño || '').toLowerCase();
+            const categorias = Array.isArray(post.categorias) ? 
+                post.categorias.map(c => c.toLowerCase()) : [];
 
-            // Asumimos que el filtro de país busca en el nombre del mundial (Ej. "Qatar 2022")
-            const matchesMundial = mundialFilter === '' || post.mundialAño.toLowerCase().includes(mundialFilter.toLowerCase());
-            const matchesCategory = categoryFilter === '' || (Array.isArray(post.categorias) && post.categorias.some(cat => cat.toLowerCase() === categoryFilter.toLowerCase()));
+            // Búsqueda por texto en contenido, autor, mundial o categorías
+            const matchesSearch = searchTerm === '' ||
+                contenido.includes(searchTerm) ||
+                autor.includes(searchTerm) ||
+                mundialNombre.includes(searchTerm) ||
+                categorias.some(cat => cat.includes(searchTerm));
+
+            // Filtro por mundial (comparación exacta con el nombre completo)
+            const matchesMundial = mundialFilter === '' || 
+                mundialNombre === mundialFilter.toLowerCase() ||
+                mundialNombre.includes(mundialFilter.toLowerCase());
+
+            // Filtro por categoría (coincidencia exacta)
+            const matchesCategory = categoryFilter === '' || 
+                categorias.some(cat => cat === categoryFilter);
 
             return matchesSearch && matchesMundial && matchesCategory;
         });
@@ -288,52 +319,52 @@ class PostsManager {
     }
 
     createPostHTML(post) {
-    const formatCategories = (categorias) => {
-        if (!Array.isArray(categorias) || categorias.length === 0) return '<span>General</span>';
-        
-        return categorias.map(cat => {
-            const formatted = cat.charAt(0).toUpperCase() + cat.slice(1);
-            return `<span>${formatted}</span>`;
-        }).join('');
-    };
+        const formatCategories = (categorias) => {
+            if (!Array.isArray(categorias) || categorias.length === 0) return '<span>General</span>';
+            
+            return categorias.map(cat => {
+                const formatted = cat.charAt(0).toUpperCase() + cat.slice(1);
+                return `<span>${formatted}</span>`;
+            }).join('');
+        };
 
-    const createMultimediaCarousel = (multimedia) => {
-        if (!multimedia || multimedia.length === 0) return '';
-        
-        const carouselId = `carousel-${post.id}`;
-        
-        const slides = multimedia.map((item, index) => {
-            if (item.type.startsWith('image/')) {
-                return `
-                    <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                        <img src="${item.src}" alt="Multimedia de publicación" onerror="this.parentElement.style.display='none'">
-                    </div>
-                `;
-            } else if (item.type.startsWith('video/')) {
-                return `
-                    <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-                        <video controls preload="metadata" playsinline>
-                            <source src="${item.src}" type="${item.type}">
-                            Tu navegador no soporta el elemento video.
-                        </video>
-                    </div>
-                `;
-            }
-            return '';
-        }).join('');
+        const createMultimediaCarousel = (multimedia) => {
+            if (!multimedia || multimedia.length === 0) return '';
+            
+            const carouselId = `carousel-${post.id}`;
+            
+            const slides = multimedia.map((item, index) => {
+                if (item.type.startsWith('image/')) {
+                    return `
+                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <img src="${item.src}" alt="Multimedia de publicación" onerror="this.parentElement.style.display='none'">
+                        </div>
+                    `;
+                } else if (item.type.startsWith('video/')) {
+                    return `
+                        <div class="carousel-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                            <video controls preload="metadata" playsinline>
+                                <source src="${item.src}" type="${item.type}">
+                                Tu navegador no soporta el elemento video.
+                            </video>
+                        </div>
+                    `;
+                }
+                return '';
+            }).join('');
 
-        const indicators = multimedia.length > 1 ? multimedia.map((_, index) => 
-            `<button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-slide="${index}"></button>`
-        ).join('') : '';
+            const indicators = multimedia.length > 1 ? multimedia.map((_, index) => 
+                `<button class="carousel-indicator ${index === 0 ? 'active' : ''}" data-slide="${index}"></button>`
+            ).join('') : '';
 
-        const navigation = multimedia.length > 1 ? `
-            <button class="carousel-nav prev" aria-label="Anterior">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="carousel-nav next" aria-label="Siguiente">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        ` : '';
+            const navigation = multimedia.length > 1 ? `
+                <button class="carousel-nav prev" aria-label="Anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="carousel-nav next" aria-label="Siguiente">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            ` : '';
 
         return `
             <div class="post-multimedia">
@@ -348,12 +379,10 @@ class PostsManager {
         `;
     };
 
-    const sedes = this.mundialNameFormat(post.sedes);
-
     return `
         <article class="post-card" data-post-id="${post.id}">
             <div class="post-mundial">
-                <span>${sedes + ' ' + post.mundialAño}</span>
+                <span>${post.sedes && post.mundialAño ? `${post.sedes} ${post.mundialAño}` : (post.mundialAño || 'Sin mundial')}</span>
             </div>
             
             <div class="post-category">
@@ -364,7 +393,7 @@ class PostsManager {
                 <h2 class="post-title">${this.truncateText(post.contenido, 70)}</h2>
                 <div class="post-meta">
                     <div class="post-author">
-                        <img src="assets/default-avatar.png" alt="${post.autorNombre}" class="profile-pic" 
+                        <img src="${post.avatar}" alt="${post.autorNombre}" class="profile-pic" 
                              onerror="this.src='assets/default-avatar.png'">
                         <span>por ${post.autorNombre}</span>
                     </div>
@@ -375,32 +404,32 @@ class PostsManager {
                 </div>
             </div>
 
-            <div class="post-content">
-                <p class="post-text">${post.contenido}</p>
-                ${createMultimediaCarousel(post.multimedia)}
-            </div>
-
-            <div class="post-interactions">
-                <div class="interaction-buttons">
-                    <button class="like-btn ${post.liked ? 'liked' : ''}" 
-                            data-post-id="${post.id}" 
-                            aria-label="Dar like a esta publicación">
-                        <i class="fas fa-heart"></i>
-                        Like
-                        <span class="interaction-count">${post.likes}</span>
-                    </button>
-                    <button class="comment-btn" 
-                            data-post-id="${post.id}"
-                            aria-label="Ver comentarios">
-                        <i class="fas fa-comment"></i>
-                        Comentar
-                        <span class="interaction-count">${post.comments}</span>
-                    </button>
+                <div class="post-content">
+                    <p class="post-text">${post.contenido}</p>
+                    ${createMultimediaCarousel(post.multimedia)}
                 </div>
-            </div>
-        </article>
-    `;
-}
+
+                <div class="post-interactions">
+                    <div class="interaction-buttons">
+                        <button class="like-btn ${post.liked ? 'liked' : ''}" 
+                                data-post-id="${post.id}" 
+                                aria-label="Dar like a esta publicación">
+                            <i class="fas fa-heart"></i>
+                            Like
+                            <span class="interaction-count">${post.likes}</span>
+                        </button>
+                        <button class="comment-btn" 
+                                data-post-id="${post.id}"
+                                aria-label="Ver comentarios">
+                            <i class="fas fa-comment"></i>
+                            Comentar
+                            <span class="interaction-count">${post.comments}</span>
+                        </button>
+                    </div>
+                </div>
+            </article>
+        `;
+    }
 
     // ================================
     // COMMENTS FUNCTIONALITY
@@ -479,44 +508,6 @@ class PostsManager {
                 this.loadingComments.style.display = 'none';
             }
         }
-    }
-
-    generateMockComments(postId) {
-        const users = [
-            { name: 'Ana García', avatar: 'assets/avatars/user1.jpg' },
-            { name: 'Luis Martínez', avatar: 'assets/avatars/user2.jpg' },
-            { name: 'Sofia López', avatar: 'assets/avatars/user3.jpg' },
-            { name: 'Miguel Torres', avatar: 'assets/avatars/user4.jpg' },
-            { name: 'Carmen Ruiz', avatar: 'assets/avatars/user5.jpg' }
-        ];
-
-        const sampleComments = [
-            "¡Excelente análisis! Me encantó tu perspectiva sobre este mundial.",
-            "Totalmente de acuerdo contigo. Ese mundial fue histórico por muchas razones.",
-            "Muy interesante tu punto de vista. ¿Podrías profundizar más en este tema?",
-            "No había pensado en eso antes. Gracias por compartir esta información.",
-            "Gran post! Me trae muchos recuerdos de ese mundial."
-        ];
-
-        const numComments = Math.floor(Math.random() * 8) + 2; // 2-9 comentarios
-        const comments = [];
-
-        for (let i = 0; i < numComments; i++) {
-            const randomUser = users[Math.floor(Math.random() * users.length)];
-            const randomComment = sampleComments[Math.floor(Math.random() * sampleComments.length)];
-            const randomDate = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
-
-            comments.push({
-                id: i + 1,
-                user: randomUser,
-                comment: randomComment,
-                date: randomDate.toISOString().split('T')[0],
-                timestamp: randomDate.toISOString()
-            });
-        }
-
-        // Ordenar por fecha más reciente primero
-        return comments.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     }
 
     renderComments() {
@@ -598,6 +589,11 @@ class PostsManager {
 
     async submitComment() {
         if (!this.newCommentText || !this.currentPostId) return;
+
+        if (!this.currentUser) {
+            this.showError('Debes iniciar sesión para realizar esta acción');
+            return;
+        }
 
         const commentText = this.newCommentText.value.trim();
         if (!commentText) {
@@ -744,13 +740,23 @@ class PostsManager {
         // Eventos para botones de like
         const likeButtons = this.postsContainer.querySelectorAll('.like-btn');
         likeButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => this.handleLike(e));
+            btn.addEventListener('click', (e) => {
+                if (!this.currentUser) {
+                    this.showError('Debes iniciar sesión para realizar esta acción');
+                    e.stopPropagation();
+                    return;
+                }
+
+                this.handleLike(e);
+            });
         });
 
         // Eventos para botones de comentarios
         const commentButtons = this.postsContainer.querySelectorAll('.comment-btn');
         commentButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => this.handleComment(e));
+            btn.addEventListener('click', (e) => {
+                this.handleComment(e);
+            });
         });
     }
 
@@ -812,27 +818,6 @@ class PostsManager {
         
         // Abrir modal de comentarios
         this.openCommentsModal(postId);
-    }
-
-    async sendLikeToServer(postId, liked) {
-        // Simulación - en un caso real, harías un fetch
-        console.log(`Like ${liked ? 'agregado' : 'removido'} para post ${postId} (simulado)`);
-        
-        // try {
-        //     const response = await fetch(`index.php?controller=api&action=likePost`, {
-        //         method: 'POST',
-        //         headers: { 'Content-Type': 'application/json' },
-        //         body: JSON.stringify({ postId, liked })
-        //     });
-        //     if (!response.ok) {
-        //         throw new Error('Error al procesar like');
-        //     }
-        //     const data = await response.json();
-        //     console.log('Respuesta del servidor (like):', data);
-        // } catch (error) {
-        //     console.error('Error al enviar like:', error);
-        //     // Revertir el like en la UI si falla
-        // }
     }
 
     // ================================

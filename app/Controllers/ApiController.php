@@ -17,6 +17,9 @@ include_once '../DAO/MundialDAO.php';
 include_once '../DAO/CategoriaDAO.php';
 include_once '../DAO/JugadorDAO.php';
 include_once '../DAO/PublicacionDAO.php';
+include_once '../DAO/ReaccionDAO.php';
+include_once '../DAO/ComentarioDAO.php';
+include_once '../DAO/VistaDAO.php';
 
 
 error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE);
@@ -168,6 +171,7 @@ class ApiController {
     public function getCurrentUser() {
         // Solo permitir obetener por GET
         if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            http_response_code(response_code: 405);
             echo json_encode([
                 'success' => false,
                 'message' => 'Método no permitido'
@@ -176,6 +180,7 @@ class ApiController {
         }
 
         if (!Auth::check()) {
+            http_response_code(response_code: 401);
             echo json_encode([
                 'success' => false,
                 'message' => 'No hay sesión activa'
@@ -427,9 +432,6 @@ class ApiController {
         }
 
         try {
-            include_once '../DAO/ReaccionDAO.php';
-            include_once '../DAO/ComentarioDAO.php';
-            include_once '../DAO/VistaDAO.php';
 
             $reaccionDAO = new ReaccionDAO($GLOBALS['conn']);
             $comentarioDAO = new ComentarioDAO($GLOBALS['conn']);
@@ -437,9 +439,9 @@ class ApiController {
 
             $views = $vistaDAO->getViewsCountByPublicacion($id);
             $likes = $reaccionDAO->getLikesCountByPublicacion($id);
-            $likedBy = $reaccionDAO->getUsersWhoLikedByPublicacion($id, 50);
+            $likedBy = $reaccionDAO->getUsersWhoLikedByPublicacion($id);
             $commentsCount = $comentarioDAO->getCommentsCountByPublicacion($id);
-            $recentComments = $comentarioDAO->getRecentCommentsByPublicacion($id, 10);
+            $recentComments = $comentarioDAO->getRecentCommentsByPublicacion($id);
 
             echo json_encode([
                 'success' => true,
@@ -480,7 +482,6 @@ class ApiController {
                 return;
             }
 
-            include_once '../DAO/ComentarioDAO.php';
             $comentarioDAO = new ComentarioDAO($GLOBALS['conn']);
             $sessionUser = Auth::user();
             $newComment = $comentarioDAO->addComment($idPublicacion, $sessionUser['id'], $texto);
@@ -518,7 +519,6 @@ class ApiController {
                 return;
             }
 
-            include_once '../DAO/ComentarioDAO.php';
             $comentarioDAO = new ComentarioDAO($GLOBALS['conn']);
 
             // Verificar que el usuario sea admin
@@ -561,8 +561,7 @@ class ApiController {
                 echo json_encode(['success' => false, 'message' => 'Id inválido']);
                 return;
             }
-
-            include_once '../DAO/ReaccionDAO.php';
+            
             $reaccionDAO = new ReaccionDAO($GLOBALS['conn']);
             $sessionUser = Auth::user();
             $userId = $sessionUser['id'];
@@ -605,9 +604,9 @@ class ApiController {
         }
 
         try {
-            include_once '../DAO/ComentarioDAO.php';
+            
             $comentarioDAO = new ComentarioDAO($GLOBALS['conn']);
-            $comments = $comentarioDAO->getRecentCommentsByPublicacion($id, $limit);
+            $comments = $comentarioDAO->getRecentCommentsByPublicacion($id);
             echo json_encode(['success' => true, 'data' => $comments]);
         } catch (Exception $e) {
             http_response_code(500);
@@ -630,7 +629,6 @@ class ApiController {
                 return;
             }
 
-            include_once '../DAO/VistaDAO.php';
             $vistaDAO = new VistaDAO($GLOBALS['conn']);
 
             $userId = null;
@@ -1615,8 +1613,9 @@ class ApiController {
                     'fechaCreacion' => $pub->getFechaCreacion(),
                     'estatus' => $pub->getEstatusAprobacion(),
                     'mundialAño' => $item['mundialAño'],
-                    'multimedia' => $multimediaArray, // ⭐ NUEVO
-                    'categorias' => $categorias // ⭐ NUEVO
+                    'multimedia' => $multimediaArray, 
+                    'categorias' => $categorias, 
+                    'sedes' => $item['sedes']
                 ];
             }, $publicaciones);
 
@@ -1684,9 +1683,6 @@ class ApiController {
                 // Obtener categorías
                 $categorias = $publicacionDAO->getCategoriasPublicacion($idPublicacion);
                 // Obtener estadísticas reales
-                include_once '../DAO/ReaccionDAO.php';
-                include_once '../DAO/ComentarioDAO.php';
-                include_once '../DAO/VistaDAO.php';
 
                 $reaccionDAO = new ReaccionDAO($GLOBALS['conn']);
                 $comentarioDAO = new ComentarioDAO($GLOBALS['conn']);
@@ -1711,6 +1707,7 @@ class ApiController {
                     'estatus' => $pub->getEstatusAprobacion(),
                     'mundialAño' => $item['mundialAño'],
                     'autorNombre' => $item['autorNombre'],
+                    'avatar' => $item['avatar'],
                     'idCreador' => $pub->getIdCreador(),
                     'multimedia' => $multimediaArray,
                     'categorias' => $categorias,
@@ -1788,7 +1785,9 @@ class ApiController {
                     'fechaCreacion' => $pub->getFechaCreacion(),
                     'estatus' => $pub->getEstatusAprobacion(),
                     'mundialAño' => $item['mundialAño'],
+                    'sedes' => $item['sedes'],
                     'autorNombre' => $item['autorNombre'],
+                    'avatar' => $item['avatar'],
                     'idCreador' => $pub->getIdCreador(),
                     'multimedia' => $multimediaArray,
                     'categorias' => $categorias,

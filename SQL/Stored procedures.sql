@@ -658,9 +658,11 @@ BEGIN
         p.EstatusAprobacion,
         p.IdCreador,
         p.IdMundial,
-        m.Año AS MundialAño
+        m.Año AS MundialAño,
+        vw.Sedes
     FROM Publicacion p
     INNER JOIN Mundial m ON p.IdMundial = m.IdMundial
+    INNER JOIN vw_info_mundiales vw ON vw.IdMundial = m.IdMundial
     WHERE p.IdCreador = p_idUsuario
     ORDER BY p.FechaCreacion DESC;
 END$$
@@ -678,12 +680,14 @@ BEGIN
         FechaAprobacion,
         EstatusAprobacion,
         IdCreador,
+        u.FotoPerfil,
         UsuarioNombre,
         UsuarioApellido,
         IdMundial,
         MundialAño,
         Sedes
     FROM vw_info_pub
+    INNER JOIN Usuario u ON IdCreador = u.IdUsuario
     ORDER BY FechaCreacion DESC;
 END$$
 DELIMITER ;
@@ -789,4 +793,157 @@ BEGIN
 	JOIN Publicacion_Categoria pc ON c.IdCategoria = pc.IdCategoria
     ORDER BY c.Nombre;
 END $$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_cantidad_vistas_pub$$
+CREATE PROCEDURE sp_cantidad_vistas_pub( IN p_id_pub INT)
+BEGIN
+	SELECT COUNT(*) AS cnt 
+    FROM Vista WHERE IdPublicacion = p_id_pub;
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_insert_vista$$
+CREATE PROCEDURE sp_insert_vista( 
+	IN p_id_usuario INT,
+    IN p_id_pub INT
+)
+BEGIN
+	INSERT INTO Vista (IdUsuario, IdPublicacion) 
+    VALUES (p_id_usuario, p_id_pub);
+END$$
+
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_cantidad_likes_pub$$
+CREATE PROCEDURE sp_cantidad_likes_pub( IN p_id_pub INT )
+BEGIN
+	SELECT COUNT(*) as cnt 
+    FROM Reaccion WHERE IdPublicacion = p_id_pub;
+END$$
+DELIMITER ;
+
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_usuarios_likearon_pub$$
+CREATE PROCEDURE sp_usuarios_likearon_pub( IN p_id_pub INT )
+BEGIN
+	SELECT u.IdUsuario, u.Nombre, 
+    u.ApellidoPaterno, u.FotoPerfil, 
+    r.IdReaccion, r.FechaReaccion
+	FROM Reaccion r
+	JOIN Usuario u ON r.IdUsuario = u.IdUsuario
+	WHERE r.IdPublicacion = p_id_pub
+	ORDER BY r.IdReaccion DESC;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_usuario_likeo$$
+CREATE PROCEDURE sp_usuario_likeo( 
+	IN p_id_usuario INT,
+    IN p_id_pub INT
+)
+BEGIN
+	SELECT COUNT(*) as cnt FROM Reaccion 
+    WHERE IdPublicacion = p_id_pub AND IdUsuario = p_id_usuario;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_add_like$$
+CREATE PROCEDURE sp_add_like( 
+	IN p_id_usuario INT,
+    IN p_id_pub INT
+)
+BEGIN
+	INSERT INTO Reaccion (IdUsuario, IdPublicacion) 
+    VALUES (p_id_usuario, p_id_pub);
+END$$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_remove_like$$
+CREATE PROCEDURE sp_remove_like( 
+	IN p_id_usuario INT,
+    IN p_id_pub INT
+)
+BEGIN
+	DELETE FROM Reaccion 
+    WHERE IdPublicacion = p_id_pub AND IdUsuario = p_id_usuario;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_cantidad_comentarios_pub$$
+CREATE PROCEDURE sp_cantidad_comentarios_pub( IN p_id_pub INT )
+BEGIN
+	SELECT COUNT(*) as cnt FROM Comentario 
+    WHERE IdPublicacion = p_id_pub AND Estatus = 1;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_comentarios_recientes_pub$$
+CREATE PROCEDURE sp_comentarios_recientes_pub(
+    IN p_id_pub INT
+)
+BEGIN
+    SELECT 
+        c.IdComentario,
+        c.Comentario,
+        c.FechaComentario,
+        u.IdUsuario,
+        u.Nombre,
+        u.ApellidoPaterno,
+        u.FotoPerfil
+    FROM Comentario c
+    JOIN Usuario u ON c.IdUsuario = u.IdUsuario
+    WHERE c.IdPublicacion = p_id_pub
+      AND c.Estatus = 1
+    ORDER BY c.FechaComentario DESC;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_add_comment$$
+CREATE PROCEDURE sp_add_comment(
+    IN p_id_pub INT,
+    IN p_id_user INT,
+    IN p_text TEXT
+)
+BEGIN
+    -- Insertar comentario
+    INSERT INTO Comentario (Comentario, IdUsuario, IdPublicacion)
+    VALUES (p_text, p_id_user, p_id_pub);
+
+    -- Devolver el registro insertado
+    SELECT 
+        c.IdComentario,
+        c.Comentario,
+        c.FechaComentario,
+        u.IdUsuario,
+        u.Nombre,
+        u.ApellidoPaterno,
+        u.FotoPerfil
+    FROM Comentario c
+    JOIN Usuario u ON c.IdUsuario = u.IdUsuario
+    WHERE c.IdComentario = LAST_INSERT_ID();
+END$$
+DELIMITER ;
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS sp_eliminar_comentario$$
+CREATE PROCEDURE sp_eliminar_comentario(
+    IN p_id_comentario INT
+)
+BEGIN
+    UPDATE Comentario
+    SET Estatus = 0
+    WHERE IdComentario = p_id_comentario;
+END$$
 DELIMITER ;

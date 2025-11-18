@@ -10,17 +10,27 @@ class ReaccionDAO {
 
     public function getLikesCountByPublicacion(int $idPublicacion): int {
         try {
-            $query = "SELECT COUNT(*) as cnt FROM Reaccion WHERE IdPublicacion = ?";
+            $query = "CALL sp_cantidad_likes_pub(?)";
             $stmt = mysqli_prepare($this->conn, $query);
+
             mysqli_stmt_bind_param($stmt, 'i', $idPublicacion);
             mysqli_stmt_execute($stmt);
+
             $result = mysqli_stmt_get_result($stmt);
             $count = 0;
+
             if ($result && $row = mysqli_fetch_assoc($result)) {
                 $count = (int)$row['cnt'];
-                mysqli_free_result($result);
             }
+
+            mysqli_free_result($result);
             mysqli_stmt_close($stmt);
+
+            // Limpiar resultados extra del CALL
+            while (mysqli_more_results($this->conn)) {
+                mysqli_next_result($this->conn);
+            }
+
             return $count;
         } catch (Exception $e) {
             error_log('Error en ReaccionDAO::getLikesCountByPublicacion: ' . $e->getMessage());
@@ -28,19 +38,16 @@ class ReaccionDAO {
         }
     }
 
-    public function getUsersWhoLikedByPublicacion(int $idPublicacion, int $limit = 20): array {
+    public function getUsersWhoLikedByPublicacion(int $idPublicacion): array {
         try {
-            $query = "SELECT u.IdUsuario, u.Nombre, u.ApellidoPaterno, u.FotoPerfil, r.IdReaccion, r.FechaReaccion
-                      FROM Reaccion r
-                      JOIN Usuario u ON r.IdUsuario = u.IdUsuario
-                      WHERE r.IdPublicacion = ?
-                      ORDER BY r.IdReaccion DESC
-                      LIMIT ?";
-
+            $query = "CALL sp_usuarios_likearon_pub(?)";
             $stmt = mysqli_prepare($this->conn, $query);
-            mysqli_stmt_bind_param($stmt, 'ii', $idPublicacion, $limit);
+
+            mysqli_stmt_bind_param($stmt, 'i', $idPublicacion);
             mysqli_stmt_execute($stmt);
+
             $result = mysqli_stmt_get_result($stmt);
+
             $users = [];
             if ($result) {
                 while ($row = mysqli_fetch_assoc($result)) {
@@ -57,7 +64,12 @@ class ReaccionDAO {
                 }
                 mysqli_free_result($result);
             }
+
             mysqli_stmt_close($stmt);
+            while (mysqli_more_results($this->conn)) {
+                mysqli_next_result($this->conn);
+            }
+
             return $users;
         } catch (Exception $e) {
             error_log('Error en ReaccionDAO::getUsersWhoLikedByPublicacion: ' . $e->getMessage());
@@ -67,32 +79,56 @@ class ReaccionDAO {
 
     public function userHasLiked(int $idPublicacion, int $idUsuario): bool {
         try {
-            $query = "SELECT COUNT(*) as cnt FROM Reaccion WHERE IdPublicacion = ? AND IdUsuario = ?";
+            $query = "CALL sp_usuario_likeo(?, ?)";
             $stmt = mysqli_prepare($this->conn, $query);
-            mysqli_stmt_bind_param($stmt, 'ii', $idPublicacion, $idUsuario);
+
+            mysqli_stmt_bind_param($stmt, 'ii', $idUsuario, $idPublicacion);
             mysqli_stmt_execute($stmt);
+
             $result = mysqli_stmt_get_result($stmt);
-            $has = false;
+
+            $hasLiked = false;
             if ($result && $row = mysqli_fetch_assoc($result)) {
-                $has = ((int)$row['cnt'] > 0);
+                $hasLiked = ((int)$row['cnt'] > 0);
                 mysqli_free_result($result);
             }
+
             mysqli_stmt_close($stmt);
-            return $has;
+
+            // Limpieza necesaria para CALL
+            while (mysqli_more_results($this->conn)) {
+                mysqli_next_result($this->conn);
+            }
+
+            return $hasLiked;
+
         } catch (Exception $e) {
             error_log('Error en ReaccionDAO::userHasLiked: ' . $e->getMessage());
             return false;
         }
     }
 
+
     public function addLike(int $idPublicacion, int $idUsuario): bool {
         try {
-            $query = "INSERT INTO Reaccion (IdUsuario, IdPublicacion) VALUES (?, ?)";
+            $query = "CALL sp_add_like(?, ?)";
             $stmt = mysqli_prepare($this->conn, $query);
+
             mysqli_stmt_bind_param($stmt, 'ii', $idUsuario, $idPublicacion);
-            $ok = mysqli_stmt_execute($stmt);
+            mysqli_stmt_execute($stmt);
+
+            // Ver si se insertó correctamente
+            $ok = mysqli_stmt_affected_rows($stmt) > 0;
+
             mysqli_stmt_close($stmt);
+
+            // Limpieza de resultados de CALL
+            while (mysqli_more_results($this->conn)) {
+                mysqli_next_result($this->conn);
+            }
+
             return $ok;
+
         } catch (Exception $e) {
             error_log('Error en ReaccionDAO::addLike: ' . $e->getMessage());
             return false;
@@ -101,15 +137,28 @@ class ReaccionDAO {
 
     public function removeLike(int $idPublicacion, int $idUsuario): bool {
         try {
-            $query = "DELETE FROM Reaccion WHERE IdPublicacion = ? AND IdUsuario = ?";
+            $query = "CALL sp_remove_like(?, ?)";
             $stmt = mysqli_prepare($this->conn, $query);
-            mysqli_stmt_bind_param($stmt, 'ii', $idPublicacion, $idUsuario);
-            $ok = mysqli_stmt_execute($stmt);
+
+            mysqli_stmt_bind_param($stmt, 'ii', $idUsuario, $idPublicacion);
+            mysqli_stmt_execute($stmt);
+
+            // Ver si realmente eliminó un registro
+            $ok = mysqli_stmt_affected_rows($stmt) > 0;
+
             mysqli_stmt_close($stmt);
+
+            // Limpiar resultados del CALL
+            while (mysqli_more_results($this->conn)) {
+                mysqli_next_result($this->conn);
+            }
+
             return $ok;
+
         } catch (Exception $e) {
             error_log('Error en ReaccionDAO::removeLike: ' . $e->getMessage());
             return false;
         }
     }
+
 }
