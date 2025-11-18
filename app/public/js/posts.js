@@ -393,7 +393,7 @@ class PostsManager {
                 <h2 class="post-title">${this.truncateText(post.contenido, 70)}</h2>
                 <div class="post-meta">
                     <div class="post-author">
-                        <img src="assets/default-avatar.png" alt="${post.autorNombre}" class="profile-pic" 
+                        <img src="${post.avatar}" alt="${post.autorNombre}" class="profile-pic" 
                              onerror="this.src='assets/default-avatar.png'">
                         <span>por ${post.autorNombre}</span>
                     </div>

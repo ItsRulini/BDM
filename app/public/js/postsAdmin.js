@@ -152,7 +152,7 @@ class PostsAdminManager {
                     category: Array.isArray(post.categorias) && post.categorias.length > 0 ? post.categorias[0].toLowerCase() : 'general',
                     user: {
                         name: post.autorNombre,
-                        avatar: 'assets/default-avatar.png'
+                        avatar: post.avatar || 'assets/default-avatar.png'
                     },
                     date: post.fechaCreacion,
                     multimedia: (post.multimedia || []).map(media => ({
@@ -180,90 +180,6 @@ class PostsAdminManager {
         } finally {
             this.showLoading(false);
         }
-    }
-
-
-    generateMockPosts() {
-        const categories = ['analisis', 'historia', 'estadisticas', 'curiosidades', 'predicciones'];
-        const mundiales = [
-            { id: 1, name: 'Brasil 2014', country: 'brasil', year: 2014 },
-            { id: 2, name: 'Rusia 2018', country: 'rusia', year: 2018 },
-            { id: 3, name: 'Qatar 2022', country: 'qatar', year: 2022 },
-            { id: 4, name: 'México 1986', country: 'mexico', year: 1986 },
-            { id: 5, name: 'Francia 1998', country: 'francia', year: 1998 },
-            { id: 6, name: 'Alemania 2006', country: 'alemania', year: 2006 },
-            { id: 7, name: 'Sudáfrica 2010', country: 'sudafrica', year: 2010 }
-        ];
-        
-        const users = [
-            { name: 'Carlos Rodríguez', avatar: 'assets/avatars/user1.jpg' },
-            { name: 'María González', avatar: 'assets/avatars/user2.jpg' },
-            { name: 'Diego Martín', avatar: 'assets/avatars/user3.jpg' },
-            { name: 'Ana López', avatar: 'assets/avatars/user4.jpg' },
-            { name: 'Roberto Silva', avatar: 'assets/avatars/user5.jpg' }
-        ];
-
-        const samplePosts = [
-            {
-                title: "El gol más importante en la historia de los mundiales",
-                content: "Analizamos los goles que cambiaron el curso de la historia en las Copas del Mundo. Desde el gol de Maradona en 1986 hasta el penal de Messi en 2022. Un recorrido por los momentos más decisivos del fútbol mundial que quedaron grabados en la memoria de todos los aficionados.",
-                category: "historia",
-                multimedia: [
-                    { type: 'image', src: 'assets/posts/gol-maradona-1.jpg', alt: 'Gol de Maradona' },
-                    { type: 'video', src: 'assets/posts/gol-maradona.mp4', poster: 'assets/posts/gol-maradona-poster.jpg' },
-                    { type: 'image', src: 'assets/posts/gol-maradona-2.jpg', alt: 'Celebración' }
-                ]
-            },
-            {
-                title: "Estadísticas sorprendentes del Mundial de Qatar 2022",
-                content: "Los números que quizás no conocías del último mundial. Records, datos curiosos y análisis estadístico profundo del torneo más visto de la historia. Desde la cantidad de goles hasta las distancias recorridas por los jugadores.",
-                category: "estadisticas",
-                multimedia: [
-                    { type: 'image', src: 'assets/posts/estadisticas-qatar-1.jpg', alt: 'Estadísticas Qatar' },
-                    { type: 'image', src: 'assets/posts/estadisticas-qatar-2.jpg', alt: 'Gráficos' }
-                ]
-            },
-            {
-                title: "Predicciones para el próximo Mundial 2026",
-                content: "¿Qué selecciones tienen más posibilidades? Análisis detallado de las selecciones favoritas para el Mundial que se disputará en Estados Unidos, México y Canadá. Un torneo que promete ser histórico por su formato expandido.",
-                category: "predicciones",
-                multimedia: [
-                    { type: 'video', src: 'assets/posts/predicciones-2026.mp4', poster: 'assets/posts/predicciones-poster.jpg' },
-                    { type: 'image', src: 'assets/posts/mundial-2026-1.jpg', alt: 'Logo Mundial 2026' },
-                    { type: 'image', src: 'assets/posts/mundial-2026-2.jpg', alt: 'Sedes' }
-                ]
-            },
-            {
-                title: "Los arqueros más legendarios de los mundiales",
-                content: "Un repaso por los porteros que marcaron época en las Copas del Mundo. Desde Lev Yashin hasta Emiliano Martínez, estos guardametas dejaron su huella imborrable en la historia del fútbol mundial.",
-                category: "historia",
-                multimedia: [
-                    { type: 'image', src: 'assets/posts/arqueros-1.jpg', alt: 'Arqueros legendarios' },
-                    { type: 'image', src: 'assets/posts/arqueros-2.jpg', alt: 'Atajadas históricas' }
-                ]
-            }
-        ];
-
-        // Generar posts para pruebas
-        const generatedPosts = [];
-        for (let i = 0; i < 20; i++) {
-            const basePost = samplePosts[i % samplePosts.length];
-            const randomMundial = mundiales[Math.floor(Math.random() * mundiales.length)];
-            generatedPosts.push({
-                ...basePost,
-                id: i + 1,
-                title: i === 0 ? basePost.title : `${basePost.title} - Análisis ${i + 1}`,
-                category: categories[Math.floor(Math.random() * categories.length)],
-                mundial: randomMundial,
-                user: users[Math.floor(Math.random() * users.length)],
-                date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                likes: Math.floor(Math.random() * 500) + 10,
-                comments: Math.floor(Math.random() * 100) + 1,
-                liked: Math.random() > 0.7
-            });
-        }
-
-        return generatedPosts;
     }
 
     filterAndSearch() {
@@ -398,15 +314,13 @@ class PostsAdminManager {
             });
         };
 
-        const formatCategory = (category) => {
-            const categoryMap = {
-                'analisis': 'Análisis',
-                'historia': 'Historia',
-                'estadisticas': 'Estadísticas',
-                'curiosidades': 'Curiosidades',
-                'predicciones': 'Predicciones'
-            };
-            return categoryMap[category] || category;
+        const formatCategories = (categorias) => {
+            if (!Array.isArray(categorias) || categorias.length === 0) return '<span class="post-card-category">General</span>';
+            
+            return categorias.map(cat => {
+                const formatted = cat;
+                return `<span class="post-card-category">${formatted}</span>`;
+            }).join('');
         };
 
         const getPreviewMedia = (multimedia) => {
@@ -437,13 +351,14 @@ class PostsAdminManager {
             }
             return '';
         };
-
+        
         return `
             <div class="admin-post-card" data-post-id="${post.id}" onclick="openPostDetail(${post.id})">
                 <div class="post-card-header">
                     <div class="post-card-badges">
-                        <span class="post-card-mundial">${post.mundial.name}</span>
-                        <span class="post-card-category">${formatCategory(post.category)}</span>
+                        <span class="post-card-mundial">${post.sedes && post.mundialAño ? `${post.sedes} ${post.mundialAño}` : (post.mundialAño || 'Sin mundial')}</span>
+                        <br>
+                        ${formatCategories(post.categorias)}
                     </div>
                     <h3 class="post-card-title">${post.title}</h3>
                 </div>
@@ -507,6 +422,15 @@ class PostsAdminManager {
         }
     }
 
+    formatCategories = (categorias) => {
+        if (!Array.isArray(categorias) || categorias.length === 0) return '<span class="post-category-badge">General</span>';
+        
+        return categorias.map(cat => {
+            const formatted = cat;
+            return `<span class="post-category-badge">${formatted}</span>`;
+        }).join('');
+    };
+
     populatePostDetail(post) {
         // Título del modal
         const modalTitle = document.getElementById('modalPostTitle');
@@ -515,8 +439,23 @@ class PostsAdminManager {
         }
 
         // Badges
-        document.getElementById('postDetailMundial').textContent = post.mundial.name;
-        document.getElementById('postDetailCategory').textContent = this.formatCategory(post.category);
+        document.getElementById('postDetailMundial').textContent = post.sedes + ' ' + post.mundial.year;
+        
+        const categoryContainer = document.getElementById('postDetailCategory');
+        if (categoryContainer && Array.isArray(post.categorias) && post.categorias.length > 0) {
+            categoryContainer.innerHTML = post.categorias.map(cat => {
+                const categoryMap = {
+                    'analisis': 'Análisis',
+                    'historia': 'Historia',
+                    'estadisticas': 'Estadísticas',
+                    'curiosidades': 'Curiosidades',
+                    'predicciones': 'Predicciones'
+                };
+                return categoryMap[cat.toLowerCase()] || cat;
+            }).join(', ');
+        } else if (categoryContainer) {
+            categoryContainer.textContent = 'General';
+        }
         
         // Título y contenido
         document.getElementById('postDetailTitle').textContent = post.title;
@@ -938,34 +877,6 @@ class PostsAdminManager {
         this.showModal('confirmDeleteModal');
     }
 
-    // async executeDeletePost(postId) {
-    //     this.hideModal('confirmDeleteModal');
-        
-    //     try {
-    //         // Simular llamada a la API
-    //         await new Promise(resolve => setTimeout(resolve, 500));
-            
-    //         // Remover del array
-    //         this.posts = this.posts.filter(p => p.id !== postId);
-    //         this.filteredPosts = this.filteredPosts.filter(p => p.id !== postId);
-            
-    //         // Actualizar vista
-    //         this.renderPosts();
-    //         this.updatePostsCounter();
-            
-    //         // Cerrar modal de detalles si está abierto
-    //         this.hideModal('postDetailModal');
-            
-    //         this.showSuccess('Publicación eliminada exitosamente');
-            
-    //     } catch (error) {
-    //         console.error('Error al eliminar post:', error);
-    //         this.showError('Error al eliminar la publicación');
-    //     }
-        
-    //     this.currentDeleteTarget = null;
-    // }
-
     async executeDeleteComment(commentId) {
         this.hideModal('confirmDeleteModal');
         
@@ -1017,16 +928,7 @@ class PostsAdminManager {
     // UTILITY FUNCTIONS
     // ================================
 
-    formatCategory(category) {
-        const categoryMap = {
-            'analisis': 'Análisis',
-            'historia': 'Historia',
-            'estadisticas': 'Estadísticas',
-            'curiosidades': 'Curiosidades',
-            'predicciones': 'Predicciones'
-        };
-        return categoryMap[category] || category;
-    }
+    
 
     formatDate(dateString) {
         const date = new Date(dateString);

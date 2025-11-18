@@ -680,12 +680,14 @@ BEGIN
         FechaAprobacion,
         EstatusAprobacion,
         IdCreador,
+        u.FotoPerfil,
         UsuarioNombre,
         UsuarioApellido,
         IdMundial,
         MundialAño,
         Sedes
     FROM vw_info_pub
+    INNER JOIN Usuario u ON IdCreador = u.IdUsuario
     ORDER BY FechaCreacion DESC;
 END$$
 DELIMITER ;
