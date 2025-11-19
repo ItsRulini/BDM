@@ -223,7 +223,7 @@ class AdminProfile extends ProfileManager {
                 </div>
                 
                 <div class="post-meta">
-                    <small><strong>Mundial:</strong> ${post.mundialAño}</small>
+                    <small><strong>Mundial:</strong> ${post.sedes + ' ' + post.mundialAño}</small>
                     <small><strong>Categorías:</strong> ${categories}</small>
                     ${post.estatus === 'rejected' && post.razonRechazo ? `<small><strong>Razón:</strong> ${post.razonRechazo}</small>` : ''}
                 </div>
